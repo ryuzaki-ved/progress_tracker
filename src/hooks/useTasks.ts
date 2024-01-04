@@ -32,7 +32,7 @@ export const useTasks = () => {
           description: taskObj.description || '',
           dueDate: taskObj.due_date ? new Date(taskObj.due_date) : null,
           priority: (taskObj.priority || 'medium') as 'low' | 'medium' | 'high',
-          status: (taskObj.status || 'pending') as 'pending' | 'completed' | 'overdue',
+          status: (taskObj.status || 'pending') as 'pending' | 'completed' | 'overdue' | 'failed',
           stockId: taskObj.stock_id,
           points: taskObj.points || 10,
           createdAt: taskObj.created_at ? new Date(taskObj.created_at) : new Date(),
@@ -174,6 +174,85 @@ export const useTasks = () => {
     }
   };
 
+  const markAsNotCompleted = async (id: string) => {
+    setError(null);
+    try {
+      const db = await getDb();
+      // Get the task
+      const taskRes = db.exec('SELECT * FROM tasks WHERE id = ?', [id]);
+      const taskRow = taskRes[0]?.values?.[0];
+      const taskCols = taskRes[0]?.columns || [];
+      if (!taskRow) throw new Error('Task not found');
+      // Update task only (no penalty)
+      db.run(
+        `UPDATE tasks SET status = 'pending', completed_at = NULL, updated_at = datetime('now') WHERE id = ?`,
+        [id]
+      );
+      await persistDb();
+      await fetchTasks();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to mark as not completed');
+      throw err;
+    }
+  };
+
+  const failTask = async (id: string) => {
+    setError(null);
+    try {
+      const db = await getDb();
+      // Get the task and its stock
+      const taskRes = db.exec('SELECT * FROM tasks WHERE id = ?', [id]);
+      const taskRow = taskRes[0]?.values?.[0];
+      const taskCols = taskRes[0]?.columns || [];
+      if (!taskRow) throw new Error('Task not found');
+      const taskObj: any = {};
+      taskCols.forEach((col, i) => (taskObj[col] = taskRow[i]));
+      const stockRes = db.exec('SELECT * FROM stocks WHERE id = ?', [taskObj.stock_id]);
+      const stockRow = stockRes[0]?.values?.[0];
+      const stockCols = stockRes[0]?.columns || [];
+      if (!stockRow) throw new Error('Stock not found');
+      const stockObj: any = {};
+      stockCols.forEach((col, i) => (stockObj[col] = stockRow[i]));
+      // Get the last score for this task (from score column or recalculate)
+      const score = taskObj.score || calculateTaskScore({
+        priority: taskObj.priority || 'medium',
+        complexity: taskObj.complexity || 1,
+        type: taskObj.type,
+        dueDate: taskObj.due_date ? new Date(taskObj.due_date) : undefined,
+        completedAt: taskObj.completed_at ? new Date(taskObj.completed_at) : undefined,
+      });
+      // Update task
+      db.run(
+        `UPDATE tasks SET status = 'failed', completed_at = NULL, updated_at = datetime('now') WHERE id = ?`,
+        [id]
+      );
+      // Decrease stock current_score by 1.5x the task's score
+      const decrease = score * 1.5;
+      const newScore = Math.max(0, (stockObj.current_score || 500) - decrease);
+      db.run(
+        `UPDATE stocks SET current_score = ?, last_activity_at = datetime('now') WHERE id = ?`,
+        [newScore, stockObj.id]
+      );
+      // Insert into stock_performance_history
+      db.run(
+        `INSERT INTO stock_performance_history (stock_id, date, daily_score, score_delta, delta_percent, tasks_completed, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+        [
+          stockObj.id,
+          new Date().toISOString().split('T')[0],
+          newScore,
+          -decrease,
+          stockObj.current_score ? (-decrease / stockObj.current_score) * 100 : 0,
+          0,
+        ]
+      );
+      await persistDb();
+      await fetchTasks();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to mark as failed');
+      throw err;
+    }
+  };
+
   useEffect(() => {
     fetchTasks();
     // eslint-disable-next-line
@@ -187,6 +266,8 @@ export const useTasks = () => {
     updateTask,
     completeTask,
     deleteTask,
+    markAsNotCompleted,
+    failTask,
     refetch: fetchTasks,
   };
 };

@@ -6,14 +6,22 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Sparkline } from '../components/ui/Sparkline';
 import { AddStockModal } from '../components/modals/AddStockModal';
+import { AddTaskModal } from '../components/modals/AddTaskModal';
 import { useStocks } from '../hooks/useStocks';
+import { useTasks } from '../hooks/useTasks';
 import { getVolatilityColor } from '../utils/stockUtils';
 import { getDb } from '../lib/sqlite';
+import { Stock } from '../types';
 
 export const Stocks: React.FC = () => {
-  const { stocks, loading, createStock, deleteStock } = useStocks();
+  const { stocks, loading, createStock, deleteStock, updateStock } = useStocks();
+  const { createTask } = useTasks();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+  const [selectedStockId, setSelectedStockId] = useState<string | undefined>(undefined);
   const [performanceHistory, setPerformanceHistory] = useState<Record<string, any[]>>({});
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editStock, setEditStock] = useState<Stock | null>(null);
 
   React.useEffect(() => {
     async function fetchHistory() {
@@ -25,7 +33,7 @@ export const Stocks: React.FC = () => {
         const columns = res[0]?.columns || [];
         result[stock.id] = rows.map((row: any[]) => {
           const obj: any = {};
-          columns.forEach((col, i) => (obj[col] = row[i]));
+          columns.forEach((col: string, i: number) => (obj[col] = row[i]));
           return obj;
         });
         if (result[stock.id].length > 0) {
@@ -48,12 +56,17 @@ export const Stocks: React.FC = () => {
     );
   }
 
+  const totalWeight = stocks.reduce((sum, s) => sum + (typeof s.weight === 'number' ? s.weight * 100 : 0), 0);
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Stocks Overview</h1>
           <p className="text-gray-600 mt-1">Monitor your life categories performance</p>
+          <div className="text-sm font-medium text-blue-700 mt-2">
+            Total Weight: {totalWeight}%
+          </div>
         </div>
         <Button onClick={() => setShowAddModal(true)}>
           <Plus className="w-4 h-4 mr-2" />
@@ -119,12 +132,29 @@ export const Stocks: React.FC = () => {
                   </div>
                 </div>
 
-                <Button variant="outline" className="w-full">
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  onClick={() => {
+                    setSelectedStockId(stock.id);
+                    setShowAddTaskModal(true);
+                  }}
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Task
                 </Button>
                 <Button
-                  variant="destructive"
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    setEditStock(stock);
+                    setShowEditModal(true);
+                  }}
+                >
+                  Edit Stock
+                </Button>
+                <Button
+                  variant="secondary"
                   className="w-full mt-2"
                   onClick={() => {
                     if (window.confirm(`Delete stock '${stock.name}'? This cannot be undone.`)) {
@@ -169,6 +199,31 @@ export const Stocks: React.FC = () => {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSubmit={createStock}
+        currentTotalWeight={totalWeight}
+      />
+      <AddStockModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditStock(null);
+        }}
+        onSubmit={async (data) => {
+          if (editStock) {
+            await updateStock(editStock.id, data);
+            setShowEditModal(false);
+            setEditStock(null);
+          }
+        }}
+        currentTotalWeight={totalWeight}
+        initialData={editStock || undefined}
+        editMode
+      />
+      <AddTaskModal
+        isOpen={showAddTaskModal}
+        onClose={() => setShowAddTaskModal(false)}
+        onSubmit={createTask}
+        stocks={stocks}
+        defaultStockId={selectedStockId}
       />
 
       {/* Stock Performance History UI */}

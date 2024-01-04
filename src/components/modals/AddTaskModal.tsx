@@ -13,7 +13,7 @@ interface AddTaskModalProps {
     description?: string;
     stockId: string;
     dueDate?: Date;
-    priority: 'low' | 'medium' | 'high';
+    priority: 'low' | 'medium' | 'high' | 'critical';
     points?: number;
   }) => Promise<void>;
   stocks: Stock[];
@@ -32,7 +32,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
     description: '',
     stockId: defaultStockId || (stocks[0]?.id || ''),
     dueDate: '',
-    priority: 'medium' as 'low' | 'medium' | 'high',
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'critical',
     points: 10,
   });
   const [loading, setLoading] = useState(false);
@@ -124,23 +124,47 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Stock Category *
               </label>
-              <select
-                value={formData.stockId}
-                onChange={(e) => setFormData({ ...formData, stockId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                {stocks.map(stock => (
-                  <option key={stock.id} value={stock.id}>
-                    {stock.name} ({stock.category})
-                  </option>
-                ))}
-              </select>
-              {selectedStock && (
-                <div className="flex items-center mt-2 text-sm text-gray-600">
-                  <div className={`w-3 h-3 ${selectedStock.color} rounded mr-2`}></div>
-                  This task will contribute to your {selectedStock.name} stock
-                </div>
+              {defaultStockId ? (
+                <>
+                  <select
+                    value={formData.stockId}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500"
+                  >
+                    {stocks.filter(stock => stock.id === defaultStockId).map(stock => (
+                      <option key={stock.id} value={stock.id}>
+                        {stock.name} ({stock.category})
+                      </option>
+                    ))}
+                  </select>
+                  {selectedStock && (
+                    <div className="flex items-center mt-2 text-sm text-gray-600">
+                      <div className={`w-3 h-3 ${selectedStock.color} rounded mr-2`}></div>
+                      This task will contribute to your {selectedStock.name} stock
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <select
+                    value={formData.stockId}
+                    onChange={(e) => setFormData({ ...formData, stockId: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    {stocks.map(stock => (
+                      <option key={stock.id} value={stock.id}>
+                        {stock.name} ({stock.category})
+                      </option>
+                    ))}
+                  </select>
+                  {selectedStock && (
+                    <div className="flex items-center mt-2 text-sm text-gray-600">
+                      <div className={`w-3 h-3 ${selectedStock.color} rounded mr-2`}></div>
+                      This task will contribute to your {selectedStock.name} stock
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -171,6 +195,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
+                  <option value="critical">Critical</option>
                 </select>
               </div>
             </div>

@@ -9,7 +9,7 @@ import { useStocks } from '../hooks/useStocks';
 import { getStatusColor, getPriorityColor } from '../utils/stockUtils';
 
 export const Tasks: React.FC = () => {
-  const { tasks, loading: tasksLoading, completeTask, createTask, deleteTask } = useTasks();
+  const { tasks, loading: tasksLoading, completeTask, createTask, deleteTask, markAsNotCompleted, failTask } = useTasks();
   const { stocks, loading: stocksLoading } = useStocks();
   const [filter, setFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('dueDate');
@@ -128,7 +128,7 @@ export const Tasks: React.FC = () => {
                     )}
                   </div>
                   <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                    {task.status}
+                    {task.status === 'failed' ? 'Failed' : task.status}
                   </div>
                 </div>
 
@@ -155,10 +155,32 @@ export const Tasks: React.FC = () => {
                   variant={task.status === 'completed' ? 'secondary' : 'primary'} 
                   className="w-full"
                   disabled={task.status === 'completed'}
-                 onClick={() => task.status !== 'completed' && handleCompleteTask(task.id)}
+                  onClick={() => task.status !== 'completed' && handleCompleteTask(task.id)}
                 >
                   {task.status === 'completed' ? 'Completed' : 'Mark Complete'}
                 </Button>
+                {task.status === 'completed' && (
+                  <Button
+                    variant="outline"
+                    className="w-full mt-2"
+                    onClick={() => markAsNotCompleted(task.id)}
+                  >
+                    Mark as Not Completed
+                  </Button>
+                )}
+                {(task.status === 'pending' || task.status === 'overdue') && (
+                  <Button
+                    variant="destructive"
+                    className="w-full mt-2"
+                    onClick={() => {
+                      if (window.confirm(`Mark task '${task.title}' as failed? This cannot be undone.`)) {
+                        failTask(task.id);
+                      }
+                    }}
+                  >
+                    Mark as Failed
+                  </Button>
+                )}
                 <Button
                   variant="destructive"
                   className="w-full mt-2"
