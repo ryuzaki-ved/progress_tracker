@@ -1,14 +1,41 @@
 import React from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, TrendingUp, TrendingDown, Activity } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Sparkline } from '../components/ui/Sparkline';
+import { AddStockModal } from '../components/modals/AddStockModal';
 import { useStocks } from '../hooks/useStocks';
 import { getVolatilityColor } from '../utils/stockUtils';
+import { getDb } from '../lib/sqlite';
 
 export const Stocks: React.FC = () => {
-  const { stocks, loading } = useStocks();
+  const { stocks, loading, createStock, deleteStock } = useStocks();
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [performanceHistory, setPerformanceHistory] = useState<Record<string, any[]>>({});
+
+  React.useEffect(() => {
+    async function fetchHistory() {
+      const db = await getDb();
+      const result: Record<string, any[]> = {};
+      for (const stock of stocks) {
+        const res = db.exec('SELECT * FROM stock_performance_history WHERE stock_id = ? ORDER BY date DESC', [stock.id]);
+        const rows = res[0]?.values || [];
+        const columns = res[0]?.columns || [];
+        result[stock.id] = rows.map((row: any[]) => {
+          const obj: any = {};
+          columns.forEach((col, i) => (obj[col] = row[i]));
+          return obj;
+        });
+        if (result[stock.id].length > 0) {
+          console.log(`Performance history for stock ${stock.name}:`, result[stock.id]);
+        }
+      }
+      setPerformanceHistory(result);
+    }
+    if (stocks.length > 0) fetchHistory();
+  }, [stocks]);
 
   if (loading) {
     return (
@@ -28,7 +55,7 @@ export const Stocks: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Stocks Overview</h1>
           <p className="text-gray-600 mt-1">Monitor your life categories performance</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowAddModal(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Add Stock
         </Button>
@@ -96,6 +123,17 @@ export const Stocks: React.FC = () => {
                   <Plus className="w-4 h-4 mr-2" />
                   Add Task
                 </Button>
+                <Button
+                  variant="destructive"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    if (window.confirm(`Delete stock '${stock.name}'? This cannot be undone.`)) {
+                      deleteStock(stock.id);
+                    }
+                  }}
+                >
+                  Delete Stock
+                </Button>
               </div>
             </Card>
           </motion.div>
@@ -125,6 +163,44 @@ export const Stocks: React.FC = () => {
             <div className="text-sm text-gray-600">Stable Stocks</div>
           </div>
         </div>
+      </Card>
+
+      <AddStockModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSubmit={createStock}
+      />
+
+      {/* Stock Performance History UI */}
+      <Card className="mt-8">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Stock Performance History (Debug)</h3>
+        {stocks.map(stock => (
+          <div key={stock.id} className="mb-6">
+            <div className="font-bold mb-2">{stock.name}</div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-xs border">
+                <thead>
+                  <tr>
+                    <th className="border px-2 py-1">Date</th>
+                    <th className="border px-2 py-1">Score</th>
+                    <th className="border px-2 py-1">Delta</th>
+                    <th className="border px-2 py-1">% Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(performanceHistory[stock.id] || []).map((h, i) => (
+                    <tr key={i}>
+                      <td className="border px-2 py-1">{h.date}</td>
+                      <td className="border px-2 py-1">{h.daily_score}</td>
+                      <td className="border px-2 py-1">{h.score_delta}</td>
+                      <td className="border px-2 py-1">{h.delta_percent?.toFixed(2)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
       </Card>
     </div>
   );

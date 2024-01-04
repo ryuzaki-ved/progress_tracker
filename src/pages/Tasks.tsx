@@ -3,15 +3,17 @@ import { motion } from 'framer-motion';
 import { Plus, Filter, Calendar, Flag } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { AddTaskModal } from '../components/modals/AddTaskModal';
 import { useTasks } from '../hooks/useTasks';
 import { useStocks } from '../hooks/useStocks';
 import { getStatusColor, getPriorityColor } from '../utils/stockUtils';
 
 export const Tasks: React.FC = () => {
-  const { tasks, loading: tasksLoading, completeTask } = useTasks();
+  const { tasks, loading: tasksLoading, completeTask, createTask, deleteTask } = useTasks();
   const { stocks, loading: stocksLoading } = useStocks();
   const [filter, setFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('dueDate');
+  const [showAddModal, setShowAddModal] = useState(false);
 
   if (tasksLoading || stocksLoading) {
     return (
@@ -66,7 +68,7 @@ export const Tasks: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Tasks</h1>
           <p className="text-gray-600 mt-1">Manage your productivity tasks</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowAddModal(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Add Task
         </Button>
@@ -157,6 +159,17 @@ export const Tasks: React.FC = () => {
                 >
                   {task.status === 'completed' ? 'Completed' : 'Mark Complete'}
                 </Button>
+                <Button
+                  variant="destructive"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    if (window.confirm(`Delete task '${task.title}'? This cannot be undone.`)) {
+                      deleteTask(task.id);
+                    }
+                  }}
+                >
+                  Delete Task
+                </Button>
               </div>
             </Card>
           </motion.div>
@@ -193,6 +206,13 @@ export const Tasks: React.FC = () => {
           </div>
         </div>
       </Card>
+
+      <AddTaskModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSubmit={createTask}
+        stocks={stocks}
+      />
     </div>
   );
 };

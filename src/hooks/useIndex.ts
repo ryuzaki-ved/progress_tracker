@@ -1,71 +1,67 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { useAuth } from './useAuth';
+import { getDb, persistDb } from '../lib/sqlite';
+import { useStocks } from './useStocks';
 import { IndexData } from '../types';
+import { calculateIndexValue } from '../utils/stockUtils';
+
+const currentUserId = 1;
 
 export const useIndex = () => {
-  const { user } = useAuth();
+  const { stocks } = useStocks();
   const [indexData, setIndexData] = useState<IndexData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Calculate the current index value (weighted sum of stocks)
+  const getCurrentIndexValue = () => {
+    console.log('Stocks for index calculation:', stocks);
+    const value = calculateIndexValue(stocks);
+    console.log('Calculated index value:', value);
+    return value;
+  };
+
   const fetchIndexData = async () => {
-    if (!user) return;
-
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-
-      // Get current index value using the database function
-      const { data: currentIndex, error: indexError } = await supabase
-        .rpc('calculate_user_index', { user_uuid: user.id });
-
-      if (indexError) throw indexError;
-
-      // Get index history for the last 7 days
-      const { data: historyData, error: historyError } = await supabase
-        .from('index_history')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: true })
-        .limit(7);
-
-      if (historyError) throw historyError;
-
-      const history = historyData.map(h => ({
-        date: new Date(h.date),
-        value: h.index_value
-      }));
-
-      // Calculate change from yesterday
+      const db = await getDb();
+      // Get last 7 days of index history
+      const res = db.exec(
+        `SELECT * FROM index_history WHERE user_id = ? ORDER BY date ASC LIMIT 7`,
+        [currentUserId]
+      );
+      const rows = res[0]?.values || [];
+      const columns = res[0]?.columns || [];
+      const history = rows.map((row: any[]) => {
+        const obj: any = {};
+        (columns as string[]).forEach((col: string, i: number) => (obj[col] = row[i]));
+        return {
+          date: new Date(obj.date),
+          value: obj.index_value,
+        };
+      });
+      // Get today's and yesterday's values
       const today = new Date().toISOString().split('T')[0];
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-      const { data: todayData } = await supabase
-        .from('index_history')
-        .select('index_value')
-        .eq('user_id', user.id)
-        .eq('date', today)
-        .single();
-
-      const { data: yesterdayData } = await supabase
-        .from('index_history')
-        .select('index_value')
-        .eq('user_id', user.id)
-        .eq('date', yesterday)
-        .single();
-
-      const todayValue = todayData?.index_value || currentIndex || 0;
-      const yesterdayValue = yesterdayData?.index_value || todayValue;
+      const todayValue = getCurrentIndexValue();
+      const yesterdayRes = db.exec(
+        `SELECT index_value FROM index_history WHERE user_id = ? AND date = ?`,
+        [currentUserId, yesterday]
+      );
+      const yesterdayValue = yesterdayRes[0]?.values?.[0]?.[0] ?? todayValue;
       const change = todayValue - yesterdayValue;
       const changePercent = yesterdayValue > 0 ? (change / yesterdayValue) * 100 : 0;
-
+      // Build history array
+      const liveValue = getCurrentIndexValue();
+      if (!history.some(h => h.date.toISOString().split('T')[0] === today)) {
+        history.push({ date: new Date(), value: liveValue });
+      }
       setIndexData({
-        value: currentIndex || 0,
+        value: todayValue,
         change,
         changePercent,
-        history: history.length > 0 ? history : [{ date: new Date(), value: currentIndex || 0 }]
+        history: history.length > 0 ? history : [{ date: new Date(), value: todayValue }],
       });
-
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch index data');
     } finally {
@@ -73,43 +69,32 @@ export const useIndex = () => {
     }
   };
 
+  // Update today's index value in history (if not already present)
   const updateIndexHistory = async () => {
-    if (!user) return;
-
     try {
+      const db = await getDb();
       const today = new Date().toISOString().split('T')[0];
-      
-      // Calculate current index
-      const { data: currentIndex, error: indexError } = await supabase
-        .rpc('calculate_user_index', { user_uuid: user.id });
-
-      if (indexError) throw indexError;
-
-      // Get yesterday's value for change calculation
+      // Check if today's entry exists
+      const res = db.exec(
+        `SELECT id FROM index_history WHERE user_id = ? AND date = ?`,
+        [currentUserId, today]
+      );
+      if (res[0]?.values?.length) return; // Already exists
+      // Get yesterday's value
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const { data: yesterdayData } = await supabase
-        .from('index_history')
-        .select('index_value')
-        .eq('user_id', user.id)
-        .eq('date', yesterday)
-        .single();
-
-      const yesterdayValue = yesterdayData?.index_value || currentIndex || 0;
-      const change = (currentIndex || 0) - yesterdayValue;
+      const yesterdayRes = db.exec(
+        `SELECT index_value FROM index_history WHERE user_id = ? AND date = ?`,
+        [currentUserId, yesterday]
+      );
+      const yesterdayValue = yesterdayRes[0]?.values?.[0]?.[0] ?? 0;
+      const currentValue = getCurrentIndexValue();
+      const change = currentValue - yesterdayValue;
       const changePercent = yesterdayValue > 0 ? (change / yesterdayValue) * 100 : 0;
-
-      // Upsert today's index value
-      const { error } = await supabase
-        .from('index_history')
-        .upsert({
-          user_id: user.id,
-          date: today,
-          index_value: currentIndex || 0,
-          daily_change: change,
-          change_percent: changePercent,
-        });
-
-      if (error) throw error;
+      db.run(
+        `INSERT INTO index_history (user_id, date, index_value, daily_change, change_percent, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))`,
+        [currentUserId, today, currentValue, change, changePercent]
+      );
+      await persistDb();
       await fetchIndexData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update index history');
@@ -118,7 +103,9 @@ export const useIndex = () => {
 
   useEffect(() => {
     fetchIndexData();
-  }, [user]);
+    updateIndexHistory();
+    // eslint-disable-next-line
+  }, [stocks]);
 
   return {
     indexData,

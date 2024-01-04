@@ -1,23 +1,162 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Save, Moon, Sun, Palette, Sliders, Bell, Shield } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { mockStocks } from '../data/mockData';
+import { useStocks } from '../hooks/useStocks';
+import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../lib/supabase';
 
 export const Settings: React.FC = () => {
+  const { user } = useAuth();
+  const { stocks, updateStock } = useStocks();
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('light');
   const [notifications, setNotifications] = useState(true);
   const [autoDecay, setAutoDecay] = useState(true);
   const [decayRate, setDecayRate] = useState(1);
-  const [stockWeights, setStockWeights] = useState(
-    mockStocks.reduce((acc, stock) => ({ ...acc, [stock.id]: stock.weight }), {})
-  );
+  const [stockWeights, setStockWeights] = useState<Record<string, number>>({});
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  // Initialize stock weights from actual stocks data
+  useEffect(() => {
+    if (stocks.length > 0) {
+      const weights = stocks.reduce((acc, stock) => ({ ...acc, [stock.id]: stock.weight }), {});
+      setStockWeights(weights);
+    }
+  }, [stocks]);
 
   const handleWeightChange = (stockId: string, weight: number) => {
     setStockWeights(prev => ({ ...prev, [stockId]: weight }));
   };
 
+  const handleSaveChanges = async () => {
+    if (!user) return;
+
+    setSaving(true);
+    setSaveMessage(null);
+
+    try {
+      // Update stock weights
+      const updatePromises = Object.entries(stockWeights).map(([stockId, weight]) => {
+        const stock = stocks.find(s => s.id === stockId);
+        if (stock && stock.weight !== weight) {
+          return updateStock(stockId, { ...stock, weight });
+        }
+        return Promise.resolve();
+      });
+
+      await Promise.all(updatePromises);
+
+      // Save other settings to user_settings table
+      const settingsToSave = [
+        { key: 'theme', value: theme },
+        { key: 'notifications_enabled', value: notifications },
+        { key: 'auto_decay_enabled', value: autoDecay },
+        { key: 'decay_rate', value: decayRate },
+      ];
+
+      for (const setting of settingsToSave) {
+        await supabase
+          .from('user_settings')
+          .upsert({
+            user_id: user.id,
+            setting_key: setting.key,
+            setting_value: JSON.stringify(setting.value),
+          });
+      }
+
+      setSaveMessage('Settings saved successfully!');
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (error) {
+      setSaveMessage('Failed to save settings. Please try again.');
+      setTimeout(() => setSaveMessage(null), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleExportData = async (format: 'json' | 'csv') => {
+    if (!user) return;
+
+    try {
+      // Fetch all user data
+      const [stocksData, tasksData, indexData] = await Promise.all([
+        supabase.from('stocks').select('*').eq('user_id', user.id),
+        supabase.from('tasks').select(`
+          *,
+          stocks!inner (user_id, name)
+        `).eq('stocks.user_id', user.id),
+        supabase.from('index_history').select('*').eq('user_id', user.id),
+      ]);
+
+      const exportData = {
+        user: { id: user.id, email: user.email },
+        stocks: stocksData.data || [],
+        tasks: tasksData.data || [],
+        indexHistory: indexData.data || [],
+        exportedAt: new Date().toISOString(),
+      };
+
+      if (format === 'json') {
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `lifestock-data-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        // Simple CSV export for stocks
+        const csvContent = [
+          'Stock Name,Category,Current Score,Weight,Created At',
+          ...exportData.stocks.map(stock => 
+            `"${stock.name}","${stock.category}",${stock.current_score},${stock.weight},"${stock.created_at}"`
+          )
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `lifestock-stocks-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
+  };
+
+  const handleResetData = async () => {
+    if (!user) return;
+    
+    const confirmed = window.confirm(
+      'Are you sure you want to reset ALL your data? This action cannot be undone.'
+    );
+    
+    if (!confirmed) return;
+
+    const doubleConfirmed = window.confirm(
+      'This will permanently delete all your stocks, tasks, and history. Type "DELETE" to confirm.'
+    );
+    
+    if (!doubleConfirmed) return;
+
+    try {
+      // Delete all user data (cascading deletes will handle related records)
+      await supabase.from('stocks').delete().eq('user_id', user.id);
+      await supabase.from('index_history').delete().eq('user_id', user.id);
+      await supabase.from('user_settings').delete().eq('user_id', user.id);
+      
+      // Reload the page to reset the app state
+      window.location.reload();
+    } catch (error) {
+      console.error('Reset failed:', error);
+      alert('Failed to reset data. Please try again.');
+    }
+  };
   const totalWeight = Object.values(stockWeights).reduce((sum, weight) => sum + weight, 0);
 
   return (
@@ -27,11 +166,32 @@ export const Settings: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
           <p className="text-gray-600 mt-1">Customize your productivity tracking experience</p>
         </div>
-        <Button>
-          <Save className="w-4 h-4 mr-2" />
-          Save Changes
+        <Button onClick={handleSaveChanges} disabled={saving}>
+          <span>
+            {saving ? (
+              <div className="flex items-center">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                Saving...
+              </div>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </>
+            )}
+          </span>
         </Button>
       </div>
+
+      {saveMessage && (
+        <div className={`p-4 rounded-lg ${
+          saveMessage.includes('successfully') 
+            ? 'bg-green-50 text-green-700 border border-green-200' 
+            : 'bg-red-50 text-red-700 border border-red-200'
+        }`}>
+          {saveMessage}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Appearance */}
@@ -150,7 +310,7 @@ export const Settings: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {mockStocks.map(stock => (
+              {stocks.map(stock => (
                 <motion.div
                   key={stock.id}
                   className="p-4 border border-gray-200 rounded-lg"
@@ -253,8 +413,12 @@ export const Settings: React.FC = () => {
             <div>
               <div className="font-medium text-gray-900 mb-2">Export Data</div>
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" size="sm">Export JSON</Button>
-                <Button variant="outline" size="sm">Export CSV</Button>
+                <Button variant="outline" size="sm" onClick={() => handleExportData('json')}>
+                  Export JSON
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleExportData('csv')}>
+                  Export CSV
+                </Button>
               </div>
             </div>
 
@@ -268,7 +432,11 @@ export const Settings: React.FC = () => {
             </div>
 
             <div className="pt-4 border-t border-gray-200">
-              <Button variant="outline" className="w-full text-red-600 hover:bg-red-50 hover:text-red-700">
+              <Button 
+                variant="outline" 
+                className="w-full text-red-600 hover:bg-red-50 hover:text-red-700"
+                onClick={handleResetData}
+              >
                 Reset All Data
               </Button>
             </div>

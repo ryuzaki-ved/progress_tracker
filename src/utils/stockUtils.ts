@@ -12,10 +12,7 @@ export const calculateStockScore = (stock: Stock, tasks: Task[]): number => {
 };
 
 export const calculateIndexValue = (stocks: Stock[]): number => {
-  const totalWeight = stocks.reduce((sum, stock) => sum + stock.weight, 0);
-  return stocks.reduce((sum, stock) => 
-    sum + (stock.currentScore * stock.weight / totalWeight), 0
-  );
+  return stocks.reduce((sum, stock) => sum + (stock.currentScore * stock.weight), 0);
 };
 
 export const getVolatilityColor = (volatility: string): string => {
@@ -44,3 +41,48 @@ export const getPriorityColor = (priority: string): string => {
     default: return 'border-gray-400 bg-gray-50';
   }
 };
+
+export function calculateTaskScore({
+  priority,
+  complexity,
+  type,
+  dueDate,
+  completedAt,
+}: {
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  complexity: number;
+  type?: string;
+  dueDate?: Date | null;
+  completedAt?: Date | null;
+}): number {
+  // Priority mapping
+  const priorityMap = { low: 1, medium: 2, high: 3, critical: 4 };
+  const p = priorityMap[priority] || 1;
+  const c = complexity || 1;
+  // Base score
+  let baseScore = p * c * 10;
+  // Type bonus (optional, can be extended)
+  if (type === 'milestone') baseScore *= 1.2;
+  if (type === 'recurring') baseScore *= 0.9;
+  // Time multiplier
+  let timeMultiplier = 1.0;
+  if (dueDate && completedAt) {
+    const due = dueDate.getTime();
+    const done = completedAt.getTime();
+    const diff = done - due;
+    if (diff < -1000 * 60 * 5) {
+      // Early (more than 5 min before due)
+      timeMultiplier = 1.1;
+    } else if (Math.abs(diff) <= 1000 * 60 * 5) {
+      // On time (within 5 min)
+      timeMultiplier = 1.0;
+    } else if (diff > 0 && diff <= 1000 * 60 * 60 * 24) {
+      // Late (<24h)
+      timeMultiplier = 0.7;
+    } else if (diff > 1000 * 60 * 60 * 24) {
+      // Very late (>24h)
+      timeMultiplier = 0.4;
+    }
+  }
+  return Math.round(baseScore * timeMultiplier);
+}

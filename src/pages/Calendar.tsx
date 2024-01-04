@@ -3,16 +3,18 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { AddTaskModal } from '../components/modals/AddTaskModal';
 import { useTasks } from '../hooks/useTasks';
 import { useStocks } from '../hooks/useStocks';
 import { getStatusColor, getPriorityColor } from '../utils/stockUtils';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from 'date-fns';
 
 export const Calendar: React.FC = () => {
-  const { tasks, loading: tasksLoading } = useTasks();
+  const { tasks, loading: tasksLoading, createTask } = useTasks();
   const { stocks, loading: stocksLoading } = useStocks();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   if (tasksLoading || stocksLoading) {
     return (
@@ -60,7 +62,7 @@ export const Calendar: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
           <p className="text-gray-600 mt-1">Schedule and track your productivity tasks</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowAddModal(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Add Task
         </Button>
@@ -216,6 +218,14 @@ export const Calendar: React.FC = () => {
           </Card>
         </div>
       </div>
+
+      <AddTaskModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSubmit={createTask}
+        stocks={stocks}
+        defaultStockId={undefined}
+      />
     </div>
   );
 };

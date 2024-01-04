@@ -1,48 +1,45 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { useAuth } from './useAuth';
-import { Task } from '../types';
+import { getDb, persistDb } from '../lib/sqlite';
+import { Stock, Task } from '../types';
+import { calculateTaskScore } from '../utils/stockUtils';
+
+// TEMP: Hardcoded user id for demo (replace with real auth integration)
+const currentUserId = 1;
 
 export const useTasks = () => {
-  const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchTasks = async () => {
-    if (!user) return;
-
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('tasks')
-        .select(`
-          *,
-          stocks!inner (
-            user_id,
-            name,
-            color
-          )
-        `)
-        .eq('stocks.user_id', user.id)
-        .order('due_date', { nullsLast: true });
-
-      if (error) throw error;
-
-      const transformedTasks: Task[] = data.map(task => ({
-        id: task.id,
-        title: task.title,
-        description: task.description || undefined,
-        dueDate: new Date(task.due_date || new Date()),
-        priority: task.priority as 'low' | 'medium' | 'high',
-        status: task.status as 'pending' | 'completed' | 'overdue',
-        stockId: task.stock_id,
-        points: task.points || 10,
-        createdAt: new Date(task.created_at),
-        completedAt: task.completed_at ? new Date(task.completed_at) : undefined,
-      }));
-
-      setTasks(transformedTasks);
+      const db = await getDb();
+      // Join with stocks to filter by user_id
+      const res = db.exec(
+        `SELECT t.*, s.user_id FROM tasks t JOIN stocks s ON t.stock_id = s.id WHERE s.user_id = ? ORDER BY t.created_at DESC`,
+        [currentUserId]
+      );
+      const rows = res[0]?.values || [];
+      const columns = res[0]?.columns || [];
+      const tasksList: Task[] = rows.map((row: any[]) => {
+        const taskObj: any = {};
+        columns.forEach((col, i) => (taskObj[col] = row[i]));
+        return {
+          id: taskObj.id,
+          title: taskObj.title,
+          description: taskObj.description || '',
+          dueDate: taskObj.due_date ? new Date(taskObj.due_date) : null,
+          priority: (taskObj.priority || 'medium') as 'low' | 'medium' | 'high',
+          status: (taskObj.status || 'pending') as 'pending' | 'completed' | 'overdue',
+          stockId: taskObj.stock_id,
+          points: taskObj.points || 10,
+          createdAt: taskObj.created_at ? new Date(taskObj.created_at) : new Date(),
+          completedAt: taskObj.completed_at ? new Date(taskObj.completed_at) : undefined,
+        };
+      });
+      setTasks(tasksList);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch tasks');
     } finally {
@@ -58,26 +55,23 @@ export const useTasks = () => {
     priority: 'low' | 'medium' | 'high';
     points?: number;
   }) => {
-    if (!user) return;
-
+    setError(null);
     try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert({
-          stock_id: taskData.stockId,
-          title: taskData.title,
-          description: taskData.description,
-          due_date: taskData.dueDate?.toISOString(),
-          priority: taskData.priority,
-          points: taskData.points || 10,
-          status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const db = await getDb();
+      db.run(
+        `INSERT INTO tasks (stock_id, title, description, priority, due_date, points, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+        [
+          taskData.stockId,
+          taskData.title,
+          taskData.description || null,
+          taskData.priority,
+          taskData.dueDate ? taskData.dueDate.toISOString() : null,
+          taskData.points || 10,
+          'pending',
+        ]
+      );
+      await persistDb();
       await fetchTasks();
-      return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create task');
       throw err;
@@ -85,32 +79,22 @@ export const useTasks = () => {
   };
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
-    if (!user) return;
-
+    setError(null);
     try {
-      const updateData: any = {
-        title: updates.title,
-        description: updates.description,
-        due_date: updates.dueDate?.toISOString(),
-        priority: updates.priority,
-        status: updates.status,
-        points: updates.points,
-        updated_at: new Date().toISOString(),
-      };
-
-      // Set completed_at when marking as completed
-      if (updates.status === 'completed') {
-        updateData.completed_at = new Date().toISOString();
-      } else if (updates.status !== 'completed') {
-        updateData.completed_at = null;
-      }
-
-      const { error } = await supabase
-        .from('tasks')
-        .update(updateData)
-        .eq('id', id);
-
-      if (error) throw error;
+      const db = await getDb();
+      db.run(
+        `UPDATE tasks SET title = ?, description = ?, priority = ?, due_date = ?, points = ?, status = ?, updated_at = datetime('now') WHERE id = ?`,
+        [
+          updates.title,
+          updates.description,
+          updates.priority,
+          updates.dueDate ? updates.dueDate.toISOString() : null,
+          updates.points,
+          updates.status,
+          id,
+        ]
+      );
+      await persistDb();
       await fetchTasks();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update task');
@@ -118,16 +102,71 @@ export const useTasks = () => {
     }
   };
 
-  const deleteTask = async (id: string) => {
-    if (!user) return;
-
+  const completeTask = async (id: string) => {
+    setError(null);
     try {
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', id);
+      const db = await getDb();
+      // Get the task and its stock
+      const taskRes = db.exec('SELECT * FROM tasks WHERE id = ?', [id]);
+      const taskRow = taskRes[0]?.values?.[0];
+      const taskCols = taskRes[0]?.columns || [];
+      if (!taskRow) throw new Error('Task not found');
+      const taskObj: any = {};
+      taskCols.forEach((col, i) => (taskObj[col] = taskRow[i]));
+      const stockRes = db.exec('SELECT * FROM stocks WHERE id = ?', [taskObj.stock_id]);
+      const stockRow = stockRes[0]?.values?.[0];
+      const stockCols = stockRes[0]?.columns || [];
+      if (!stockRow) throw new Error('Stock not found');
+      const stockObj: any = {};
+      stockCols.forEach((col, i) => (stockObj[col] = stockRow[i]));
+      // Calculate score
+      const score = calculateTaskScore({
+        priority: taskObj.priority || 'medium',
+        complexity: taskObj.complexity || 1,
+        type: taskObj.type,
+        dueDate: taskObj.due_date ? new Date(taskObj.due_date) : undefined,
+        completedAt: new Date(),
+      });
+      // Update task
+      db.run(
+        `UPDATE tasks SET status = 'completed', completed_at = datetime('now'), updated_at = datetime('now'), score = ? WHERE id = ?`,
+        [score, id]
+      );
+      // Update stock current_score and last_activity_at
+      const newScore = (stockObj.current_score || 500) + score;
+      db.run(
+        `UPDATE stocks SET current_score = ?, last_activity_at = datetime('now') WHERE id = ?`,
+        [newScore, stockObj.id]
+      );
+      // Insert into stock_performance_history
+      db.run(
+        `INSERT INTO stock_performance_history (stock_id, date, daily_score, score_delta, delta_percent, tasks_completed, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+        [
+          stockObj.id,
+          new Date().toISOString().split('T')[0],
+          newScore,
+          score,
+          stockObj.current_score ? (score / stockObj.current_score) * 100 : 0,
+          1,
+        ]
+      );
+      await persistDb();
+      await fetchTasks();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to complete task');
+      throw err;
+    }
+  };
 
-      if (error) throw error;
+  const deleteTask = async (id: string) => {
+    setError(null);
+    try {
+      const db = await getDb();
+      db.run(
+        `DELETE FROM tasks WHERE id = ?`,
+        [id]
+      );
+      await persistDb();
       await fetchTasks();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete task');
@@ -135,16 +174,10 @@ export const useTasks = () => {
     }
   };
 
-  const completeTask = async (id: string) => {
-    await updateTask(id, { 
-      status: 'completed',
-      completedAt: new Date()
-    });
-  };
-
   useEffect(() => {
     fetchTasks();
-  }, [user]);
+    // eslint-disable-next-line
+  }, []);
 
   return {
     tasks,
@@ -152,8 +185,8 @@ export const useTasks = () => {
     error,
     createTask,
     updateTask,
-    deleteTask,
     completeTask,
+    deleteTask,
     refetch: fetchTasks,
   };
 };
