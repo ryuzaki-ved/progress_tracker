@@ -53,14 +53,13 @@ export const useIndex = () => {
       const changePercent = yesterdayValue > 0 ? (change / yesterdayValue) * 100 : 0;
       // Build history array
       const liveValue = getCurrentIndexValue();
-      if (!history.some(h => h.date.toISOString().split('T')[0] === today)) {
-        history.push({ date: new Date(), value: liveValue });
-      }
+      const historyWithoutToday = history.filter((h: { date: Date }) => h.date.toISOString().split('T')[0] !== today);
+      const newHistory = [...historyWithoutToday, { date: new Date(), value: liveValue }];
       setIndexData({
         value: todayValue,
         change,
         changePercent,
-        history: history.length > 0 ? history : [{ date: new Date(), value: todayValue }],
+        history: newHistory.length > 0 ? newHistory : [{ date: new Date(), value: todayValue }],
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch index data');
@@ -102,8 +101,10 @@ export const useIndex = () => {
   };
 
   useEffect(() => {
-    fetchIndexData();
-    updateIndexHistory();
+    if (stocks && stocks.length > 0) {
+      fetchIndexData();
+      updateIndexHistory();
+    }
     // eslint-disable-next-line
   }, [stocks]);
 

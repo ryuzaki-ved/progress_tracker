@@ -180,8 +180,15 @@ export const Analytics: React.FC = () => {
         <Card>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Index Performance</h3>
           <div className="h-64">
+            {console.log('Chart data:', indexData.history.map(h => ({
+              ...h,
+              date: typeof h.date === 'string' ? h.date : h.date.toISOString().split('T')[0]
+            })))}
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={indexData.history}>
+              <LineChart data={indexData.history.map(h => ({
+                ...h,
+                date: typeof h.date === 'string' ? h.date : h.date.toISOString().split('T')[0]
+              }))}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" tickFormatter={(value) => new Date(value).toLocaleDateString()} />
                 <YAxis />
