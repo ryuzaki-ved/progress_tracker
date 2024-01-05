@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Moon, Sun, Palette, Sliders, Bell, Shield } from 'lucide-react';
+import { Save, Moon, Sun, Palette, Sliders, Bell, Shield, Monitor } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useStocks } from '../hooks/useStocks';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../contexts/ThemeContext';
 
 export const Settings: React.FC = () => {
   const { user } = useAuth();
   const { stocks, updateStock } = useStocks();
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('light');
+  const { mode, accent, setMode, setAccent } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [autoDecay, setAutoDecay] = useState(true);
   const [decayRate, setDecayRate] = useState(1);
@@ -200,21 +201,21 @@ export const Settings: React.FC = () => {
                 {[
                   { value: 'light', label: 'Light', icon: Sun },
                   { value: 'dark', label: 'Dark', icon: Moon },
-                  { value: 'system', label: 'System', icon: Sliders }
+                  { value: 'system', label: 'System', icon: Monitor }
                 ].map(({ value, label, icon: Icon }) => (
                   <motion.button
                     key={value}
                     className={`p-3 rounded-lg border-2 transition-colors ${
-                      theme === value
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                      mode === value
+                        ? 'border-primary bg-primary/10 dark:bg-primary/20'
+                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                     }`}
-                    onClick={() => setTheme(value as any)}
+                    onClick={() => setMode(value as any)}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Icon className="w-5 h-5 mx-auto mb-1" />
-                    <div className="text-sm font-medium">{label}</div>
+                    <Icon className="w-5 h-5 mx-auto mb-1 text-gray-600 dark:text-gray-300" />
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">{label}</div>
                   </motion.button>
                 ))}
               </div>
@@ -223,10 +224,19 @@ export const Settings: React.FC = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
               <div className="flex space-x-2">
-                {['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500'].map(color => (
+                {[
+                  { name: 'blue', class: 'bg-blue-500' },
+                  { name: 'green', class: 'bg-green-500' },
+                  { name: 'purple', class: 'bg-purple-500' },
+                  { name: 'orange', class: 'bg-orange-500' },
+                  { name: 'pink', class: 'bg-pink-500' },
+                ].map(({ name, class: colorClass }) => (
                   <motion.button
-                    key={color}
-                    className={`w-8 h-8 rounded-full ${color} ring-2 ring-offset-2 ring-transparent hover:ring-gray-300`}
+                    key={name}
+                    className={`w-8 h-8 rounded-full ${colorClass} ring-2 ring-offset-2 dark:ring-offset-gray-800 ${
+                      accent === name ? 'ring-gray-400 dark:ring-gray-500' : 'ring-transparent hover:ring-gray-300 dark:hover:ring-gray-600'
+                    }`}
+                    onClick={() => setAccent(name as any)}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                   />
@@ -251,7 +261,7 @@ export const Settings: React.FC = () => {
               </div>
               <motion.button
                 className={`relative w-12 h-6 rounded-full transition-colors ${
-                  notifications ? 'bg-blue-500' : 'bg-gray-300'
+                  notifications ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
                 onClick={() => setNotifications(!notifications)}
                 whileTap={{ scale: 0.95 }}
@@ -352,7 +362,7 @@ export const Settings: React.FC = () => {
               </div>
               <motion.button
                 className={`relative w-12 h-6 rounded-full transition-colors ${
-                  autoDecay ? 'bg-blue-500' : 'bg-gray-300'
+                  autoDecay ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
                 onClick={() => setAutoDecay(!autoDecay)}
                 whileTap={{ scale: 0.95 }}
@@ -426,7 +436,7 @@ export const Settings: React.FC = () => {
             <div className="pt-4 border-t border-gray-200">
               <Button 
                 variant="outline" 
-                className="w-full text-red-600 hover:bg-red-50 hover:text-red-700"
+                className="w-full text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
                 onClick={handleResetData}
               >
                 Reset All Data

@@ -17,7 +17,7 @@ export interface Task {
   id: string;
   title: string;
   description?: string;
-  dueDate: Date;
+  dueDate: Date | null | undefined;
   priority: 'low' | 'medium' | 'high';
   status: 'pending' | 'completed' | 'overdue';
   stockId: string;

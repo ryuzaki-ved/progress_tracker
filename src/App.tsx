@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { SidebarProvider } from './contexts/SidebarContext';
 import { AuthForm } from './components/auth/AuthForm';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
@@ -30,26 +32,30 @@ function App() {
   }
 
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <div className="flex">
-          <Sidebar />
-          <div className="flex-1">
-            <Header />
-            <main className="overflow-auto">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/stocks" element={<Stocks />} />
-                <Route path="/tasks" element={<Tasks />} />
-                <Route path="/calendar" element={<Calendar />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/settings" element={<Settings />} />
-              </Routes>
-            </main>
+    <ThemeProvider>
+      <SidebarProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+            <div className="flex">
+              <Sidebar />
+              <div className="flex-1">
+                <Header />
+                <main className="overflow-auto">
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/stocks" element={<Stocks />} />
+                    <Route path="/tasks" element={<Tasks />} />
+                    <Route path="/calendar" element={<Calendar />} />
+                    <Route path="/analytics" element={<Analytics />} />
+                    <Route path="/settings" element={<Settings />} />
+                  </Routes>
+                </main>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </Router>
+        </Router>
+      </SidebarProvider>
+    </ThemeProvider>
   );
 }
 

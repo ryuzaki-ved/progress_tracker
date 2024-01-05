@@ -32,7 +32,7 @@ export const Calendar: React.FC = () => {
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
   const getTasksForDate = (date: Date) => {
-    return tasks.filter(task => isSameDay(task.dueDate, date));
+    return tasks.filter(task => task.dueDate && isSameDay(task.dueDate, date));
   };
 
   const getStockName = (stockId: string) => {

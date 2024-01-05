@@ -8,8 +8,11 @@ import {
   Home, 
   PieChart, 
   Settings,
-  TrendingUp 
+  TrendingUp,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
+import { useSidebar } from '../../contexts/SidebarContext';
 
 const menuItems = [
   { path: '/', icon: Home, label: 'Dashboard' },
@@ -22,18 +25,32 @@ const menuItems = [
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
+  const { isCollapsed, toggleSidebar } = useSidebar();
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-screen sticky top-0">
+    <motion.div
+      className={`bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0 transition-all duration-300 ${
+        isCollapsed ? 'w-16' : 'w-64'
+      }`}
+      animate={{ width: isCollapsed ? 64 : 256 }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
+    >
       <div className="p-6">
-        <div className="flex items-center space-x-3 mb-8">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+        <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
             <PieChart className="w-6 h-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">LifeStock</h1>
-            <p className="text-sm text-gray-500">Track your potential</p>
-          </div>
+          {!isCollapsed && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">LifeStock</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Track your potential</p>
+            </motion.div>
+          )}
         </div>
         
         <nav className="space-y-2">
@@ -44,22 +61,53 @@ export const Sidebar: React.FC = () => {
             return (
               <Link key={item.path} to={item.path}>
                 <motion.div
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200 ${
+                  className={`flex items-center px-3 py-2 rounded-lg transition-colors duration-200 ${
                     isActive 
-                      ? 'bg-blue-50 text-blue-600' 
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                  whileHover={{ x: 2 }}
+                      ? 'bg-primary/10 text-primary dark:bg-primary/20' 
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                  } ${isCollapsed ? 'justify-center' : 'space-x-3'}`}
+                  whileHover={{ x: isCollapsed ? 0 : 2 }}
                   whileTap={{ scale: 0.98 }}
+                  title={isCollapsed ? item.label : undefined}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  {!isCollapsed && (
+                    <motion.span
+                      className="font-medium"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
                 </motion.div>
               </Link>
             );
           })}
         </nav>
+
+        {/* Collapse Toggle Button */}
+        <motion.button
+          onClick={toggleSidebar}
+          className={`mt-8 w-full flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 ${
+            isCollapsed ? 'justify-center' : 'space-x-3'
+          }`}
+          whileHover={{ x: isCollapsed ? 0 : 2 }}
+          whileTap={{ scale: 0.98 }}
+          title={isCollapsed ? (isCollapsed ? 'Expand sidebar' : 'Collapse sidebar') : undefined}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="w-5 h-5" />
+          ) : (
+            <>
+              <ChevronLeft className="w-5 h-5" />
+              <span className="font-medium">Collapse</span>
+            </>
+          )}
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 };

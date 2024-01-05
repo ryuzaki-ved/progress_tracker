@@ -35,7 +35,11 @@ export const Tasks: React.FC = () => {
   });
 
   const sortedTasks = filteredTasks.sort((a, b) => {
-    if (sortBy === 'dueDate') return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    if (sortBy === 'dueDate') {
+      const aDate = a.dueDate ? new Date(a.dueDate).getTime() : 0;
+      const bDate = b.dueDate ? new Date(b.dueDate).getTime() : 0;
+      return aDate - bDate;
+    }
     if (sortBy === 'priority') {
       const priorityOrder = { high: 3, medium: 2, low: 1 };
       return priorityOrder[b.priority] - priorityOrder[a.priority];
@@ -135,7 +139,7 @@ export const Tasks: React.FC = () => {
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <div className="flex items-center space-x-1">
                     <Calendar className="w-4 h-4" />
-                    <span>{task.dueDate.toLocaleDateString()}</span>
+                    <span>{task.dueDate ? task.dueDate.toLocaleDateString() : 'No due date'}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Flag className="w-4 h-4" />
