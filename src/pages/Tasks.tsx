@@ -69,7 +69,7 @@ export const Tasks: React.FC = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tasks</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Tasks</h1>
           <p className="text-gray-600 mt-1">Manage your productivity tasks</p>
         </div>
         <Button onClick={() => setShowAddModal(true)}>
@@ -126,7 +126,7 @@ export const Tasks: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1">{task.title}</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{task.title}</h3>
                     {task.description && (
                       <p className="text-sm text-gray-600 mb-2">{task.description}</p>
                     )}
@@ -152,7 +152,7 @@ export const Tasks: React.FC = () => {
                     <div className={`w-4 h-4 ${getStockColor(task.stockId)} rounded`}></div>
                     <span className="text-sm text-gray-600">{getStockName(task.stockId)}</span>
                   </div>
-                  <div className="text-sm font-medium text-gray-900">{task.points} pts</div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">{task.points} pts</div>
                 </div>
 
                 <Button 
@@ -204,7 +204,7 @@ export const Tasks: React.FC = () => {
 
       {/* Task Stats */}
       <Card>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Task Statistics</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Task Statistics</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">
@@ -225,7 +225,7 @@ export const Tasks: React.FC = () => {
             <div className="text-sm text-gray-600">Overdue</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               {tasks.reduce((sum, task) => sum + task.points, 0)}
             </div>
             <div className="text-sm text-gray-600">Total Points</div>

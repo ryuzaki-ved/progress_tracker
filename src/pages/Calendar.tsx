@@ -59,7 +59,7 @@ export const Calendar: React.FC = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Calendar</h1>
           <p className="text-gray-600 mt-1">Schedule and track your productivity tasks</p>
         </div>
         <Button onClick={() => setShowAddModal(true)}>
@@ -73,7 +73,7 @@ export const Calendar: React.FC = () => {
         <div className="lg:col-span-2">
           <Card>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 {format(currentDate, 'MMMM yyyy')}
               </h2>
               <div className="flex items-center space-x-2">
@@ -112,9 +112,7 @@ export const Calendar: React.FC = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <div className={`text-sm font-medium mb-1 ${
-                      isToday ? 'text-indigo-600' : 'text-gray-900'
-                    }`}>
+                    <div className={`text-sm font-medium mb-1 ${isToday ? 'text-indigo-600' : 'text-gray-900 dark:text-white'}`}>
                       {format(day, 'd')}
                     </div>
                     <div className="space-y-1">
@@ -142,7 +140,7 @@ export const Calendar: React.FC = () => {
         {/* Task Details */}
         <div className="space-y-6">
           <Card>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'Select a date'}
             </h3>
             {selectedDate ? (
@@ -190,11 +188,11 @@ export const Calendar: React.FC = () => {
 
           {/* Quick Stats */}
           <Card>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">This Month</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">This Month</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Total Tasks</span>
-                <span className="font-semibold text-gray-900">{tasks.length}</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{tasks.length}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Completed</span>

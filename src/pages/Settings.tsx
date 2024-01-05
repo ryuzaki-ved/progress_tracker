@@ -156,8 +156,8 @@ export const Settings: React.FC = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-600 mt-1">Customize your productivity tracking experience</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Customize your productivity tracking experience</p>
         </div>
         <Button onClick={handleSaveChanges} disabled={saving}>
           <span>
@@ -190,13 +190,13 @@ export const Settings: React.FC = () => {
         {/* Appearance */}
         <Card>
           <div className="flex items-center space-x-3 mb-4">
-            <Palette className="w-5 h-5 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Appearance</h3>
+            <Palette className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Appearance</h3>
           </div>
           
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Theme</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Theme</label>
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { value: 'light', label: 'Light', icon: Sun },
@@ -222,7 +222,7 @@ export const Settings: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Accent Color</label>
               <div className="flex space-x-2">
                 {[
                   { name: 'blue', class: 'bg-blue-500' },
@@ -249,15 +249,15 @@ export const Settings: React.FC = () => {
         {/* Notifications */}
         <Card>
           <div className="flex items-center space-x-3 mb-4">
-            <Bell className="w-5 h-5 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+            <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h3>
           </div>
           
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-gray-900">Push Notifications</div>
-                <div className="text-sm text-gray-600">Receive alerts for due tasks and milestones</div>
+                <div className="font-medium text-gray-900 dark:text-white">Push Notifications</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Receive alerts for due tasks and milestones</div>
               </div>
               <motion.button
                 className={`relative w-12 h-6 rounded-full transition-colors ${
@@ -275,19 +275,19 @@ export const Settings: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <div className="font-medium text-gray-900">Notification Schedule</div>
+              <div className="font-medium text-gray-900 dark:text-white">Notification Schedule</div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">Daily Summary</label>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Daily Summary</label>
                   <input
                     type="time"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
                     defaultValue="09:00"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">Task Reminders</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Task Reminders</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
                     <option>30 minutes before</option>
                     <option>1 hour before</option>
                     <option>1 day before</option>
@@ -301,12 +301,12 @@ export const Settings: React.FC = () => {
         {/* Stock Weights */}
         <Card className="lg:col-span-2">
           <div className="flex items-center space-x-3 mb-4">
-            <Sliders className="w-5 h-5 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Stock Weights</h3>
+            <Sliders className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Stock Weights</h3>
           </div>
           
           <div className="space-y-4">
-            <div className="text-sm text-gray-600 mb-4">
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Adjust how much each life category contributes to your overall index score.
               Total weight: <span className="font-semibold">{(totalWeight * 100).toFixed(0)}%</span>
             </div>
@@ -315,7 +315,7 @@ export const Settings: React.FC = () => {
               {stocks.map(stock => (
                 <motion.div
                   key={stock.id}
-                  className="p-4 border border-gray-200 rounded-lg"
+                  className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
@@ -323,11 +323,11 @@ export const Settings: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       <div className={`w-8 h-8 ${stock.color} rounded-lg`}></div>
                       <div>
-                        <div className="font-medium text-gray-900">{stock.name}</div>
-                        <div className="text-sm text-gray-600">{stock.category}</div>
+                        <div className="font-medium text-gray-900 dark:text-white">{stock.name}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">{stock.category}</div>
                       </div>
                     </div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">
                       {(stockWeights[stock.id] * 100).toFixed(0)}%
                     </div>
                   </div>
@@ -339,7 +339,7 @@ export const Settings: React.FC = () => {
                     step="0.05"
                     value={stockWeights[stock.id]}
                     onChange={(e) => handleWeightChange(stock.id, parseFloat(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
                   />
                 </motion.div>
               ))}
@@ -350,15 +350,15 @@ export const Settings: React.FC = () => {
         {/* System Settings */}
         <Card>
           <div className="flex items-center space-x-3 mb-4">
-            <Shield className="w-5 h-5 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-900">System Settings</h3>
+            <Shield className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">System Settings</h3>
           </div>
           
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-gray-900">Auto Decay</div>
-                <div className="text-sm text-gray-600">Automatically decrease scores over time without activity</div>
+                <div className="font-medium text-gray-900 dark:text-white">Auto Decay</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Automatically decrease scores over time without activity</div>
               </div>
               <motion.button
                 className={`relative w-12 h-6 rounded-full transition-colors ${
@@ -377,7 +377,7 @@ export const Settings: React.FC = () => {
 
             {autoDecay && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Decay Rate: {decayRate}% per day
                 </label>
                 <input
@@ -387,14 +387,14 @@ export const Settings: React.FC = () => {
                   step="0.1"
                   value={decayRate}
                   onChange={(e) => setDecayRate(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Data Retention</label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Data Retention</label>
+              <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
                 <option>Keep all data</option>
                 <option>1 year</option>
                 <option>6 months</option>
@@ -407,13 +407,13 @@ export const Settings: React.FC = () => {
         {/* Export & Import */}
         <Card>
           <div className="flex items-center space-x-3 mb-4">
-            <Save className="w-5 h-5 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Data Management</h3>
+            <Save className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Data Management</h3>
           </div>
           
           <div className="space-y-4">
             <div>
-              <div className="font-medium text-gray-900 mb-2">Export Data</div>
+              <div className="font-medium text-gray-900 dark:text-white mb-2">Export Data</div>
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="outline" size="sm" onClick={() => handleExportData('json')}>
                   Export JSON
@@ -425,15 +425,15 @@ export const Settings: React.FC = () => {
             </div>
 
             <div>
-              <div className="font-medium text-gray-900 mb-2">Import Data</div>
+              <div className="font-medium text-gray-900 dark:text-white mb-2">Import Data</div>
               <input
                 type="file"
                 accept=".json,.csv"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
-            <div className="pt-4 border-t border-gray-200">
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
               <Button 
                 variant="outline" 
                 className="w-full text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20"

@@ -85,14 +85,14 @@ export const Analytics: React.FC = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-600 mt-1">Insights into your productivity performance</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Analytics</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Insights into your productivity performance</p>
         </div>
         <div className="flex items-center space-x-4">
           <select 
             value={timeRange} 
             onChange={(e) => setTimeRange(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>
@@ -101,7 +101,7 @@ export const Analytics: React.FC = () => {
           <select 
             value={selectedStock} 
             onChange={(e) => setSelectedStock(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
             <option value="all">All Stocks</option>
             {stocks.map(stock => (
@@ -178,7 +178,7 @@ export const Analytics: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Index Performance Chart */}
         <Card>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Index Performance</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Index Performance</h3>
           <div className="h-64">
             {console.log('Chart data:', indexData.history.map(h => ({
               ...h,
@@ -210,7 +210,7 @@ export const Analytics: React.FC = () => {
 
         {/* Stock Performance Chart */}
         <Card>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Stock Performance</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stock Performance</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stockPerformanceData}>
@@ -226,7 +226,7 @@ export const Analytics: React.FC = () => {
 
         {/* Task Completion Rate */}
         <Card>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Task Completion by Stock</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Task Completion by Stock</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <RechartsPieChart>
@@ -252,7 +252,7 @@ export const Analytics: React.FC = () => {
 
         {/* Daily Productivity */}
         <Card>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Daily Productivity</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Daily Productivity</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyProductivityData}>
@@ -271,17 +271,17 @@ export const Analytics: React.FC = () => {
 
       {/* Detailed Analytics */}
       <Card>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Stock Performance Details</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stock Performance Details</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-medium text-gray-900">Stock</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">Current Score</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">Change</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">Volatility</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">Tasks</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">Completion Rate</th>
+              <tr className="border-b border-gray-200 dark:border-gray-700">
+                <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Stock</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Current Score</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Change</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Volatility</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Tasks</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Completion Rate</th>
               </tr>
             </thead>
             <tbody>
@@ -293,7 +293,7 @@ export const Analytics: React.FC = () => {
                 return (
                   <motion.tr
                     key={stock.id}
-                    className="border-b border-gray-100 hover:bg-gray-50"
+                    className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
@@ -301,12 +301,12 @@ export const Analytics: React.FC = () => {
                       <div className="flex items-center space-x-3">
                         <div className={`w-8 h-8 ${stock.color} rounded-lg`}></div>
                         <div>
-                          <div className="font-medium text-gray-900">{stock.name}</div>
-                          <div className="text-sm text-gray-600">{stock.category}</div>
+                          <div className="font-medium text-gray-900 dark:text-white">{stock.name}</div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">{stock.category}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4 font-semibold text-gray-900">{stock.currentScore}</td>
+                    <td className="py-3 px-4 font-semibold text-gray-900 dark:text-white">{stock.currentScore}</td>
                     <td className="py-3 px-4">
                       <div className={`flex items-center ${stock.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {stock.change >= 0 ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
@@ -322,7 +322,7 @@ export const Analytics: React.FC = () => {
                         {stock.volatility}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-gray-900">{stockTasks.length}</td>
+                    <td className="py-3 px-4 text-gray-900 dark:text-white">{stockTasks.length}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center space-x-2">
                         <div className="w-16 bg-gray-200 rounded-full h-2">
@@ -331,7 +331,7 @@ export const Analytics: React.FC = () => {
                             style={{ width: `${completionRate}%` }}
                           ></div>
                         </div>
-                        <span className="text-sm text-gray-600">{completionRate.toFixed(0)}%</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{completionRate.toFixed(0)}%</span>
                       </div>
                     </td>
                   </motion.tr>

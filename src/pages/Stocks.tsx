@@ -62,7 +62,7 @@ export const Stocks: React.FC = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Stocks Overview</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Stocks Overview</h1>
           <p className="text-gray-600 mt-1">Monitor your life categories performance</p>
           <div className="text-sm font-medium text-blue-700 mt-2">
             Total Weight: {totalWeight}%
@@ -89,7 +89,7 @@ export const Stocks: React.FC = () => {
                     <Activity className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{stock.name}</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{stock.name}</h3>
                     <p className="text-sm text-gray-600">{stock.category}</p>
                   </div>
                 </div>
@@ -101,7 +101,7 @@ export const Stocks: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-2xl font-bold text-gray-900">{stock.currentScore}</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{stock.currentScore}</div>
                     <div className="text-sm text-gray-600">Current Score</div>
                   </div>
                   <div className="text-right">
@@ -172,7 +172,7 @@ export const Stocks: React.FC = () => {
 
       {/* Stock Performance Summary */}
       <Card>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Summary</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Performance Summary</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">
@@ -187,7 +187,7 @@ export const Stocks: React.FC = () => {
             <div className="text-sm text-gray-600">Losing Stocks</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               {stocks.filter(s => s.change === 0).length}
             </div>
             <div className="text-sm text-gray-600">Stable Stocks</div>
@@ -221,34 +221,34 @@ export const Stocks: React.FC = () => {
       <AddTaskModal
         isOpen={showAddTaskModal}
         onClose={() => setShowAddTaskModal(false)}
-        onSubmit={createTask}
+        onSubmit={createTask as any}
         stocks={stocks}
         defaultStockId={selectedStockId}
       />
 
       {/* Stock Performance History UI */}
       <Card className="mt-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Stock Performance History (Debug)</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stock Performance History (Debug)</h3>
         {stocks.map(stock => (
           <div key={stock.id} className="mb-6">
-            <div className="font-bold mb-2">{stock.name}</div>
+            <div className="font-bold mb-2 text-gray-900 dark:text-white">{stock.name}</div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-xs border">
                 <thead>
                   <tr>
-                    <th className="border px-2 py-1">Date</th>
-                    <th className="border px-2 py-1">Score</th>
-                    <th className="border px-2 py-1">Delta</th>
-                    <th className="border px-2 py-1">% Change</th>
+                    <th className="border px-2 py-1 text-gray-900 dark:text-white">Date</th>
+                    <th className="border px-2 py-1 text-gray-900 dark:text-white">Score</th>
+                    <th className="border px-2 py-1 text-gray-900 dark:text-white">Delta</th>
+                    <th className="border px-2 py-1 text-gray-900 dark:text-white">% Change</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(performanceHistory[stock.id] || []).map((h, i) => (
                     <tr key={i}>
-                      <td className="border px-2 py-1">{h.date}</td>
-                      <td className="border px-2 py-1">{h.daily_score}</td>
-                      <td className="border px-2 py-1">{h.score_delta}</td>
-                      <td className="border px-2 py-1">{h.delta_percent?.toFixed(2)}%</td>
+                      <td className="border px-2 py-1 text-gray-900 dark:text-white">{h.date}</td>
+                      <td className="border px-2 py-1 text-gray-900 dark:text-white">{h.daily_score}</td>
+                      <td className="border px-2 py-1 text-gray-900 dark:text-white">{h.score_delta}</td>
+                      <td className="border px-2 py-1 text-gray-900 dark:text-white">{h.delta_percent?.toFixed(2)}%</td>
                     </tr>
                   ))}
                 </tbody>
