@@ -88,7 +88,7 @@ export const useStocks = () => {
       if (err.message && err.message.includes('UNIQUE constraint failed')) {
         setError('A stock with this name already exists.');
       } else {
-        setError(err instanceof Error ? err.message : 'Failed to create stock');
+      setError(err instanceof Error ? err.message : 'Failed to create stock');
       }
       throw err;
     }

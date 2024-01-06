@@ -9,12 +9,85 @@ import { useTasks } from '../hooks/useTasks';
 import { useIndex } from '../hooks/useIndex';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../contexts/ThemeContext';
+import { getDb, persistDb } from '../lib/sqlite';
 
 export const Dashboard: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
   const { tasks, loading: tasksLoading } = useTasks();
-  const { indexData, loading: indexLoading } = useIndex();
+  const { indexData, loading: indexLoading, refetch } = useIndex();
   const { isDark } = useTheme();
+  const [missingDays, setMissingDays] = useState<string[]>([]);
+  const [manualValues, setManualValues] = useState<Record<string, number>>({});
+  const [editValues, setEditValues] = useState<Record<string, number>>({});
+  const [editMode, setEditMode] = useState(false);
+
+  useEffect(() => {
+    if (indexData && indexData.history) {
+      // Find missing days in the last 7 days
+      const days = [];
+      const today = new Date();
+      const historyDates = indexData.history.map(h => h.date.toISOString().split('T')[0]);
+      for (let i = 6; i >= 1; i--) {
+        const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+        const ds = d.toISOString().split('T')[0];
+        if (!historyDates.includes(ds)) days.push(ds);
+      }
+      setMissingDays(days);
+    }
+  }, [indexData]);
+
+  // Build last 7 days with values
+  const last7Days = React.useMemo(() => {
+    if (!indexData || !indexData.history) return [];
+    const today = new Date();
+    const days: { date: string, value: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+      const ds = d.toISOString().split('T')[0];
+      const found = indexData.history.find(h => h.date.toISOString().split('T')[0] === ds);
+      days.push({ date: ds, value: found ? found.value : 500 });
+    }
+    return days;
+  }, [indexData]);
+
+  const handleManualValueChange = (date: string, value: number) => {
+    setManualValues(v => ({ ...v, [date]: value }));
+  };
+
+  const handleAssignValues = async () => {
+    const db = await getDb();
+    for (const date of missingDays) {
+      const value = manualValues[date] ?? 500;
+      db.run(
+        `INSERT INTO index_history (user_id, date, index_value, daily_change, change_percent, created_at) VALUES (?, ?, ?, 0, 0, datetime('now'))`,
+        [1, date, value]
+      );
+    }
+    await persistDb();
+    setManualValues({});
+    setMissingDays([]);
+    refetch();
+  };
+
+  const handleEditValueChange = (date: string, value: number) => {
+    setEditValues(v => ({ ...v, [date]: value }));
+  };
+
+  const handleSaveEdits = async () => {
+    const db = await getDb();
+    for (const { date } of last7Days) {
+      if (editValues[date] !== undefined) {
+        db.run(
+          `UPDATE index_history SET index_value = ? WHERE user_id = ? AND date = ?`,
+          [editValues[date], 1, date]
+        );
+      }
+    }
+    await persistDb();
+    setEditMode(false);
+    setEditValues({});
+    refetch();
+  };
 
   if (stocksLoading || tasksLoading || indexLoading) {
     return (
@@ -51,6 +124,12 @@ export const Dashboard: React.FC = () => {
     task.completedAt && 
     task.completedAt.toDateString() === new Date().toDateString()
   ).length;
+
+  // Calculate min/max for dynamic Y-axis
+  const indexHistoryValues = indexData.history.map(h => h.value);
+  const minY = Math.min(...indexHistoryValues);
+  const maxY = Math.max(...indexHistoryValues);
+  const yMargin = Math.max(10, Math.round((maxY - minY) * 0.1));
 
   return (
     <div className="p-6 space-y-6">
@@ -93,7 +172,7 @@ export const Dashboard: React.FC = () => {
             <LineChart data={indexData.history}>
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#CBD5E1'} />
               <XAxis dataKey="date" tickFormatter={(value) => new Date(value).toLocaleDateString()} stroke={isDark ? '#CBD5E1' : '#334155'} />
-              <YAxis stroke={isDark ? '#CBD5E1' : '#334155'} />
+              <YAxis stroke={isDark ? '#CBD5E1' : '#334155'} domain={[minY - yMargin, maxY + yMargin]} />
               <Tooltip 
                 labelFormatter={(value) => new Date(value).toLocaleDateString()}
                 formatter={(value) => [`${value}`, 'Index Value']}
@@ -110,6 +189,69 @@ export const Dashboard: React.FC = () => {
           </ResponsiveContainer>
         </div>
       </Card>
+
+      {missingDays.length > 0 && (
+        <Card className="bg-yellow-50 border-yellow-200 mb-6">
+          <h3 className="text-lg font-semibold text-yellow-900 mb-2">Assign Index Value for Missing Days</h3>
+          <div className="space-y-2">
+            {missingDays.map(date => (
+              <div key={date} className="flex items-center space-x-4">
+                <span className="w-32 text-gray-800">{new Date(date).toLocaleDateString()}</span>
+                <input
+                  type="number"
+                  className="border rounded px-2 py-1 w-32"
+                  value={manualValues[date] ?? 500}
+                  onChange={e => handleManualValueChange(date, Number(e.target.value))}
+                  min={0}
+                  max={2000}
+                />
+              </div>
+            ))}
+          </div>
+          <button
+            className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+            onClick={handleAssignValues}
+          >
+            Assign Values
+          </button>
+        </Card>
+      )}
+
+      {last7Days.length > 0 && (
+        <Card className="bg-blue-50 border-blue-200 mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold text-blue-900">Edit Index Values (Last 7 Days)</h3>
+            {!editMode ? (
+              <button className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={() => setEditMode(true)}>
+                Edit
+              </button>
+            ) : (
+              <button className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700" onClick={handleSaveEdits}>
+                Save Changes
+              </button>
+            )}
+          </div>
+          <div className="space-y-2">
+            {last7Days.map(({ date, value }) => (
+              <div key={date} className="flex items-center space-x-4">
+                <span className="w-32 text-gray-800">{new Date(date).toLocaleDateString()}</span>
+                {editMode ? (
+                  <input
+                    type="number"
+                    className="border rounded px-2 py-1 w-32"
+                    value={editValues[date] !== undefined ? editValues[date] : value}
+                    onChange={e => handleEditValueChange(date, Number(e.target.value))}
+                    min={0}
+                    max={2000}
+                  />
+                ) : (
+                  <span className="w-32 text-gray-900 font-semibold">{value}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

@@ -81,6 +81,12 @@ export const Analytics: React.FC = () => {
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
+  // Calculate min/max for dynamic Y-axis (Index Performance Chart)
+  const indexHistoryValues = indexData.history.map(h => h.value);
+  const minY = Math.min(...indexHistoryValues);
+  const maxY = Math.max(...indexHistoryValues);
+  const yMargin = Math.max(10, Math.round((maxY - minY) * 0.1));
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -191,7 +197,7 @@ export const Analytics: React.FC = () => {
               }))}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" tickFormatter={(value) => new Date(value).toLocaleDateString()} />
-                <YAxis />
+                <YAxis domain={[minY - yMargin, maxY + yMargin]} />
                 <Tooltip 
                   labelFormatter={(value) => new Date(value).toLocaleDateString()}
                   formatter={(value) => [`${value}`, 'Index Value']}

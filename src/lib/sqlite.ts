@@ -132,7 +132,7 @@ function migrateIndexHistoryTable(db: Database) {
 
 // Load database from IndexedDB
 async function loadDatabase(): Promise<Database> {
-  if (!SQL) SQL = await initSqlJs({ locateFile: file => `/sql-wasm.wasm` });
+  if (!SQL) SQL = await initSqlJs({ locateFile: file => 'public/sql-wasm.wasm' });
   const saved = await loadFromIndexedDB(DB_KEY);
   db = saved ? new SQL.Database(new Uint8Array(saved)) : new SQL.Database();
   db.exec(SCHEMA);

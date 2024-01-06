@@ -85,7 +85,7 @@ export const useIndex = () => {
         `SELECT index_value FROM index_history WHERE user_id = ? AND date = ?`,
         [currentUserId, yesterday]
       );
-      const yesterdayValue = yesterdayRes[0]?.values?.[0]?.[0] ?? 0;
+      const yesterdayValue = yesterdayRes[0]?.values?.[0]?.[0] ?? 500;
       const currentValue = getCurrentIndexValue();
       const change = currentValue - yesterdayValue;
       const changePercent = yesterdayValue > 0 ? (change / yesterdayValue) * 100 : 0;

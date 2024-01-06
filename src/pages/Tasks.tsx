@@ -159,7 +159,7 @@ export const Tasks: React.FC = () => {
                   variant={task.status === 'completed' ? 'secondary' : 'primary'} 
                   className="w-full"
                   disabled={task.status === 'completed'}
-                  onClick={() => task.status !== 'completed' && handleCompleteTask(task.id)}
+                 onClick={() => task.status !== 'completed' && handleCompleteTask(task.id)}
                 >
                   {task.status === 'completed' ? 'Completed' : 'Mark Complete'}
                 </Button>

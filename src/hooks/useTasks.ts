@@ -220,7 +220,7 @@ export const useTasks = () => {
         type: taskObj.type,
         dueDate: taskObj.due_date ? new Date(taskObj.due_date) : undefined,
         completedAt: taskObj.completed_at ? new Date(taskObj.completed_at) : undefined,
-      });
+    });
       // Update task
       db.run(
         `UPDATE tasks SET status = 'failed', completed_at = NULL, updated_at = datetime('now') WHERE id = ?`,
