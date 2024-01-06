@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Activity, Target } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Target, ChevronDown, ChevronRight } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Sparkline } from '../components/ui/Sparkline';
 import { useStocks } from '../hooks/useStocks';
@@ -20,6 +20,7 @@ export const Dashboard: React.FC = () => {
   const [manualValues, setManualValues] = useState<Record<string, number>>({});
   const [editValues, setEditValues] = useState<Record<string, number>>({});
   const [editMode, setEditMode] = useState(false);
+  const [editExpanded, setEditExpanded] = useState(false);
 
   useEffect(() => {
     if (indexData && indexData.history) {
@@ -219,37 +220,42 @@ export const Dashboard: React.FC = () => {
 
       {last7Days.length > 0 && (
         <Card className="bg-blue-50 border-blue-200 mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-blue-900">Edit Index Values (Last 7 Days)</h3>
+          <div className="flex items-center justify-between mb-2 cursor-pointer" onClick={() => setEditExpanded(v => !v)}>
+            <div className="flex items-center">
+              {editExpanded ? <ChevronDown className="w-5 h-5 mr-2 text-blue-700" /> : <ChevronRight className="w-5 h-5 mr-2 text-blue-700" />}
+              <h3 className="text-lg font-semibold text-blue-900">Edit Index Values (Last 7 Days)</h3>
+            </div>
             {!editMode ? (
-              <button className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={() => setEditMode(true)}>
+              <button className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={e => { e.stopPropagation(); setEditMode(true); setEditExpanded(true); }}>
                 Edit
               </button>
             ) : (
-              <button className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700" onClick={handleSaveEdits}>
+              <button className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700" onClick={e => { e.stopPropagation(); handleSaveEdits(); }}>
                 Save Changes
               </button>
             )}
           </div>
-          <div className="space-y-2">
-            {last7Days.map(({ date, value }) => (
-              <div key={date} className="flex items-center space-x-4">
-                <span className="w-32 text-gray-800">{new Date(date).toLocaleDateString()}</span>
-                {editMode ? (
-                  <input
-                    type="number"
-                    className="border rounded px-2 py-1 w-32"
-                    value={editValues[date] !== undefined ? editValues[date] : value}
-                    onChange={e => handleEditValueChange(date, Number(e.target.value))}
-                    min={0}
-                    max={2000}
-                  />
-                ) : (
-                  <span className="w-32 text-gray-900 font-semibold">{value}</span>
-                )}
-              </div>
-            ))}
-          </div>
+          {editExpanded && (
+            <div className="space-y-2 mt-2">
+              {last7Days.map(({ date, value }) => (
+                <div key={date} className="flex items-center space-x-4">
+                  <span className="w-32 text-gray-800">{new Date(date).toLocaleDateString()}</span>
+                  {editMode ? (
+                    <input
+                      type="number"
+                      className="border rounded px-2 py-1 w-32"
+                      value={editValues[date] !== undefined ? editValues[date] : value}
+                      onChange={e => handleEditValueChange(date, Number(e.target.value))}
+                      min={0}
+                      max={2000}
+                    />
+                  ) : (
+                    <span className="w-32 text-gray-900 font-semibold">{value}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
       )}
 
