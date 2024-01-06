@@ -5,10 +5,12 @@ import { Plus, TrendingUp, TrendingDown, Activity } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Sparkline } from '../components/ui/Sparkline';
+import { StreakCounter } from '../components/ui/StreakCounter';
 import { AddStockModal } from '../components/modals/AddStockModal';
 import { AddTaskModal } from '../components/modals/AddTaskModal';
 import { useStocks } from '../hooks/useStocks';
 import { useTasks } from '../hooks/useTasks';
+import { useStreaks } from '../hooks/useStreaks';
 import { getVolatilityColor } from '../utils/stockUtils';
 import { getDb } from '../lib/sqlite';
 import { Stock } from '../types';
@@ -16,6 +18,7 @@ import { Stock } from '../types';
 export const Stocks: React.FC = () => {
   const { stocks, loading, createStock, deleteStock, updateStock } = useStocks();
   const { createTask } = useTasks();
+  const { streaks } = useStreaks();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [selectedStockId, setSelectedStockId] = useState<string | undefined>(undefined);
@@ -130,6 +133,24 @@ export const Stocks: React.FC = () => {
                   <div>
                     Weight: {(stock.weight * 100).toFixed(0)}%
                   </div>
+                </div>
+
+                {/* Add streak indicators */}
+                <div className="flex items-center justify-between">
+                  <div className="flex space-x-2">
+                    {streaks.filter(s => s.isActive).map(streak => (
+                      <StreakCounter key={streak.id} streak={streak} size="sm" showLabel={false} />
+                    ))}
+                  </div>
+                  {stock.changePercent > 0 && (
+                    <motion.span
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="text-green-500"
+                    >
+                      📈
+                    </motion.span>
+                  )}
                 </div>
 
                 <Button

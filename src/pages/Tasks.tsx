@@ -3,14 +3,17 @@ import { motion } from 'framer-motion';
 import { Plus, Filter, Calendar, Flag } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { AchievementBadge } from '../components/ui/AchievementBadge';
 import { AddTaskModal } from '../components/modals/AddTaskModal';
 import { useTasks } from '../hooks/useTasks';
 import { useStocks } from '../hooks/useStocks';
+import { useAchievements } from '../hooks/useAchievements';
 import { getStatusColor, getPriorityColor } from '../utils/stockUtils';
 
 export const Tasks: React.FC = () => {
   const { tasks, loading: tasksLoading, completeTask, createTask, deleteTask, markAsNotCompleted, failTask } = useTasks();
   const { stocks, loading: stocksLoading } = useStocks();
+  const { achievements } = useAchievements();
   const [filter, setFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('dueDate');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -163,6 +166,18 @@ export const Tasks: React.FC = () => {
                 >
                   {task.status === 'completed' ? 'Completed' : 'Mark Complete'}
                 </Button>
+                
+                {/* Show confetti effect when task is completed */}
+                {task.status === 'completed' && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: [0, 1.2, 1] }}
+                    className="text-center py-2"
+                  >
+                    <span className="text-2xl">🎉</span>
+                  </motion.div>
+                )}
+                
                 {task.status === 'completed' && (
                   <Button
                     variant="outline"
@@ -204,7 +219,14 @@ export const Tasks: React.FC = () => {
 
       {/* Task Stats */}
       <Card>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Task Statistics</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Task Statistics</h3>
+          <div className="flex space-x-2">
+            {achievements.filter(a => a.isUnlocked && a.category === 'completion').slice(0, 3).map(achievement => (
+              <AchievementBadge key={achievement.id} achievement={achievement} size="sm" />
+            ))}
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">

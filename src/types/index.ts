@@ -33,6 +33,40 @@ export interface IndexData {
   history: { date: Date; value: number }[];
 }
 
+export interface Streak {
+  id: string;
+  type: 'daily_completion' | 'on_time' | 'no_missed';
+  currentStreak: number;
+  longestStreak: number;
+  lastActivityDate: Date;
+  isActive: boolean;
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  category: 'streak' | 'completion' | 'performance' | 'consistency';
+  requirement: number;
+  progress: number;
+  isUnlocked: boolean;
+  unlockedAt?: Date;
+  color: string;
+}
+
+export interface Alert {
+  id: string;
+  type: 'neglected_stock' | 'performance_drop' | 'overdue_tasks' | 'streak_risk';
+  title: string;
+  message: string;
+  stockId?: string;
+  severity: 'low' | 'medium' | 'high';
+  isRead: boolean;
+  isDismissed: boolean;
+  createdAt: Date;
+}
+
 export interface Theme {
   mode: 'light' | 'dark';
   accent: string;

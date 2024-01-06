@@ -2,9 +2,13 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, BarChart3, PieChart, ChevronDown, ChevronRight } from 'lucide-react';
 import { Card } from '../components/ui/Card';
+import { AchievementBadge } from '../components/ui/AchievementBadge';
+import { StreakCounter } from '../components/ui/StreakCounter';
 import { useStocks } from '../hooks/useStocks';
 import { useTasks } from '../hooks/useTasks';
 import { useIndex } from '../hooks/useIndex';
+import { useAchievements } from '../hooks/useAchievements';
+import { useStreaks } from '../hooks/useStreaks';
 import { 
   LineChart, 
   Line, 
@@ -24,6 +28,8 @@ export const Analytics: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
   const { tasks, loading: tasksLoading } = useTasks();
   const { indexData, loading: indexLoading } = useIndex();
+  const { achievements } = useAchievements();
+  const { streaks } = useStreaks();
   const [timeRange, setTimeRange] = useState('7d');
   const [selectedStock, setSelectedStock] = useState('all');
   const [editValues, setEditValues] = useState<Record<string, number>>({});
@@ -162,11 +168,14 @@ export const Analytics: React.FC = () => {
         <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-purple-600 font-medium">Active Streaks</p>
-              <p className="text-2xl font-bold text-purple-900">12</p>
+              <p className="text-sm text-purple-600 font-medium">Achievements</p>
+              <p className="text-2xl font-bold text-purple-900">{achievements.filter(a => a.isUnlocked).length}</p>
               <div className="flex items-center text-sm text-purple-600">
-                <TrendingUp className="w-4 h-4 mr-1" />
-                Best: 18 days
+                <div className="flex space-x-1">
+                  {achievements.filter(a => a.isUnlocked).slice(0, 3).map(achievement => (
+                    <AchievementBadge key={achievement.id} achievement={achievement} size="sm" />
+                  ))}
+                </div>
               </div>
             </div>
             <TrendingUp className="w-8 h-8 text-purple-600" />
@@ -189,6 +198,21 @@ export const Analytics: React.FC = () => {
           </div>
         </Card>
       </div>
+
+      {/* Streaks Overview */}
+      <Card>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">🔥 Streak Performance</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {streaks.map(streak => (
+            <div key={streak.id} className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <StreakCounter streak={streak} size="lg" />
+              <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                Best: {streak.longestStreak} days
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

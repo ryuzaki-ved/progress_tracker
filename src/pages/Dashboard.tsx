@@ -1,12 +1,20 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Activity, Target, ChevronDown, ChevronRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Target, ChevronDown, ChevronRight, Award } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Sparkline } from '../components/ui/Sparkline';
+import { StreakCounter } from '../components/ui/StreakCounter';
+import { AchievementBadge } from '../components/ui/AchievementBadge';
+import { SmartFeedback } from '../components/ui/SmartFeedback';
+import { AlertCard } from '../components/ui/AlertCard';
+import { AchievementUnlockModal } from '../components/ui/AchievementUnlockModal';
 import { useStocks } from '../hooks/useStocks';
 import { useTasks } from '../hooks/useTasks';
 import { useIndex } from '../hooks/useIndex';
+import { useStreaks } from '../hooks/useStreaks';
+import { useAchievements } from '../hooks/useAchievements';
+import { useAlerts } from '../hooks/useAlerts';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../contexts/ThemeContext';
 import { getDb, persistDb } from '../lib/sqlite';
@@ -15,12 +23,16 @@ export const Dashboard: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
   const { tasks, loading: tasksLoading } = useTasks();
   const { indexData, loading: indexLoading, refetch } = useIndex();
+  const { streaks, loading: streaksLoading } = useStreaks();
+  const { achievements, newlyUnlocked } = useAchievements();
+  const { alerts, markAsRead, dismissAlert } = useAlerts();
   const { isDark } = useTheme();
   const [missingDays, setMissingDays] = useState<string[]>([]);
   const [manualValues, setManualValues] = useState<Record<string, number>>({});
   const [editValues, setEditValues] = useState<Record<string, number>>({});
   const [editMode, setEditMode] = useState(false);
   const [editExpanded, setEditExpanded] = useState(false);
+  const [showAchievementModal, setShowAchievementModal] = useState(false);
 
   useEffect(() => {
     if (indexData && indexData.history) {
@@ -36,6 +48,12 @@ export const Dashboard: React.FC = () => {
       setMissingDays(days);
     }
   }, [indexData]);
+
+  useEffect(() => {
+    if (newlyUnlocked.length > 0) {
+      setShowAchievementModal(true);
+    }
+  }, [newlyUnlocked]);
 
   // Build last 7 days with values
   const last7Days = React.useMemo(() => {
@@ -90,7 +108,7 @@ export const Dashboard: React.FC = () => {
     refetch();
   };
 
-  if (stocksLoading || tasksLoading || indexLoading) {
+  if (stocksLoading || tasksLoading || indexLoading || streaksLoading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-96">
         <div className="text-center">
@@ -125,6 +143,9 @@ export const Dashboard: React.FC = () => {
     task.completedAt && 
     task.completedAt.toDateString() === new Date().toDateString()
   ).length;
+
+  const unlockedAchievements = achievements.filter(a => a.isUnlocked);
+  const activeStreaks = streaks.filter(s => s.isActive);
 
   // Calculate min/max for dynamic Y-axis
   const indexHistoryValues = indexData.history.map(h => h.value);
@@ -259,6 +280,27 @@ export const Dashboard: React.FC = () => {
         </Card>
       )}
 
+      {/* Alerts Section */}
+      {alerts.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">🔔 Alerts & Notifications</h3>
+          {alerts.slice(0, 3).map(alert => (
+            <AlertCard
+              key={alert.id}
+              alert={alert}
+              onDismiss={dismissAlert}
+              onMarkAsRead={markAsRead}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Smart Feedback */}
+      <div className="space-y-3">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">💡 Smart Insights</h3>
+        <SmartFeedback />
+      </div>
+
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="bg-green-50 border-green-200">
@@ -288,11 +330,11 @@ export const Dashboard: React.FC = () => {
         <Card className="bg-purple-50 border-purple-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-purple-600 font-medium">Active Stocks</p>
-              <p className="text-2xl font-bold text-purple-900">{stocks.length}</p>
+              <p className="text-sm text-purple-600 font-medium">Achievements</p>
+              <p className="text-2xl font-bold text-purple-900">{unlockedAchievements.length}</p>
             </div>
             <div className="w-12 h-12 bg-purple-200 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-purple-600" />
+              <Award className="w-6 h-6 text-purple-600" />
             </div>
           </div>
         </Card>
@@ -300,13 +342,63 @@ export const Dashboard: React.FC = () => {
         <Card className="bg-orange-50 border-orange-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-orange-600 font-medium">Avg. Daily Score</p>
-              <p className="text-2xl font-bold text-orange-900">{(indexData.value / 7).toFixed(0)}</p>
+              <p className="text-sm text-orange-600 font-medium">Active Streaks</p>
+              <p className="text-2xl font-bold text-orange-900">{activeStreaks.length}</p>
             </div>
             <div className="w-12 h-12 bg-orange-200 rounded-lg flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-orange-600" />
             </div>
           </div>
+        </Card>
+      </div>
+
+      {/* Streaks & Achievements */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Streaks */}
+        <Card>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            🔥 Current Streaks
+          </h3>
+          <div className="space-y-4">
+            {streaks.map(streak => (
+              <div key={streak.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <StreakCounter streak={streak} size="md" />
+                {streak.currentStreak > 0 && (
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="text-orange-500"
+                  >
+                    🔥
+                  </motion.div>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Recent Achievements */}
+        <Card>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            🏆 Achievements ({unlockedAchievements.length}/{achievements.length})
+          </h3>
+          <div className="grid grid-cols-4 gap-3">
+            {achievements.slice(0, 8).map(achievement => (
+              <AchievementBadge
+                key={achievement.id}
+                achievement={achievement}
+                size="md"
+                showProgress={!achievement.isUnlocked}
+              />
+            ))}
+          </div>
+          {achievements.length > 8 && (
+            <div className="text-center mt-4">
+              <span className="text-sm text-gray-500">
+                +{achievements.length - 8} more achievements
+              </span>
+            </div>
+          )}
         </Card>
       </div>
 
@@ -330,6 +422,18 @@ export const Dashboard: React.FC = () => {
                   <div>
                     <div className="font-medium text-gray-900 dark:text-white">{stock.name}</div>
                     <div className="text-sm font-semibold text-green-900 dark:text-green-200">{stock.currentScore} pts</div>
+                  </div>
+                  {/* Add streak indicator for top performers */}
+                  <div className="flex items-center space-x-2">
+                    {streaks.filter(s => s.isActive).length > 0 && (
+                      <motion.span
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="text-orange-500"
+                      >
+                        🔥
+                      </motion.span>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">
@@ -375,15 +479,13 @@ export const Dashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Motivational Message */}
-      <Card className="bg-gradient-to-r from-indigo-50 to-blue-50 border-blue-200 dark:from-indigo-900 dark:to-blue-900">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">💡 Daily Insight</h3>
-          <p className="text-gray-900 dark:text-white">
-            Your Health & Fitness stock is performing exceptionally well! Keep up the momentum by completing your pending tasks in Career Development to boost your overall index.
-          </p>
-        </div>
-      </Card>
+      {/* Achievement Unlock Modal */}
+      {showAchievementModal && (
+        <AchievementUnlockModal
+          achievements={newlyUnlocked}
+          onClose={() => setShowAchievementModal(false)}
+        />
+      )}
     </div>
   );
 };
