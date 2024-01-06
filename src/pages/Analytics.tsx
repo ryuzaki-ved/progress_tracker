@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, BarChart3, PieChart } from 'lucide-react';
+import { TrendingUp, TrendingDown, BarChart3, PieChart, ChevronDown, ChevronRight } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { useStocks } from '../hooks/useStocks';
 import { useTasks } from '../hooks/useTasks';
@@ -26,6 +26,9 @@ export const Analytics: React.FC = () => {
   const { indexData, loading: indexLoading } = useIndex();
   const [timeRange, setTimeRange] = useState('7d');
   const [selectedStock, setSelectedStock] = useState('all');
+  const [editValues, setEditValues] = useState<Record<string, number>>({});
+  const [editMode, setEditMode] = useState(false);
+  const [editExpanded, setEditExpanded] = useState(false);
 
   if (stocksLoading || tasksLoading || indexLoading) {
     return (
@@ -86,6 +89,13 @@ export const Analytics: React.FC = () => {
   const minY = Math.min(...indexHistoryValues);
   const maxY = Math.max(...indexHistoryValues);
   const yMargin = Math.max(10, Math.round((maxY - minY) * 0.1));
+
+  // Pie chart data for stock weightage
+  const stockWeightData = stocks.map(stock => ({
+    name: stock.name,
+    value: stock.weight,
+    color: stock.color?.replace('bg-', '') || '#3B82F6',
+  }));
 
   return (
     <div className="p-6 space-y-6">
@@ -186,10 +196,6 @@ export const Analytics: React.FC = () => {
         <Card>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Index Performance</h3>
           <div className="h-64">
-            {console.log('Chart data:', indexData.history.map(h => ({
-              ...h,
-              date: typeof h.date === 'string' ? h.date : h.date.toISOString().split('T')[0]
-            })))}
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={indexData.history.map(h => ({
                 ...h,
@@ -206,14 +212,37 @@ export const Analytics: React.FC = () => {
                   type="monotone" 
                   dataKey="value" 
                   stroke="#3B82F6" 
-                  strokeWidth={2}
+                  strokeWidth={3}
                   dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </Card>
-
+        {/* Stock Weightage Pie Chart */}
+        <Card>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stock Weightage in Index</h3>
+          <div className="h-64 flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsPieChart>
+                <Pie
+                  data={stockWeightData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                >
+                  {stockWeightData.map((entry, idx) => (
+                    <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value, name) => [`${value}%`, name]} />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
         {/* Stock Performance Chart */}
         <Card>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stock Performance</h3>
@@ -229,33 +258,21 @@ export const Analytics: React.FC = () => {
             </ResponsiveContainer>
           </div>
         </Card>
-
         {/* Task Completion Rate */}
         <Card>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Task Completion by Stock</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <RechartsPieChart>
-                <Pie
-                  data={taskCompletionData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, rate }) => `${name}: ${rate.toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="rate"
-                >
-                  {taskCompletionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
-              </RechartsPieChart>
+              <BarChart data={taskCompletionData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="rate" fill="#10B981" />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </Card>
-
         {/* Daily Productivity */}
         <Card>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Daily Productivity</h3>
@@ -274,6 +291,47 @@ export const Analytics: React.FC = () => {
           </div>
         </Card>
       </div>
+      {/* Expand/Collapse Edit Index Values Section */}
+      {indexData.history.length > 0 && (
+        <Card className="bg-blue-50 border-blue-200 mb-6">
+          <div className="flex items-center justify-between mb-2 cursor-pointer" onClick={() => setEditExpanded(v => !v)}>
+            <div className="flex items-center">
+              {editExpanded ? <ChevronDown className="w-5 h-5 mr-2 text-blue-700" /> : <ChevronRight className="w-5 h-5 mr-2 text-blue-700" />}
+              <h3 className="text-lg font-semibold text-blue-900">Edit Index Values (Last 7 Days)</h3>
+            </div>
+            {!editMode ? (
+              <button className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={e => { e.stopPropagation(); setEditMode(true); setEditExpanded(true); }}>
+                Edit
+              </button>
+            ) : (
+              <button className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700" onClick={e => { e.stopPropagation(); /* handleSaveEdits() to be implemented if needed */ }}>
+                Save Changes
+              </button>
+            )}
+          </div>
+          {editExpanded && (
+            <div className="space-y-2 mt-2">
+              {indexData.history.slice(-7).map((h, idx) => (
+                <div key={h.date.toString()} className="flex items-center space-x-4">
+                  <span className="w-32 text-gray-800">{typeof h.date === 'string' ? new Date(h.date).toLocaleDateString() : h.date.toLocaleDateString()}</span>
+                  {editMode ? (
+                    <input
+                      type="number"
+                      className="border rounded px-2 py-1 w-32"
+                      value={editValues[h.date.toString()] !== undefined ? editValues[h.date.toString()] : h.value}
+                      onChange={e => setEditValues(v => ({ ...v, [h.date.toString()]: Number(e.target.value) }))}
+                      min={0}
+                      max={2000}
+                    />
+                  ) : (
+                    <span className="w-32 text-gray-900 font-semibold">{h.value}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* Detailed Analytics */}
       <Card>
