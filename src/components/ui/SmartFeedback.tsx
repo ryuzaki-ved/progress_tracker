@@ -124,7 +124,7 @@ export const SmartFeedback: React.FC = () => {
       <Card className={`bg-gradient-to-r ${feedback.color}`}>
         <div className="flex items-center space-x-4">
           <motion.div
-            className={`w-12 h-12 rounded-full bg-white bg-opacity-50 flex items-center justify-center`}
+            className={`w-12 h-12 rounded-full bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 flex items-center justify-center shadow-sm`}
             animate={{ 
               scale: [1, 1.1, 1],
               rotate: [0, 5, -5, 0]
@@ -142,7 +142,7 @@ export const SmartFeedback: React.FC = () => {
             <h3 className={`text-lg font-semibold ${feedback.textColor} mb-1`}>
               {feedback.title}
             </h3>
-            <p className={`${feedback.textColor} opacity-80`}>
+            <p className={`${feedback.textColor} opacity-90 dark:opacity-95`}>
               {feedback.message}
             </p>
           </div>

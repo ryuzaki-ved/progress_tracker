@@ -16,9 +16,9 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
   const [showTooltip, setShowTooltip] = useState(false);
 
   const sizeClasses = {
-    sm: 'w-8 h-8 text-sm',
-    md: 'w-12 h-12 text-lg',
-    lg: 'w-16 h-16 text-xl',
+    sm: 'w-10 h-10 text-sm',
+    md: 'w-14 h-14 text-lg',
+    lg: 'w-18 h-18 text-xl',
   };
 
   const progressPercent = Math.min((achievement.progress / achievement.requirement) * 100, 100);
@@ -65,20 +65,20 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
             exit={{ opacity: 0, y: 10, scale: 0.8 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 max-w-xs">
+            <div className="bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg px-3 py-2 max-w-xs shadow-lg border border-gray-700 dark:border-gray-600">
               <div className="font-semibold">{achievement.title}</div>
-              <div className="text-gray-300">{achievement.description}</div>
+              <div className="text-gray-200 dark:text-gray-300">{achievement.description}</div>
               {!achievement.isUnlocked && (
-                <div className="text-gray-400 mt-1">
+                <div className="text-gray-300 dark:text-gray-400 mt-1">
                   Progress: {achievement.progress}/{achievement.requirement}
                 </div>
               )}
               {achievement.isUnlocked && achievement.unlockedAt && (
-                <div className="text-gray-400 mt-1">
+                <div className="text-gray-300 dark:text-gray-400 mt-1">
                   Unlocked: {achievement.unlockedAt.toLocaleDateString()}
                 </div>
               )}
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
             </div>
           </motion.div>
         )}

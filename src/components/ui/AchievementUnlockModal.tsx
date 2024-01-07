@@ -52,7 +52,7 @@ export const AchievementUnlockModal: React.FC<AchievementUnlockModalProps> = ({
 
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 z-10"
           >
             <X className="w-5 h-5" />
           </button>
@@ -77,7 +77,7 @@ export const AchievementUnlockModal: React.FC<AchievementUnlockModalProps> = ({
               🎉 Achievement{achievements.length > 1 ? 's' : ''} Unlocked!
             </h2>
             
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
               Congratulations on your progress!
             </p>
 

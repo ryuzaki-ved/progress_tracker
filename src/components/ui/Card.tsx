@@ -10,7 +10,7 @@ interface CardProps {
 export const Card: React.FC<CardProps> = ({ children, className = '', hover = false }) => {
   return (
     <motion.div
-      className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 ${hover ? 'hover:shadow-md dark:hover:shadow-lg' : ''} transition-shadow duration-200 ${className}`}
+      className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 ${hover ? 'hover:shadow-md dark:hover:shadow-xl dark:hover:shadow-gray-900/20' : ''} transition-shadow duration-200 ${className}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}

@@ -78,7 +78,7 @@ export const StreakCounter: React.FC<StreakCounterProps> = ({
       
       <div className="flex flex-col">
         <motion.span
-          className={`font-bold ${streak.isActive ? 'text-orange-600' : 'text-gray-600'}`}
+          className={`font-bold ${streak.isActive ? 'text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-400'}`}
           animate={streak.currentStreak > 0 ? { scale: [1, 1.1, 1] } : {}}
           transition={{ duration: 0.3 }}
         >
@@ -86,14 +86,14 @@ export const StreakCounter: React.FC<StreakCounterProps> = ({
         </motion.span>
         
         {showLabel && (
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             {getLabel()}
           </span>
         )}
       </div>
       
       {streak.longestStreak > streak.currentStreak && (
-        <div className="text-xs text-gray-400">
+        <div className="text-xs text-gray-400 dark:text-gray-500">
           Best: {streak.longestStreak}
         </div>
       )}

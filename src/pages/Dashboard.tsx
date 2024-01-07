@@ -379,22 +379,27 @@ export const Dashboard: React.FC = () => {
 
         {/* Recent Achievements */}
         <Card>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-            🏆 Achievements ({unlockedAchievements.length}/{achievements.length})
-          </h3>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+              🏆 Achievements
+            </h3>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              {unlockedAchievements.length}/{achievements.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
             {achievements.slice(0, 8).map(achievement => (
               <AchievementBadge
                 key={achievement.id}
                 achievement={achievement}
-                size="md"
+                size="sm"
                 showProgress={!achievement.isUnlocked}
               />
             ))}
           </div>
           {achievements.length > 8 && (
-            <div className="text-center mt-4">
-              <span className="text-sm text-gray-500">
+            <div className="text-center mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 +{achievements.length - 8} more achievements
               </span>
             </div>

@@ -28,26 +28,26 @@ export const AlertCard: React.FC<AlertCardProps> = ({ alert, onDismiss, onMarkAs
     switch (alert.severity) {
       case 'high':
         return {
-          bg: 'from-red-50 to-pink-50 border-red-200',
-          text: 'text-red-900',
+          bg: 'from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border-red-200 dark:border-red-700',
+          text: 'text-red-900 dark:text-red-200',
           icon: 'text-red-600',
         };
       case 'medium':
         return {
-          bg: 'from-yellow-50 to-amber-50 border-yellow-200',
-          text: 'text-yellow-900',
+          bg: 'from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-yellow-200 dark:border-yellow-700',
+          text: 'text-yellow-900 dark:text-yellow-200',
           icon: 'text-yellow-600',
         };
       case 'low':
         return {
-          bg: 'from-blue-50 to-indigo-50 border-blue-200',
-          text: 'text-blue-900',
+          bg: 'from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-700',
+          text: 'text-blue-900 dark:text-blue-200',
           icon: 'text-blue-600',
         };
       default:
         return {
-          bg: 'from-gray-50 to-slate-50 border-gray-200',
-          text: 'text-gray-900',
+          bg: 'from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 border-gray-200 dark:border-gray-600',
+          text: 'text-gray-900 dark:text-gray-200',
           icon: 'text-gray-600',
         };
     }
@@ -95,7 +95,7 @@ export const AlertCard: React.FC<AlertCardProps> = ({ alert, onDismiss, onMarkAs
               <p className={`${colors.text} opacity-80 text-sm mt-1`}>
                 {alert.message}
               </p>
-              <div className="text-xs opacity-60 mt-2">
+              <div className={`text-xs opacity-60 mt-2 ${colors.text}`}>
                 {alert.createdAt.toLocaleDateString()} at {alert.createdAt.toLocaleTimeString()}
               </div>
             </div>

@@ -171,7 +171,7 @@ export const Analytics: React.FC = () => {
               <p className="text-sm text-purple-600 font-medium">Achievements</p>
               <p className="text-2xl font-bold text-purple-900">{achievements.filter(a => a.isUnlocked).length}</p>
               <div className="flex items-center text-sm text-purple-600">
-                <div className="flex space-x-1">
+                <div className="flex space-x-1 overflow-hidden">
                   {achievements.filter(a => a.isUnlocked).slice(0, 3).map(achievement => (
                     <AchievementBadge key={achievement.id} achievement={achievement} size="sm" />
                   ))}
