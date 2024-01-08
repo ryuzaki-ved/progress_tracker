@@ -18,12 +18,36 @@ export interface Task {
   title: string;
   description?: string;
   dueDate: Date | null | undefined;
+  scheduledTime?: string; // HH:MM format for specific time scheduling
+  estimatedDuration?: number; // in minutes
   priority: 'low' | 'medium' | 'high';
   status: 'pending' | 'completed' | 'overdue';
   stockId: string;
   points: number;
   createdAt: Date;
   completedAt?: Date;
+}
+
+export interface DailyTimeSlot {
+  time: string; // HH:MM format
+  task?: Task;
+  isAvailable: boolean;
+}
+
+export interface DayLoadInfo {
+  date: Date;
+  totalScheduledMinutes: number;
+  dailyBudgetMinutes: number;
+  loadScore: 'light' | 'moderate' | 'heavy' | 'overloaded';
+  tasks: Task[];
+  stockBalance: Record<string, number>; // stockId -> minutes
+}
+
+export interface Reschedulesuggestion {
+  taskId: string;
+  suggestedDate: Date;
+  reason: string;
+  confidence: 'low' | 'medium' | 'high';
 }
 
 export interface IndexData {

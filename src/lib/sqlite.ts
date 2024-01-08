@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   priority TEXT DEFAULT 'medium',
   complexity INTEGER DEFAULT 3,
   estimated_duration INTEGER,
+  scheduled_time TEXT,
   points INTEGER DEFAULT 10,
   due_date TEXT,
   status TEXT DEFAULT 'pending',
@@ -101,6 +102,12 @@ function migrateTasksTable(db: Database) {
   }
   if (!columns.includes('score')) {
     db.run("ALTER TABLE tasks ADD COLUMN score REAL;");
+  }
+  if (!columns.includes('estimated_duration')) {
+    db.run("ALTER TABLE tasks ADD COLUMN estimated_duration INTEGER;");
+  }
+  if (!columns.includes('scheduled_time')) {
+    db.run("ALTER TABLE tasks ADD COLUMN scheduled_time TEXT;");
   }
 }
 function migrateStockPerformanceHistoryTable(db: Database) {

@@ -31,12 +31,14 @@ export const useTasks = () => {
           title: taskObj.title,
           description: taskObj.description || '',
           dueDate: taskObj.due_date ? new Date(taskObj.due_date) : null,
-          priority: (taskObj.priority || 'medium') as 'low' | 'medium' | 'high',
+          priority: (taskObj.priority || 'medium') as 'low' | 'medium' | 'high' | 'critical',
           status: (taskObj.status || 'pending') as 'pending' | 'completed' | 'overdue' | 'failed',
           stockId: taskObj.stock_id,
           points: taskObj.points || 10,
           createdAt: taskObj.created_at ? new Date(taskObj.created_at) : new Date(),
           completedAt: taskObj.completed_at ? new Date(taskObj.completed_at) : undefined,
+          scheduledTime: taskObj.scheduled_time || undefined,
+          estimatedDuration: taskObj.estimated_duration || 30,
         };
       });
       setTasks(tasksList);
@@ -52,20 +54,24 @@ export const useTasks = () => {
     description?: string;
     stockId: string;
     dueDate?: Date;
-    priority: 'low' | 'medium' | 'high';
+    scheduledTime?: string;
+    estimatedDuration?: number;
+    priority: 'low' | 'medium' | 'high' | 'critical';
     points?: number;
   }) => {
     setError(null);
     try {
       const db = await getDb();
       db.run(
-        `INSERT INTO tasks (stock_id, title, description, priority, due_date, points, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+        `INSERT INTO tasks (stock_id, title, description, priority, due_date, scheduled_time, estimated_duration, points, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
         [
           taskData.stockId,
           taskData.title,
           taskData.description || null,
           taskData.priority,
           taskData.dueDate ? taskData.dueDate.toISOString() : null,
+          taskData.scheduledTime || null,
+          taskData.estimatedDuration || 30,
           taskData.points || 10,
           'pending',
         ]
@@ -82,15 +88,43 @@ export const useTasks = () => {
     setError(null);
     try {
       const db = await getDb();
+      
+      // First, fetch the existing task data
+      const existingTaskRes = db.exec('SELECT * FROM tasks WHERE id = ?', [id]);
+      const existingTaskRow = existingTaskRes[0]?.values?.[0];
+      const existingTaskCols = existingTaskRes[0]?.columns || [];
+      
+      if (!existingTaskRow) {
+        throw new Error('Task not found');
+      }
+      
+      // Convert existing task row to object
+      const existingTask: any = {};
+      existingTaskCols.forEach((col, i) => (existingTask[col] = existingTaskRow[i]));
+      
+      // Merge updates with existing values
+      const mergedData = {
+        title: updates.title ?? existingTask.title,
+        description: updates.description ?? existingTask.description,
+        priority: updates.priority ?? existingTask.priority,
+        dueDate: updates.dueDate !== undefined ? updates.dueDate : (existingTask.due_date ? new Date(existingTask.due_date) : null),
+        points: updates.points ?? existingTask.points,
+        status: updates.status ?? existingTask.status,
+        scheduledTime: (updates as any).scheduledTime ?? existingTask.scheduled_time,
+        estimatedDuration: (updates as any).estimatedDuration ?? existingTask.estimated_duration,
+      };
+      
       db.run(
-        `UPDATE tasks SET title = ?, description = ?, priority = ?, due_date = ?, points = ?, status = ?, updated_at = datetime('now') WHERE id = ?`,
+        `UPDATE tasks SET title = ?, description = ?, priority = ?, due_date = ?, points = ?, status = ?, scheduled_time = ?, estimated_duration = ?, updated_at = datetime('now') WHERE id = ?`,
         [
-          updates.title,
-          updates.description,
-          updates.priority,
-          updates.dueDate ? updates.dueDate.toISOString() : null,
-          updates.points,
-          updates.status,
+          mergedData.title,
+          mergedData.description,
+          mergedData.priority,
+          mergedData.dueDate ? mergedData.dueDate.toISOString() : null,
+          mergedData.points,
+          mergedData.status,
+          mergedData.scheduledTime,
+          mergedData.estimatedDuration,
           id,
         ]
       );

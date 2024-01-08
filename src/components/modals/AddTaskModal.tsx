@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Plus, Calendar, Flag } from 'lucide-react';
 import { Button } from '../ui/Button';
@@ -13,11 +13,15 @@ interface AddTaskModalProps {
     description?: string;
     stockId: string;
     dueDate?: Date;
+    scheduledTime?: string;
+    estimatedDuration?: number;
     priority: 'low' | 'medium' | 'high' | 'critical';
     points?: number;
   }) => Promise<void>;
   stocks: Stock[];
   defaultStockId?: string;
+  defaultDate?: Date;
+  defaultTime?: string;
 }
 
 export const AddTaskModal: React.FC<AddTaskModalProps> = ({
@@ -26,17 +30,29 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   onSubmit,
   stocks,
   defaultStockId,
+  defaultDate,
+  defaultTime,
 }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     stockId: defaultStockId || (stocks[0]?.id || ''),
-    dueDate: '',
+    dueDate: defaultDate ? defaultDate.toISOString().split('T')[0] : '',
+    scheduledTime: defaultTime || '',
+    estimatedDuration: 30,
     priority: 'medium' as 'low' | 'medium' | 'high' | 'critical',
     points: 10,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFormData(f => ({
+      ...f,
+      dueDate: defaultDate ? defaultDate.toISOString().split('T')[0] : '',
+      scheduledTime: defaultTime || '',
+    }));
+  }, [defaultDate, defaultTime]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +64,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         ...formData,
         description: formData.description || undefined,
         dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+        scheduledTime: formData.scheduledTime || undefined,
+        estimatedDuration: formData.estimatedDuration || undefined,
         points: formData.points || undefined,
       });
       
@@ -56,7 +74,9 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         title: '',
         description: '',
         stockId: defaultStockId || (stocks[0]?.id || ''),
-        dueDate: '',
+        dueDate: defaultDate ? defaultDate.toISOString().split('T')[0] : '',
+        scheduledTime: defaultTime || '',
+        estimatedDuration: 30,
         priority: 'medium',
         points: 10,
       });
@@ -180,6 +200,39 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Scheduled Time
+                </label>
+                <input
+                  type="time"
+                  value={formData.scheduledTime}
+                  onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Estimated Duration: {formData.estimatedDuration} minutes
+                </label>
+                <input
+                  type="range"
+                  min="15"
+                  max="240"
+                  step="15"
+                  value={formData.estimatedDuration}
+                  onChange={(e) => setFormData({ ...formData, estimatedDuration: parseInt(e.target.value) })}
+                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <span>15m</span>
+                  <span>4h</span>
+                </div>
               </div>
 
               <div>
