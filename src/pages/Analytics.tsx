@@ -23,6 +23,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import { addDays, format, isSameDay, subDays } from 'date-fns';
 
 export const Analytics: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
@@ -77,16 +78,28 @@ export const Analytics: React.FC = () => {
     };
   });
 
-  // Calculate daily productivity
-  const dailyProductivityData = [
-    { date: '2024-01-08', completed: 3, pending: 2, overdue: 1 },
-    { date: '2024-01-09', completed: 4, pending: 3, overdue: 0 },
-    { date: '2024-01-10', completed: 2, pending: 4, overdue: 1 },
-    { date: '2024-01-11', completed: 5, pending: 2, overdue: 0 },
-    { date: '2024-01-12', completed: 3, pending: 3, overdue: 1 },
-    { date: '2024-01-13', completed: 4, pending: 2, overdue: 0 },
-    { date: '2024-01-14', completed: 6, pending: 1, overdue: 0 },
-  ];
+  // Calculate daily productivity from real tasks
+  const getDaysArray = (days: number) => {
+    const arr = [];
+    const today = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+      arr.push(subDays(today, i));
+    }
+    return arr;
+  };
+  const rangeDays = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
+  const daysArray = getDaysArray(rangeDays);
+  const dailyProductivityData = daysArray.map(date => {
+    const completed = tasks.filter(t => t.completedAt && isSameDay(t.completedAt, date)).length;
+    const overdue = tasks.filter(t => t.status === 'overdue' && t.dueDate && isSameDay(t.dueDate, date)).length;
+    const pending = tasks.filter(t => t.status === 'pending' && t.dueDate && isSameDay(t.dueDate, date)).length;
+    return {
+      date: format(date, 'yyyy-MM-dd'),
+      completed,
+      pending,
+      overdue,
+    };
+  });
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
