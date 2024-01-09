@@ -4,6 +4,7 @@ import { useStocks } from './useStocks';
 import { useTasks } from './useTasks';
 import { useIndex } from './useIndex';
 import { addDays, subDays, differenceInDays, startOfDay } from 'date-fns';
+import { calculateStockScore, calculateIndexValue, calculateTaskScore } from '../utils/stockUtils';
 
 export const useForecasting = () => {
   const { stocks } = useStocks();
@@ -150,31 +151,62 @@ export const useForecasting = () => {
     return goal;
   };
 
-  // Simulate load changes
+  // Simulate load changes using real logic
   const simulateLoad = (changes: LoadSimulation['changes']): LoadSimulation => {
-    const projectedImpact = changes.map(change => {
-      const pointsPerTask = 15; // Average points per task
-      const baseScoreChange = change.additionalTasks * pointsPerTask;
-      const scoreChange = change.isPositive ? baseScoreChange : -baseScoreChange;
-      const stock = stocks.find(s => s.id === change.stockId);
-      const percentChange = stock ? (scoreChange / stock.currentScore) * 100 : 0;
-      
+    // Clone current stocks and tasks
+    const simulatedStocks = stocks.map(s => ({ ...s }));
+    let simulatedTasks = [...tasks];
+    // For each change, add simulated tasks to the relevant stock
+    changes.forEach(change => {
+      const stock = simulatedStocks.find(s => s.id === change.stockId);
+      if (!stock) return;
+      for (let i = 0; i < change.additionalTasks; i++) {
+        // Simulate a task with average/typical values
+        const task = {
+          id: `sim-${Date.now()}-${Math.random()}`,
+          title: 'Simulated Task',
+          description: '',
+          dueDate: new Date(),
+          scheduledTime: undefined,
+          estimatedDuration: Math.round((change.additionalHours * 60) / change.additionalTasks) || 30,
+          priority: 'medium',
+          status: change.isPositive ? 'completed' : 'overdue',
+          stockId: change.stockId,
+          points: 10,
+          createdAt: new Date(),
+          completedAt: change.isPositive ? new Date() : undefined,
+        };
+        // Calculate real score for this task
+        const score = calculateTaskScore({
+          priority: 'medium',
+          complexity: 1,
+          type: undefined,
+          dueDate: task.dueDate,
+          completedAt: task.completedAt,
+        });
+        task.points = score;
+        simulatedTasks.push(task);
+      }
+    });
+    // Calculate projected stock scores
+    const projectedImpact = simulatedStocks.map(stock => {
+      const newScore = calculateStockScore(stock, simulatedTasks);
+      const scoreChange = newScore - stock.currentScore;
+      const percentChange = stock.currentScore ? (scoreChange / stock.currentScore) * 100 : 0;
       return {
-        stockId: change.stockId,
+        stockId: stock.id,
         scoreChange,
         percentChange,
       };
     });
-    
-    // Calculate overall index change
-    const totalWeightedChange = projectedImpact.reduce((sum, impact) => {
-      const stock = stocks.find(s => s.id === impact.stockId);
-      return sum + (impact.scoreChange * (stock?.weight || 0));
-    }, 0);
-    
+    // Calculate projected index value
+    simulatedStocks.forEach(stock => {
+      const impact = projectedImpact.find(i => i.stockId === stock.id);
+      if (impact) stock.currentScore += impact.scoreChange;
+    });
+    const projectedIndex = calculateIndexValue(simulatedStocks);
     const currentIndex = indexData?.value || 500;
-    const overallIndexChange = (totalWeightedChange / currentIndex) * 100;
-    
+    const overallIndexChange = ((projectedIndex - currentIndex) / currentIndex) * 100;
     return {
       scenario: 'Load Simulation',
       changes,
@@ -189,31 +221,95 @@ export const useForecasting = () => {
     description: string,
     changes: WhatIfScenario['changes']
   ): WhatIfScenario => {
-    // Calculate projected results based on changes
-    const stockChanges: { stockId: string; change: number }[] = [];
-    let indexChange = 0;
-    
+    // Clone current stocks and tasks
+    const simulatedStocks = stocks.map(s => ({ ...s }));
+    let simulatedTasks = [...tasks];
+
+    // Apply changes to the clones
     changes.forEach(change => {
       switch (change.type) {
         case 'add_task':
           if (change.stockId && change.taskData) {
-            const points = change.taskData.points || 15;
-            stockChanges.push({ stockId: change.stockId, change: points });
+            const task = {
+              id: `sim-${Date.now()}-${Math.random()}`,
+              title: change.taskData.title || 'Simulated Task',
+              description: change.taskData.description || '',
+              dueDate: new Date(),
+              scheduledTime: undefined,
+              estimatedDuration: 30,
+              priority: change.taskData.priority || 'medium',
+              status: 'completed',
+              stockId: change.stockId,
+              points: change.taskData.points || 10,
+              createdAt: new Date(),
+              completedAt: new Date(),
+            };
+            // Calculate real score for this task
+            task.points = calculateTaskScore({
+              priority: task.priority,
+              complexity: 1,
+              type: undefined,
+              dueDate: task.dueDate,
+              completedAt: task.completedAt,
+            });
+            simulatedTasks.push(task);
           }
           break;
         case 'change_weight':
           if (change.stockId && change.weightChange) {
-            const stock = stocks.find(s => s.id === change.stockId);
+            const stock = simulatedStocks.find(s => s.id === change.stockId);
             if (stock) {
-              const impact = stock.currentScore * change.weightChange;
-              indexChange += impact;
+              stock.weight = Math.max(0, stock.weight + change.weightChange);
             }
+          }
+          break;
+        case 'add_stock':
+          if (change.stockData) {
+            const newStock = {
+              id: `sim-stock-${Date.now()}-${Math.random()}`,
+              name: change.stockData.name || 'New Stock',
+              icon: '',
+              category: change.stockData.category || 'Personal',
+              currentScore: 500,
+              change: 0,
+              changePercent: 0,
+              volatility: 'medium',
+              lastActivity: new Date(),
+              color: change.stockData.color || 'bg-blue-500',
+              weight: change.stockData.weight || 0.1,
+              history: [],
+            };
+            simulatedStocks.push(newStock);
+          }
+          break;
+        case 'remove_stock':
+          if (change.stockId) {
+            const idx = simulatedStocks.findIndex(s => s.id === change.stockId);
+            if (idx !== -1) simulatedStocks.splice(idx, 1);
+            simulatedTasks = simulatedTasks.filter(t => t.stockId !== change.stockId);
           }
           break;
         // Add more cases as needed
       }
     });
-    
+
+    // Recalculate stock scores
+    simulatedStocks.forEach(stock => {
+      stock.currentScore = calculateStockScore(stock, simulatedTasks);
+    });
+
+    // Calculate projected index value
+    const projectedIndex = calculateIndexValue(simulatedStocks);
+    const currentIndex = indexData?.value || 500;
+    const indexChange = ((projectedIndex - currentIndex) / currentIndex) * 100;
+
+    // Calculate per-stock changes
+    const stockChanges = simulatedStocks.map(stock => {
+      const original = stocks.find(s => s.id === stock.id);
+      const change = original ? stock.currentScore - original.currentScore : stock.currentScore;
+      return { stockId: stock.id, change };
+    });
+
     const scenario: WhatIfScenario = {
       id: `scenario-${Date.now()}`,
       name,
@@ -227,7 +323,7 @@ export const useForecasting = () => {
       isSaved: false,
       createdAt: new Date(),
     };
-    
+
     setWhatIfScenarios(prev => [...prev, scenario]);
     return scenario;
   };

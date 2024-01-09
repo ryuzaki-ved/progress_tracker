@@ -27,6 +27,16 @@ export const Settings: React.FC = () => {
     }
   }, [stocks]);
 
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const storedNotifications = localStorage.getItem('settings_notifications');
+    const storedAutoDecay = localStorage.getItem('settings_autoDecay');
+    const storedDecayRate = localStorage.getItem('settings_decayRate');
+    if (storedNotifications !== null) setNotifications(storedNotifications === 'true');
+    if (storedAutoDecay !== null) setAutoDecay(storedAutoDecay === 'true');
+    if (storedDecayRate !== null) setDecayRate(Number(storedDecayRate));
+  }, []);
+
   const handleWeightChange = (stockId: string, weight: number) => {
     setStockWeights(prev => ({ ...prev, [stockId]: weight }));
   };
@@ -49,19 +59,12 @@ export const Settings: React.FC = () => {
 
       await Promise.all(updatePromises);
 
-      // Save other settings to user_settings table
-      const settingsToSave = [
-        { key: 'theme', value: theme },
-        { key: 'notifications_enabled', value: notifications },
-        { key: 'auto_decay_enabled', value: autoDecay },
-        { key: 'decay_rate', value: decayRate },
-      ];
-
-      for (const setting of settingsToSave) {
-        // This part of the code was removed as per the edit hint.
-        // The original code had supabase calls here, which are now removed.
-        // The settings will not be persisted locally.
-      }
+      // Save settings to localStorage
+      localStorage.setItem('settings_theme', mode);
+      localStorage.setItem('settings_accent', accent);
+      localStorage.setItem('settings_notifications', String(notifications));
+      localStorage.setItem('settings_autoDecay', String(autoDecay));
+      localStorage.setItem('settings_decayRate', String(decayRate));
 
       setSaveMessage('Settings saved successfully!');
       setTimeout(() => setSaveMessage(null), 3000);
@@ -308,7 +311,10 @@ export const Settings: React.FC = () => {
           <div className="space-y-4">
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Adjust how much each life category contributes to your overall index score.
-              Total weight: <span className="font-semibold">{(totalWeight * 100).toFixed(0)}%</span>
+              Total weight: <span className={`font-semibold ${totalWeight > 1 ? 'text-red-600' : 'text-green-700'}`}>{(totalWeight * 100).toFixed(0)}%</span>
+              {totalWeight > 1 && (
+                <span className="ml-2 text-xs text-red-600">(Exceeds 100%!)</span>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -336,9 +342,20 @@ export const Settings: React.FC = () => {
                     type="range"
                     min="0"
                     max="1"
-                    step="0.05"
-                    value={stockWeights[stock.id]}
-                    onChange={(e) => handleWeightChange(stock.id, parseFloat(e.target.value))}
+                    step="0.01"
+                    value={stockWeights[stock.id] ?? 0}
+                    onChange={(e) => {
+                      const newValue = parseFloat(e.target.value);
+                      // Calculate what the new total would be if this stock is changed
+                      const newTotal = Object.entries(stockWeights).reduce((sum, [id, weight]) => {
+                        if (id === stock.id) return sum + newValue;
+                        return sum + weight;
+                      }, 0);
+                      // Only allow if new total is <= 1, or if reducing this stock's weight
+                      if (newTotal <= 1 || newValue < (stockWeights[stock.id] ?? 0)) {
+                        handleWeightChange(stock.id, newValue);
+                      }
+                    }}
                     className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
                   />
                 </motion.div>
