@@ -118,9 +118,9 @@ export const useForecasting = () => {
     stockId: string,
     targetChangePercent: number,
     timeframe: 30 | 60 | 90
-  ) => {
+  ): StrategyGoal => {
     const stock = stocks.find(s => s.id === stockId);
-    if (!stock) return;
+    if (!stock) throw new Error('Stock not found');
     
     const targetScore = stock.currentScore * (1 + targetChangePercent / 100);
     const scoreIncrease = targetScore - stock.currentScore;
@@ -147,13 +147,15 @@ export const useForecasting = () => {
     };
     
     setStrategyGoals(prev => [...prev, goal]);
+    return goal;
   };
 
   // Simulate load changes
   const simulateLoad = (changes: LoadSimulation['changes']): LoadSimulation => {
     const projectedImpact = changes.map(change => {
       const pointsPerTask = 15; // Average points per task
-      const scoreChange = change.additionalTasks * pointsPerTask;
+      const baseScoreChange = change.additionalTasks * pointsPerTask;
+      const scoreChange = change.isPositive ? baseScoreChange : -baseScoreChange;
       const stock = stocks.find(s => s.id === change.stockId);
       const percentChange = stock ? (scoreChange / stock.currentScore) * 100 : 0;
       

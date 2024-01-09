@@ -26,7 +26,13 @@ export const StrategyModePanel: React.FC<StrategyModePanelProps> = ({
 
   const handleCreateGoal = () => {
     if (selectedStock) {
-      onCreateGoal(selectedStock, targetChange, selectedTimeframe);
+      try {
+        onCreateGoal(selectedStock, targetChange, selectedTimeframe);
+      } catch (error) {
+        console.error('Failed to create goal:', error);
+        alert('Failed to create goal. Please try again.');
+        return;
+      }
       setShowCreateModal(false);
       setSelectedStock('');
       setTargetChange(20);
@@ -217,6 +223,9 @@ export const StrategyModePanel: React.FC<StrategyModePanelProps> = ({
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   Create {selectedTimeframe}-Day Goal
                 </h3>
+                          <div className="text-xs mt-1 opacity-75">
+                            Estimated tasks needed: {Math.ceil(((stocks.find(s => s.id === selectedStock)?.currentScore || 0) * targetChange / 100) / 15)}
+                          </div>
                 
                 <div className="space-y-4">
                   <div>
@@ -263,6 +272,9 @@ export const StrategyModePanel: React.FC<StrategyModePanelProps> = ({
                         <div className="mt-1">
                           {stocks.find(s => s.id === selectedStock)?.currentScore} → {' '}
                           {Math.round((stocks.find(s => s.id === selectedStock)?.currentScore || 0) * (1 + targetChange / 100))}
+                        </div>
+                        <div className="text-xs mt-1 opacity-75">
+                          ~{selectedStock ? Math.ceil((((stocks.find(s => s.id === selectedStock)?.currentScore || 0) * targetChange / 100) / 15) / (selectedTimeframe / 7)) : 0} tasks per week
                         </div>
                       </div>
                     </div>

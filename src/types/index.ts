@@ -184,6 +184,7 @@ export interface LoadSimulation {
     stockId: string;
     additionalTasks: number;
     additionalHours: number;
+    isPositive: boolean;
   }[];
   projectedImpact: {
     stockId: string;

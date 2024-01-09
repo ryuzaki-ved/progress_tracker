@@ -36,7 +36,7 @@ export const useStocks = () => {
         const change = perfRow ? perfRow[0] : 0;
         const changePercent = perfRow ? perfRow[1] : 0;
         stocksList.push({
-          id: stockObj.id,
+          id: stockObj.id.toString(),
           name: stockObj.name,
           icon: stockObj.icon || 'activity',
           category: stockObj.category || 'General',

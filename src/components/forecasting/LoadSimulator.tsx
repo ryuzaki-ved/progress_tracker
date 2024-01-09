@@ -20,11 +20,11 @@ export const LoadSimulator: React.FC<LoadSimulatorProps> = ({
   const addChange = (stockId: string) => {
     setChanges(prev => [
       ...prev,
-      { stockId, additionalTasks: 1, additionalHours: 1.5 }
+      { stockId, additionalTasks: 1, additionalHours: 1.5, isPositive: true }
     ]);
   };
 
-  const updateChange = (index: number, field: 'additionalTasks' | 'additionalHours', value: number) => {
+  const updateChange = (index: number, field: 'additionalTasks' | 'additionalHours' | 'isPositive', value: number | boolean) => {
     setChanges(prev => prev.map((change, i) => 
       i === index ? { ...change, [field]: value } : change
     ));
@@ -158,6 +158,36 @@ export const LoadSimulator: React.FC<LoadSimulatorProps> = ({
                         />
                       </div>
                     </div>
+                    
+                    <div className="mt-3">
+                      <label className="block text-xs text-gray-600 dark:text-gray-400 mb-2">
+                        Impact Type
+                      </label>
+                      <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                        <button
+                          type="button"
+                          onClick={() => updateChange(index, 'isPositive', true)}
+                          className={`flex-1 px-3 py-1 rounded text-xs font-medium transition-colors ${
+                            change.isPositive
+                              ? 'bg-green-500 text-white shadow-sm'
+                              : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                          }`}
+                        >
+                          📈 Gain
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateChange(index, 'isPositive', false)}
+                          className={`flex-1 px-3 py-1 rounded text-xs font-medium transition-colors ${
+                            !change.isPositive
+                              ? 'bg-red-500 text-white shadow-sm'
+                              : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                          }`}
+                        >
+                          📉 Loss
+                        </button>
+                      </div>
+                    </div>
                   </motion.div>
                 );
               })}
@@ -214,6 +244,13 @@ export const LoadSimulator: React.FC<LoadSimulatorProps> = ({
                           <span className="font-medium text-gray-900 dark:text-white">
                             {stock.name}
                           </span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            impact.scoreChange > 0 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
+                              : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                          }`}>
+                            {impact.scoreChange > 0 ? 'Gain' : 'Loss'}
+                          </span>
                         </div>
                         <div className="text-right">
                           <div className={`font-semibold ${
@@ -243,9 +280,14 @@ export const LoadSimulator: React.FC<LoadSimulatorProps> = ({
                       <li>• Positive impact with moderate improvement</li>
                     )}
                     {simulation.overallIndexChange < 0 && (
-                      <li>• This change might not be optimal for your overall performance</li>
+                      <li>• This change would decrease your overall performance by {Math.abs(simulation.overallIndexChange).toFixed(1)}%</li>
                     )}
-                    <li>• Consider balancing tasks across multiple stocks for best results</li>
+                    {simulation.projectedImpact.some(i => i.scoreChange < 0) && (
+                      <li>• Some stocks would be negatively impacted - consider mitigation strategies</li>
+                    )}
+                    {simulation.projectedImpact.every(i => i.scoreChange > 0) && (
+                      <li>• All affected stocks would benefit from this change</li>
+                    )}
                   </ul>
                 </div>
               </div>
