@@ -150,3 +150,77 @@ export interface ReflectionInsight {
   dismissed: boolean;
   createdAt: Date;
 }
+
+export interface StockForecast {
+  stockId: string;
+  momentum: 'rising' | 'falling' | 'stable';
+  confidence: 'low' | 'medium' | 'high';
+  projectedScore: number;
+  projectedChange: number;
+  projectedChangePercent: number;
+  tasksNeeded: number;
+  hoursNeeded: number;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  recommendation: string;
+  forecastPeriod: number; // days
+}
+
+export interface StrategyGoal {
+  id: string;
+  stockId: string;
+  targetScore: number;
+  targetChangePercent: number;
+  timeframe: 30 | 60 | 90; // days
+  currentProgress: number;
+  weeklyMilestones: number[];
+  tasksRequired: number;
+  isOnTrack: boolean;
+  createdAt: Date;
+}
+
+export interface LoadSimulation {
+  scenario: string;
+  changes: {
+    stockId: string;
+    additionalTasks: number;
+    additionalHours: number;
+  }[];
+  projectedImpact: {
+    stockId: string;
+    scoreChange: number;
+    percentChange: number;
+  }[];
+  overallIndexChange: number;
+}
+
+export interface NeglectAlert {
+  id: string;
+  stockId: string;
+  severity: 'warning' | 'urgent' | 'critical';
+  declinePercent: number;
+  timeframe: number; // days
+  projectedZeroDate?: Date;
+  actionRequired: string;
+  isOnHold: boolean;
+  createdAt: Date;
+}
+
+export interface WhatIfScenario {
+  id: string;
+  name: string;
+  description: string;
+  changes: {
+    type: 'add_task' | 'remove_task' | 'change_weight' | 'add_stock' | 'remove_stock';
+    stockId?: string;
+    taskData?: Partial<Task>;
+    weightChange?: number;
+    stockData?: Partial<Stock>;
+  }[];
+  projectedResults: {
+    indexChange: number;
+    stockChanges: { stockId: string; change: number }[];
+    timeframe: number;
+  };
+  isSaved: boolean;
+  createdAt: Date;
+}

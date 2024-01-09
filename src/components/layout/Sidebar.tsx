@@ -11,7 +11,8 @@ import {
   TrendingUp,
   BookOpen,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Zap
 } from 'lucide-react';
 import { useSidebar } from '../../contexts/SidebarContext';
 
@@ -20,6 +21,7 @@ const menuItems = [
   { path: '/stocks', icon: TrendingUp, label: 'Stocks' },
   { path: '/tasks', icon: CheckSquare, label: 'Tasks' },
   { path: '/calendar', icon: Calendar, label: 'Calendar' },
+  { path: '/forecasting', icon: Zap, label: 'Forecasting' },
   { path: '/retrospective', icon: BookOpen, label: 'Retrospective' },
   { path: '/analytics', icon: BarChart3, label: 'Analytics' },
   { path: '/settings', icon: Settings, label: 'Settings' },
