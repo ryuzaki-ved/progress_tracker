@@ -80,3 +80,13 @@
 .focus\:ring-primary:focus {
   --tw-ring-color: var(--color-primary);
 }
+
+/* Hide scrollbars for journal editor textareas */
+.journal-textarea::-webkit-scrollbar {
+  display: none;
+}
+
+.journal-textarea {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

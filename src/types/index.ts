@@ -95,3 +95,58 @@ export interface Theme {
   mode: 'light' | 'dark';
   accent: string;
 }
+
+export interface JournalEntry {
+  id: string;
+  userId: string;
+  type: 'daily' | 'weekly' | 'monthly';
+  date: Date;
+  title?: string;
+  content: string;
+  mood?: 'great' | 'good' | 'okay' | 'tough' | 'chaotic';
+  prompts?: {
+    whatWorked?: string;
+    whereStruggled?: string;
+    willImprove?: string;
+    gratitude?: string;
+  };
+  tags?: string[];
+  isPrivate: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface WeeklyReview {
+  id: string;
+  userId: string;
+  weekStart: Date;
+  weekEnd: Date;
+  rating: 'great' | 'good' | 'okay' | 'tough' | 'chaotic';
+  stats: {
+    tasksCompleted: number;
+    tasksMissed: number;
+    tasksRescheduled: number;
+    streaksMaintained: number;
+    streaksBroken: number;
+    indexChange: number;
+    topPerformingStock: string;
+    strugglingStock: string;
+  };
+  journalEntryId?: string;
+  insights: string[];
+  goals: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ReflectionInsight {
+  id: string;
+  type: 'pattern' | 'trend' | 'suggestion' | 'achievement';
+  title: string;
+  description: string;
+  data: any;
+  confidence: 'low' | 'medium' | 'high';
+  actionable: boolean;
+  dismissed: boolean;
+  createdAt: Date;
+}

@@ -9,6 +9,7 @@ import {
   PieChart, 
   Settings,
   TrendingUp,
+  BookOpen,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -19,6 +20,7 @@ const menuItems = [
   { path: '/stocks', icon: TrendingUp, label: 'Stocks' },
   { path: '/tasks', icon: CheckSquare, label: 'Tasks' },
   { path: '/calendar', icon: Calendar, label: 'Calendar' },
+  { path: '/retrospective', icon: BookOpen, label: 'Retrospective' },
   { path: '/analytics', icon: BarChart3, label: 'Analytics' },
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];
@@ -34,7 +36,7 @@ export const Sidebar: React.FC = () => {
         isCollapsed ? 'w-16' : 'w-64'
       }`}
       animate={{ width: isCollapsed ? 64 : 256 }}
-      transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25, duration: 0.2 }}
     >
       <div className="flex-1 flex flex-col p-6">
         <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center' : 'space-x-3'}`}> 
@@ -44,7 +46,7 @@ export const Sidebar: React.FC = () => {
           <motion.div
             initial={false}
             animate={{ opacity: isCollapsed ? 0 : 1, x: isCollapsed ? -20 : 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25, duration: 0.15 }}
             style={{ display: isCollapsed ? 'none' : 'block' }}
           >
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">LifeStock</h1>
@@ -68,14 +70,14 @@ export const Sidebar: React.FC = () => {
                   whileTap={{ scale: 0.98 }}
                   title={item.label}
                   layout
-                  transition={{ type: 'spring', stiffness: 200, damping: 30, delay: isCollapsed ? 0 : idx * 0.03 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25, duration: 0.1 }}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <motion.span
                     className="font-medium"
                     initial={false}
                     animate={{ opacity: isCollapsed ? 0 : 1, x: isCollapsed ? -10 : 0 }}
-                    transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 25, duration: 0.15 }}
                     style={{ display: isCollapsed ? 'none' : 'inline' }}
                   >
                     {item.label}

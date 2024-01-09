@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Activity, Target, ChevronDown, ChevronRight, Award } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Target, ChevronDown, ChevronRight, Award, BookOpen } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Sparkline } from '../components/ui/Sparkline';
 import { StreakCounter } from '../components/ui/StreakCounter';
@@ -15,6 +15,7 @@ import { useIndex } from '../hooks/useIndex';
 import { useStreaks } from '../hooks/useStreaks';
 import { useAchievements } from '../hooks/useAchievements';
 import { useAlerts } from '../hooks/useAlerts';
+import { useJournal } from '../hooks/useJournal';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../contexts/ThemeContext';
 import { getDb, persistDb } from '../lib/sqlite';
@@ -27,6 +28,7 @@ export const Dashboard: React.FC = () => {
   const { achievements, newlyUnlocked } = useAchievements();
   const { alerts, markAsRead, dismissAlert } = useAlerts();
   const { isDark } = useTheme();
+  const { entries: journalEntries, getEntryByDate } = useJournal();
   const [missingDays, setMissingDays] = useState<string[]>([]);
   const [manualValues, setManualValues] = useState<Record<string, number>>({});
   const [editValues, setEditValues] = useState<Record<string, number>>({});
@@ -146,6 +148,10 @@ export const Dashboard: React.FC = () => {
 
   const unlockedAchievements = achievements.filter(a => a.isUnlocked);
   const activeStreaks = streaks.filter(s => s.isActive);
+
+  // Check if user has journaled today
+  const todayEntry = getEntryByDate(new Date(), 'daily');
+  const hasJournaledToday = !!todayEntry;
 
   // Calculate min/max for dynamic Y-axis
   const indexHistoryValues = indexData.history.map(h => h.value);
@@ -299,6 +305,35 @@ export const Dashboard: React.FC = () => {
       <div className="space-y-3">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">💡 Smart Insights</h3>
         <SmartFeedback />
+        
+        {/* Journal Prompt */}
+        {!hasJournaledToday && (
+          <Card className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-700">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-amber-200 dark:bg-amber-800 rounded-lg flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-amber-700 dark:text-amber-300" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-amber-900 dark:text-amber-100">
+                    Take a moment to reflect
+                  </h4>
+                  <p className="text-amber-700 dark:text-amber-300 text-sm">
+                    How has your day been so far? A quick journal entry can help track your progress.
+                  </p>
+                </div>
+              </div>
+              <motion.a
+                href="/retrospective"
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Start Journal
+              </motion.a>
+            </div>
+          </Card>
+        )}
       </div>
 
       {/* Quick Stats */}

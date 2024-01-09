@@ -10,6 +10,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Stocks } from './pages/Stocks';
 import { Tasks } from './pages/Tasks';
 import { Calendar } from './pages/Calendar';
+import { Retrospective } from './pages/Retrospective';
 import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
 
@@ -46,6 +47,7 @@ function App() {
                     <Route path="/stocks" element={<Stocks />} />
                     <Route path="/tasks" element={<Tasks />} />
                     <Route path="/calendar" element={<Calendar />} />
+                    <Route path="/retrospective" element={<Retrospective />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
