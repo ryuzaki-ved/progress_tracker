@@ -14,6 +14,7 @@ import { Forecasting } from './pages/Forecasting';
 import { Retrospective } from './pages/Retrospective';
 import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
+import { Simulation } from './pages/Simulation';
 
 function App() {
   const { user, loading } = useAuth();
@@ -51,6 +52,7 @@ function App() {
                     <Route path="/forecasting" element={<Forecasting />} />
                     <Route path="/retrospective" element={<Retrospective />} />
                     <Route path="/analytics" element={<Analytics />} />
+                    <Route path="/simulation" element={<Simulation />} />
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
                 </main>

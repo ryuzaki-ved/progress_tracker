@@ -2,14 +2,17 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Target, AlertTriangle, Zap } from 'lucide-react';
 import { Card } from './Card';
+import { Button } from './Button';
 import { useStocks } from '../../hooks/useStocks';
 import { useTasks } from '../../hooks/useTasks';
 import { useStreaks } from '../../hooks/useStreaks';
+import { useSimulation } from '../../hooks/useSimulation';
 
 export const SmartFeedback: React.FC = () => {
   const { stocks } = useStocks();
   const { tasks } = useTasks();
   const { streaks } = useStreaks();
+  const { createSimulation, enterSimulationMode } = useSimulation();
 
   const generateFeedback = () => {
     const completedToday = tasks.filter(task => 
@@ -95,6 +98,22 @@ export const SmartFeedback: React.FC = () => {
       });
     }
 
+    // Simulation suggestions
+    if (decliningStocks.length > 1) {
+      feedbackOptions.push({
+        type: 'neutral',
+        icon: '🧪',
+        title: 'Try a different strategy?',
+        message: "Experiment with alternate approaches in Simulation Mode to find what works.",
+        color: 'from-purple-50 to-violet-50 border-purple-200',
+        textColor: 'text-purple-900',
+        action: () => {
+          const simulation = createSimulation('Recovery Strategy', 'Focus on improving declining stocks');
+          enterSimulationMode(simulation);
+        },
+      });
+    }
+
     return feedbackOptions[Math.floor(Math.random() * feedbackOptions.length)];
   };
 
@@ -145,6 +164,15 @@ export const SmartFeedback: React.FC = () => {
             <p className={`${feedback.textColor} opacity-90 dark:opacity-95`}>
               {feedback.message}
             </p>
+            {feedback.action && (
+              <Button
+                size="sm"
+                onClick={feedback.action}
+                className="mt-3 bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                Try Simulation
+              </Button>
+            )}
           </div>
           
           <motion.div

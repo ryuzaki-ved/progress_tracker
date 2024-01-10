@@ -12,7 +12,8 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
-  Zap
+  Zap,
+  Beaker
 } from 'lucide-react';
 import { useSidebar } from '../../contexts/SidebarContext';
 
@@ -23,6 +24,7 @@ const menuItems = [
   { path: '/calendar', icon: Calendar, label: 'Calendar' },
   { path: '/forecasting', icon: Zap, label: 'Forecasting' },
   { path: '/retrospective', icon: BookOpen, label: 'Retrospective' },
+  { path: '/simulation', icon: Beaker, label: 'Simulation' },
   { path: '/analytics', icon: BarChart3, label: 'Analytics' },
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];
