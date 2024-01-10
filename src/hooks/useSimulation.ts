@@ -3,6 +3,7 @@ import { SimulationState, SimulationComparison, SimulationInsight, SimulationTem
 import { useStocks } from './useStocks';
 import { useTasks } from './useTasks';
 import { useIndex } from './useIndex';
+import { useStreaks } from './useStreaks';
 import { Stock, Task } from '../types';
 import { calculateIndexValue, calculateStockScore } from '../utils/stockUtils';
 
@@ -61,6 +62,7 @@ export const useSimulation = () => {
   const { stocks } = useStocks();
   const { tasks } = useTasks();
   const { indexData } = useIndex();
+  const { streaks } = useStreaks();
   
   const [simulations, setSimulations] = useState<SimulationState[]>([]);
   const [activeSimulation, setActiveSimulation] = useState<SimulationState | null>(null);
@@ -103,8 +105,8 @@ export const useSimulation = () => {
       // Clone current state
       stocks: stocks.map(stock => ({ ...stock })),
       tasks: tasks.map(task => ({ ...task })),
-      indexHistory: indexData?.history.map(h => ({ ...h })) || [],
-      currentIndexValue: indexData?.value || 500,
+      indexHistory: indexData?.history ? indexData.history.map(h => ({ ...h })) : [],
+      currentIndexValue: indexData?.value || calculateIndexValue(stocks),
       
       tags: [],
       color: '#8B5CF6', // Purple theme for simulations
@@ -122,7 +124,7 @@ export const useSimulation = () => {
 
     const updatedSims = [...simulations, simulation];
     saveSimulations(updatedSims);
-    return simulation;
+    return calculateProjections(simulation);
   };
 
   // Create simulation from template
@@ -154,15 +156,21 @@ export const useSimulation = () => {
   const enterSimulationMode = (simulation: SimulationState) => {
     // Always recalculate projections before entering
     const recalculated = calculateProjections(simulation);
+    
+    // Update the simulation in the list
+    const updatedSims = simulations.map(s => s.id === simulation.id ? recalculated : s);
+    saveSimulations(updatedSims);
+    
     setActiveSimulation(recalculated);
     setIsSimulationMode(true);
-    // Mark simulation as active and update in localStorage
-    const updatedSims = simulations.map(s =>
+    
+    // Mark simulation as active
+    const finalSims = updatedSims.map(s =>
       s.id === recalculated.id
         ? { ...recalculated, isActive: true, lastModified: new Date() }
         : { ...s, isActive: false }
     );
-    saveSimulations(updatedSims);
+    saveSimulations(finalSims);
   };
 
   // Exit simulation mode
@@ -177,15 +185,24 @@ export const useSimulation = () => {
 
   // Update simulation
   const updateSimulation = (simulationId: string, updates: Partial<SimulationState>) => {
+    // Recalculate projections if stocks or tasks changed
+    let updatedSimulation = { ...updates };
+    if (updates.stocks || updates.tasks) {
+      const tempSim = simulations.find(s => s.id === simulationId);
+      if (tempSim) {
+        updatedSimulation = calculateProjections({ ...tempSim, ...updates });
+      }
+    }
+    
     const updatedSims = simulations.map(sim => 
       sim.id === simulationId 
-        ? { ...sim, ...updates, lastModified: new Date() }
+        ? { ...sim, ...updatedSimulation, lastModified: new Date() }
         : sim
     );
     saveSimulations(updatedSims);
     
     if (activeSimulation?.id === simulationId) {
-      setActiveSimulation({ ...activeSimulation, ...updates, lastModified: new Date() });
+      setActiveSimulation({ ...activeSimulation, ...updatedSimulation, lastModified: new Date() });
     }
   };
 
@@ -201,10 +218,16 @@ export const useSimulation = () => {
 
   // Calculate projections for simulation
   const calculateProjections = (simulation: SimulationState): SimulationState => {
+    // Ensure we have valid data
+    if (!simulation.stocks || simulation.stocks.length === 0) {
+      return simulation;
+    }
+    
     // Recalculate index value with new weights
     const newIndexValue = calculateIndexValue(simulation.stocks);
-    const indexChange = newIndexValue - simulation.currentIndexValue;
-    const indexChangePercent = (indexChange / simulation.currentIndexValue) * 100;
+    const originalIndexValue = indexData?.value || calculateIndexValue(stocks);
+    const indexChange = newIndexValue - originalIndexValue;
+    const indexChangePercent = originalIndexValue > 0 ? (indexChange / originalIndexValue) * 100 : 0;
 
     // Calculate stock changes
     const stockChanges = simulation.stocks.map(simStock => {
@@ -222,7 +245,7 @@ export const useSimulation = () => {
     const weightImbalance = Math.abs(1 - totalWeight);
     const maxWeight = Math.max(...simulation.stocks.map(s => s.weight));
     
-    const burnoutRisk = Math.min(100, (maxWeight * 100) + (weightImbalance * 50));
+    const burnoutRisk = Math.min(100, Math.max(0, (maxWeight * 100) + (weightImbalance * 50)));
     const balanceScore = Math.max(0, 100 - burnoutRisk);
     
     let riskLevel: 'low' | 'medium' | 'high' = 'low';
@@ -231,7 +254,7 @@ export const useSimulation = () => {
 
     return {
       ...simulation,
-      currentIndexValue: newIndexValue,
+      currentIndexValue: originalIndexValue, // Keep original for comparison
       projectedChanges: {
         indexChange: indexChangePercent,
         stockChanges,
@@ -357,21 +380,28 @@ export const useSimulation = () => {
   // Apply simulation to reality
   const applySimulation = async (simulationId: string) => {
     const simulation = simulations.find(s => s.id === simulationId);
-    if (!simulation) return;
+    if (!simulation) return false;
 
-    // This would integrate with your existing hooks to update real data
-    // For now, we'll just show a confirmation
-    return new Promise<boolean>((resolve) => {
-      const confirmed = window.confirm(
-        `Ready to step into this new timeline?\n\n` +
-        `This will apply "${simulation.name}" strategy to your real data:\n` +
-        `• Update stock weights\n` +
-        `• Modify task priorities\n` +
-        `• Adjust your life strategy\n\n` +
-        `This action cannot be undone.`
-      );
-      resolve(confirmed);
-    });
+    const confirmed = window.confirm(
+      `Ready to step into this new timeline?\n\n` +
+      `This will apply "${simulation.name}" strategy to your real data:\n` +
+      `• Update stock weights\n` +
+      `• Modify task priorities\n` +
+      `• Adjust your life strategy\n\n` +
+      `This action cannot be undone.`
+    );
+    
+    if (!confirmed) return false;
+
+    try {
+      // Here you would integrate with your existing hooks to update real data
+      // For now, we'll just exit simulation mode and mark as applied
+      exitSimulationMode();
+      return true;
+    } catch (error) {
+      console.error('Failed to apply simulation:', error);
+      return false;
+    }
   };
 
   return {

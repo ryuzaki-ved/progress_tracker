@@ -4,6 +4,7 @@ import { X, Zap, Plus, Target } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { useSimulation } from '../../hooks/useSimulation';
+import { useStocks } from '../../hooks/useStocks';
 
 interface CreateSimulationModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export const CreateSimulationModal: React.FC<CreateSimulationModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { stocks } = useStocks();
   const { createSimulation, enterSimulationMode, updateSimulation, simulations } = useSimulation();
   const [formData, setFormData] = useState({
     name: '',
@@ -25,22 +27,38 @@ export const CreateSimulationModal: React.FC<CreateSimulationModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.name.trim()) {
+      alert('Please enter a simulation name');
+      return;
+    }
+
+    console.log('Creating simulation with data:', formData);
+    console.log('Available stocks:', stocks);
+    
     if (!formData.name.trim()) return;
 
     const simulation = createSimulation(formData.name, formData.description);
+    console.log('Created simulation:', simulation);
+    
     // Immediately update with additional metadata and get the updated simulation from state
     updateSimulation(simulation.id, {
       tags: formData.tags,
       projectedDuration: formData.projectedDuration,
     });
+    
     // Find the updated simulation in the simulations array (after updateSimulation)
     const updatedSim = simulations.find(s => s.id === simulation.id);
+    console.log('Updated simulation found:', updatedSim);
+    
     if (updatedSim) {
       enterSimulationMode({ ...updatedSim, tags: formData.tags, projectedDuration: formData.projectedDuration });
     } else {
       // fallback: enter with the original simulation + metadata
+      console.log('Using fallback simulation');
       enterSimulationMode({ ...simulation, tags: formData.tags, projectedDuration: formData.projectedDuration });
     }
+    
     onClose();
     // Reset form
     setFormData({
@@ -216,6 +234,7 @@ export const CreateSimulationModal: React.FC<CreateSimulationModalProps> = ({
                 <Button
                   type="submit"
                   disabled={!formData.name.trim()}
+                  onClick={(e) => console.log('Submit button clicked', e)}
                   className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
                 >
                   <Zap className="w-4 h-4 mr-2" />

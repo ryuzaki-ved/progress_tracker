@@ -26,6 +26,12 @@ export const SimulationComparison: React.FC<SimulationComparisonProps> = ({
   onClose,
 }) => {
   const { compareWithReality, applySimulation } = useSimulation();
+  
+  // Ensure we have a valid simulation
+  if (!simulation || !simulation.stocks) {
+    return <div>Invalid simulation data</div>;
+  }
+  
   const comparison = compareWithReality(simulation);
 
   const getInsightIcon = (type: string) => {
@@ -58,9 +64,14 @@ export const SimulationComparison: React.FC<SimulationComparisonProps> = ({
   });
 
   const handleApply = async () => {
+    console.log('Applying simulation:', simulation.id);
     const confirmed = await applySimulation(simulation.id);
     if (confirmed) {
+      console.log('Simulation applied successfully');
+      alert('Strategy applied successfully! Your real data has been updated.');
       onClose();
+    } else {
+      console.log('Simulation application cancelled or failed');
     }
   };
 
@@ -88,7 +99,7 @@ export const SimulationComparison: React.FC<SimulationComparisonProps> = ({
           <div className="text-center">
             <h3 className="text-lg font-semibold text-blue-900 mb-2">Current Reality</h3>
             <div className="text-3xl font-bold text-blue-600 mb-2">
-              {comparison.realState.indexValue.toFixed(1)}
+              {comparison.realState.indexValue?.toFixed(1) || '0.0'}
             </div>
             <div className="text-sm text-blue-700 mb-4">Life Index Value</div>
             <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
@@ -108,7 +119,7 @@ export const SimulationComparison: React.FC<SimulationComparisonProps> = ({
           <div className="text-center">
             <h3 className="text-lg font-semibold text-purple-900 mb-2">Simulated Future</h3>
             <div className="text-3xl font-bold text-purple-600 mb-2">
-              {comparison.simulatedState.indexValue.toFixed(1)}
+              {comparison.simulatedState.indexValue?.toFixed(1) || '0.0'}
             </div>
             <div className="text-sm text-purple-700 mb-4">Projected Index Value</div>
             <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
@@ -131,34 +142,34 @@ export const SimulationComparison: React.FC<SimulationComparisonProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="text-center">
             <div className={`text-2xl font-bold ${
-              simulation.projectedChanges.indexChange > 0 ? 'text-green-600' : 'text-red-600'
+              (simulation.projectedChanges?.indexChange || 0) > 0 ? 'text-green-600' : 'text-red-600'
             }`}>
-              {simulation.projectedChanges.indexChange > 0 ? '+' : ''}
-              {simulation.projectedChanges.indexChange.toFixed(1)}%
+              {(simulation.projectedChanges?.indexChange || 0) > 0 ? '+' : ''}
+              {(simulation.projectedChanges?.indexChange || 0).toFixed(1)}%
             </div>
             <div className="text-sm text-gray-600">Index Change</div>
           </div>
           <div className="text-center">
             <div className={`text-2xl font-bold ${
-              simulation.projectedChanges.riskLevel === 'low' ? 'text-green-600' :
-              simulation.projectedChanges.riskLevel === 'medium' ? 'text-yellow-600' : 'text-red-600'
+              (simulation.projectedChanges?.riskLevel || 'low') === 'low' ? 'text-green-600' :
+              (simulation.projectedChanges?.riskLevel || 'low') === 'medium' ? 'text-yellow-600' : 'text-red-600'
             }`}>
-              {simulation.projectedChanges.riskLevel}
+              {simulation.projectedChanges?.riskLevel || 'low'}
             </div>
             <div className="text-sm text-gray-600">Risk Level</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">
-              {simulation.projectedChanges.balanceScore.toFixed(0)}%
+              {(simulation.projectedChanges?.balanceScore || 0).toFixed(0)}%
             </div>
             <div className="text-sm text-gray-600">Balance Score</div>
           </div>
           <div className="text-center">
             <div className={`text-2xl font-bold ${
-              simulation.projectedChanges.burnoutRisk < 30 ? 'text-green-600' :
-              simulation.projectedChanges.burnoutRisk < 70 ? 'text-yellow-600' : 'text-red-600'
+              (simulation.projectedChanges?.burnoutRisk || 0) < 30 ? 'text-green-600' :
+              (simulation.projectedChanges?.burnoutRisk || 0) < 70 ? 'text-yellow-600' : 'text-red-600'
             }`}>
-              {simulation.projectedChanges.burnoutRisk.toFixed(0)}%
+              {(simulation.projectedChanges?.burnoutRisk || 0).toFixed(0)}%
             </div>
             <div className="text-sm text-gray-600">Burnout Risk</div>
           </div>
@@ -186,7 +197,7 @@ export const SimulationComparison: React.FC<SimulationComparisonProps> = ({
       <Card>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Weight Allocation Changes</h3>
         <div className="space-y-3">
-          {stockComparisonData.map((stock, index) => {
+          {stockComparisonData.filter(stock => stock.name).map((stock, index) => {
             const weightChange = (stock.simulatedWeight - stock.realWeight) * 100;
             return (
               <motion.div
@@ -224,7 +235,7 @@ export const SimulationComparison: React.FC<SimulationComparisonProps> = ({
       <Card>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">🤖 AI Insights</h3>
         <div className="space-y-3">
-          {comparison.insights.map((insight, index) => {
+          {(comparison.insights || []).map((insight, index) => {
             const Icon = getInsightIcon(insight.type);
             const colorClasses = getInsightColor(insight.type);
             
@@ -248,7 +259,7 @@ export const SimulationComparison: React.FC<SimulationComparisonProps> = ({
                           insight.impact === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-green-100 text-green-800'
                         }`}>
-                          {insight.impact} impact
+                          {insight.impact || 'low'} impact
                         </span>
                       </div>
                     </div>
@@ -276,6 +287,7 @@ export const SimulationComparison: React.FC<SimulationComparisonProps> = ({
             </Button>
             <Button 
               onClick={handleApply}
+              disabled={!simulation.projectedChanges}
               className="bg-purple-600 hover:bg-purple-700 text-white"
             >
               <Target className="w-4 h-4 mr-2" />

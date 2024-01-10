@@ -17,6 +17,7 @@ import { Button } from '../ui/Button';
 import { useSimulation } from '../../hooks/useSimulation';
 import { SimulationState } from '../../types/simulation';
 import { format } from 'date-fns';
+import { useStocks } from '../../hooks/useStocks';
 
 interface SimulationDashboardProps {
   onCreateNew: () => void;
@@ -27,6 +28,7 @@ export const SimulationDashboard: React.FC<SimulationDashboardProps> = ({
   onCreateNew,
   onViewComparison,
 }) => {
+  const { stocks } = useStocks();
   const { 
     simulations, 
     templates, 
@@ -38,7 +40,14 @@ export const SimulationDashboard: React.FC<SimulationDashboardProps> = ({
   
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('SimulationDashboard - simulations:', simulations);
+    console.log('SimulationDashboard - stocks:', stocks);
+  }, [simulations, stocks]);
+
   const handleEnterSimulation = (simulation: SimulationState) => {
+    console.log('Entering simulation:', simulation);
     enterSimulationMode(simulation);
   };
 
@@ -47,6 +56,7 @@ export const SimulationDashboard: React.FC<SimulationDashboardProps> = ({
     if (confirmed) {
       // Show success message or redirect
       console.log('Simulation applied successfully!');
+      alert('Simulation applied successfully! Your real data has been updated.');
     }
   };
 
@@ -54,6 +64,7 @@ export const SimulationDashboard: React.FC<SimulationDashboardProps> = ({
     const template = templates.find(t => t.id === templateId);
     if (template) {
       const simulation = createFromTemplate(template);
+      console.log('Created simulation from template:', simulation);
       enterSimulationMode(simulation);
     }
   };
@@ -127,6 +138,7 @@ export const SimulationDashboard: React.FC<SimulationDashboardProps> = ({
                   className="mt-3 w-full bg-purple-600 hover:bg-purple-700"
                   onClick={(e) => {
                     e.stopPropagation();
+                    console.log('Creating from template:', template.id);
                     handleCreateFromTemplate(template.id);
                   }}
                 >
@@ -262,6 +274,7 @@ export const SimulationDashboard: React.FC<SimulationDashboardProps> = ({
                     <Button
                       variant="primary"
                       className="w-full bg-purple-600 hover:bg-purple-700"
+                      disabled={!simulation.stocks || simulation.stocks.length === 0}
                       onClick={() => handleEnterSimulation(simulation)}
                     >
                       <Play className="w-4 h-4 mr-2" />
@@ -272,6 +285,7 @@ export const SimulationDashboard: React.FC<SimulationDashboardProps> = ({
                       <Button
                         variant="outline"
                         size="sm"
+                        disabled={!simulation.stocks || simulation.stocks.length === 0}
                         onClick={() => handleApplySimulation(simulation.id)}
                       >
                         <Target className="w-3 h-3 mr-1" />

@@ -7,6 +7,11 @@ import { useSimulation } from '../../hooks/useSimulation';
 export const SimulationModeToggle: React.FC = () => {
   const { isSimulationMode, activeSimulation, exitSimulationMode } = useSimulation();
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('SimulationModeToggle - isSimulationMode:', isSimulationMode, 'activeSimulation:', activeSimulation);
+  }, [isSimulationMode, activeSimulation]);
+
   if (!isSimulationMode || !activeSimulation) {
     return null;
   }
@@ -43,6 +48,7 @@ export const SimulationModeToggle: React.FC = () => {
                   <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium">
                     {activeSimulation.name}
                   </span>
+                  <span className="text-xs opacity-75">ID: {activeSimulation.id.slice(-8)}</span>
                 </div>
                 <div className="text-sm opacity-90">
                   Experimenting with alternate timeline • Changes won't affect real data
@@ -63,6 +69,7 @@ export const SimulationModeToggle: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={(e) => { console.log('Exit simulation clicked'); exitSimulationMode(); }}
                 onClick={exitSimulationMode}
                 className="text-white hover:bg-white/20"
               >
