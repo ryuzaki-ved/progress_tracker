@@ -44,11 +44,11 @@ export const Simulation: React.FC = () => {
       <div className={`p-6 space-y-6 ${isSimulationMode ? 'pt-20' : ''}`}>
         {/* Debug info */}
         {process.env.NODE_ENV === 'development' && (
-          <div className="bg-gray-100 p-4 rounded text-xs">
-            <div>Simulation Mode: {isSimulationMode ? 'ON' : 'OFF'}</div>
-            <div>Active Simulation: {activeSimulation?.name || 'None'}</div>
-            <div>Total Simulations: {simulations.length}</div>
-            <div>Stocks Available: {stocks.length}</div>
+          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded text-xs border border-gray-200 dark:border-gray-600">
+            <div className="text-gray-900 dark:text-gray-100">Simulation Mode: <span className="font-semibold">{isSimulationMode ? 'ON' : 'OFF'}</span></div>
+            <div className="text-gray-900 dark:text-gray-100">Active Simulation: <span className="font-semibold">{activeSimulation?.name || 'None'}</span></div>
+            <div className="text-gray-900 dark:text-gray-100">Total Simulations: <span className="font-semibold">{simulations.length}</span></div>
+            <div className="text-gray-900 dark:text-gray-100">Stocks Available: <span className="font-semibold">{stocks.length}</span></div>
           </div>
         )}
         

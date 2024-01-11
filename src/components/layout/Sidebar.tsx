@@ -36,11 +36,19 @@ export const Sidebar: React.FC = () => {
   return (
     <motion.div
       layout
-      className={`bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0 flex flex-col transition-all duration-300 ${
+      className={`bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0 flex flex-col ${
         isCollapsed ? 'w-16' : 'w-64'
       }`}
-      animate={{ width: isCollapsed ? 64 : 256 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 25, duration: 0.2 }}
+      animate={{ 
+        width: isCollapsed ? 64 : 256,
+      }}
+      transition={{ 
+        type: 'spring', 
+        stiffness: 600, 
+        damping: 30, 
+        duration: 0.15,
+        mass: 0.8
+      }}
     >
       <div className="flex-1 flex flex-col p-6">
         <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center' : 'space-x-3'}`}> 
@@ -73,15 +81,33 @@ export const Sidebar: React.FC = () => {
                   whileHover={{ x: isCollapsed ? 0 : 2 }}
                   whileTap={{ scale: 0.98 }}
                   title={item.label}
-                  layout
-                  transition={{ type: 'spring', stiffness: 400, damping: 25, duration: 0.1 }}
+                  transition={{ 
+                    type: 'spring', 
+                    stiffness: 600, 
+                    damping: 30, 
+                    duration: 0.1,
+                    mass: 0.6
+                  }}
+                  transition={{ 
+                    type: 'spring', 
+                    stiffness: 600, 
+                    damping: 30, 
+                    duration: 0.08,
+                    mass: 0.5
+                  }}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <motion.span
                     className="font-medium"
                     initial={false}
                     animate={{ opacity: isCollapsed ? 0 : 1, x: isCollapsed ? -10 : 0 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 25, duration: 0.15 }}
+                    transition={{ 
+                      type: 'spring', 
+                      stiffness: 600, 
+                      damping: 30, 
+                      duration: 0.1,
+                      mass: 0.6
+                    }}
                     style={{ display: isCollapsed ? 'none' : 'inline' }}
                   >
                     {item.label}

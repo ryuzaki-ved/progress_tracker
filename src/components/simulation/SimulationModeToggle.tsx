@@ -22,7 +22,7 @@ export const SimulationModeToggle: React.FC = () => {
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -50 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-700 dark:to-indigo-700 text-white shadow-lg"
       >
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
@@ -44,13 +44,13 @@ export const SimulationModeToggle: React.FC = () => {
               
               <div>
                 <div className="flex items-center space-x-2">
-                  <span className="font-semibold">Simulation Mode</span>
+                  <span className="font-semibold text-white">Simulation Mode</span>
                   <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium">
                     {activeSimulation.name}
                   </span>
-                  <span className="text-xs opacity-75">ID: {activeSimulation.id.slice(-8)}</span>
+                  <span className="text-xs text-white/75">ID: {activeSimulation.id.slice(-8)}</span>
                 </div>
-                <div className="text-sm opacity-90">
+                <div className="text-sm text-white/90">
                   Experimenting with alternate timeline • Changes won't affect real data
                 </div>
               </div>
@@ -60,7 +60,7 @@ export const SimulationModeToggle: React.FC = () => {
               <motion.div
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="flex items-center space-x-1 text-sm"
+                className="flex items-center space-x-1 text-sm text-white"
               >
                 <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                 <span>Live Simulation</span>
@@ -70,7 +70,6 @@ export const SimulationModeToggle: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={(e) => { console.log('Exit simulation clicked'); exitSimulationMode(); }}
-                onClick={exitSimulationMode}
                 className="text-white hover:bg-white/20"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -82,7 +81,7 @@ export const SimulationModeToggle: React.FC = () => {
 
         {/* Animated border */}
         <motion.div
-          className="h-1 bg-gradient-to-r from-yellow-400 via-pink-400 to-blue-400"
+          className="h-1 bg-gradient-to-r from-yellow-400 via-pink-400 to-blue-400 dark:from-yellow-300 dark:via-pink-300 dark:to-blue-300"
           animate={{
             background: [
               'linear-gradient(90deg, #fbbf24, #f472b6, #3b82f6)',
