@@ -15,6 +15,7 @@ import { Retrospective } from './pages/Retrospective';
 import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
 import { Simulation } from './pages/Simulation';
+import { StrategicBrain } from './pages/StrategicBrain';
 
 function App() {
   const { user, loading } = useAuth();
@@ -54,6 +55,7 @@ function App() {
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/simulation" element={<Simulation />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/strategic-brain" element={<StrategicBrain />} />
                   </Routes>
                 </main>
               </div>

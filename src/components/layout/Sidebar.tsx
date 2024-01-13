@@ -13,7 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
-  Beaker
+  Beaker,
+  Brain
 } from 'lucide-react';
 import { useSidebar } from '../../contexts/SidebarContext';
 
@@ -23,6 +24,7 @@ const menuItems = [
   { path: '/tasks', icon: CheckSquare, label: 'Tasks' },
   { path: '/calendar', icon: Calendar, label: 'Calendar' },
   { path: '/forecasting', icon: Zap, label: 'Forecasting' },
+  { path: '/strategic-brain', icon: Brain, label: 'Strategic Brain' },
   { path: '/retrospective', icon: BookOpen, label: 'Retrospective' },
   { path: '/simulation', icon: Beaker, label: 'Simulation' },
   { path: '/analytics', icon: BarChart3, label: 'Analytics' },
