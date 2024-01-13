@@ -75,7 +75,7 @@ export const StrategicAdvisorPanel: React.FC<StrategicAdvisorPanelProps> = ({
 
   return (
     <motion.div
-      className={`fixed right-4 top-20 z-40 ${isExpanded ? 'w-96' : 'w-16'} transition-all duration-300`}
+      className={`fixed right-4 top-24 z-40 ${isExpanded ? 'w-96' : 'w-20'} transition-all duration-300`}
       initial={{ x: 100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
     >
@@ -93,9 +93,9 @@ export const StrategicAdvisorPanel: React.FC<StrategicAdvisorPanelProps> = ({
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
-              className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center"
+              className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0"
             >
-              <Brain className="w-4 h-4 text-white" />
+              <Brain className="w-5 h-5 text-white" />
             </motion.div>
             {isExpanded && (
               <div>

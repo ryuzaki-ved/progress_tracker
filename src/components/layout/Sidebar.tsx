@@ -46,10 +46,10 @@ export const Sidebar: React.FC = () => {
       }}
       transition={{ 
         type: 'spring', 
-        stiffness: 600, 
-        damping: 30, 
-        duration: 0.15,
-        mass: 0.8
+        stiffness: 400, 
+        damping: 35, 
+        duration: 0.4,
+        mass: 1.2
       }}
     >
       <div className="flex-1 flex flex-col p-6">
@@ -60,7 +60,7 @@ export const Sidebar: React.FC = () => {
           <motion.div
             initial={false}
             animate={{ opacity: isCollapsed ? 0 : 1, x: isCollapsed ? -20 : 0 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 25, duration: 0.15 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30, duration: 0.35 }}
             style={{ display: isCollapsed ? 'none' : 'block' }}
           >
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">LifeStock</h1>
@@ -83,20 +83,6 @@ export const Sidebar: React.FC = () => {
                   whileHover={{ x: isCollapsed ? 0 : 2 }}
                   whileTap={{ scale: 0.98 }}
                   title={item.label}
-                  transition={{ 
-                    type: 'spring', 
-                    stiffness: 600, 
-                    damping: 30, 
-                    duration: 0.1,
-                    mass: 0.6
-                  }}
-                  transition={{ 
-                    type: 'spring', 
-                    stiffness: 600, 
-                    damping: 30, 
-                    duration: 0.08,
-                    mass: 0.5
-                  }}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <motion.span
@@ -105,10 +91,10 @@ export const Sidebar: React.FC = () => {
                     animate={{ opacity: isCollapsed ? 0 : 1, x: isCollapsed ? -10 : 0 }}
                     transition={{ 
                       type: 'spring', 
-                      stiffness: 600, 
+                      stiffness: 300, 
                       damping: 30, 
-                      duration: 0.1,
-                      mass: 0.6
+                      duration: 0.3,
+                      mass: 1.0
                     }}
                     style={{ display: isCollapsed ? 'none' : 'inline' }}
                   >

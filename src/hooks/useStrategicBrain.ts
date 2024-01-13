@@ -81,7 +81,11 @@ export const useStrategicBrain = () => {
   const { indexData } = useIndex();
   
   const [strategicModes, setStrategicModes] = useState<StrategicMode[]>(STRATEGIC_MODES);
-  const [advisorPersonality, setAdvisorPersonality] = useState<'zen' | 'energetic' | 'analytical' | 'supportive'>('analytical');
+  const [advisorPersonality, setAdvisorPersonality] = useState<'zen' | 'energetic' | 'analytical' | 'supportive'>(() => {
+    // Load from localStorage or default to analytical
+    const saved = localStorage.getItem('advisor-personality');
+    return (saved as 'zen' | 'energetic' | 'analytical' | 'supportive') || 'analytical';
+  });
   const [insights, setInsights] = useState<StrategicInsight[]>([]);
   const [patterns, setPatterns] = useState<PatternDetection[]>([]);
 
@@ -355,6 +359,11 @@ export const useStrategicBrain = () => {
     ));
   };
 
+  // Update advisor personality and save to localStorage
+  const updateAdvisorPersonality = (personality: 'zen' | 'energetic' | 'analytical' | 'supportive') => {
+    setAdvisorPersonality(personality);
+    localStorage.setItem('advisor-personality', personality);
+  };
   // Run analysis periodically
   useEffect(() => {
     if (stocks.length > 0 && tasks.length > 0) {
@@ -381,7 +390,7 @@ export const useStrategicBrain = () => {
     strategicBrain: strategicBrainState,
     switchMode,
     dismissInsight,
-    setAdvisorPersonality,
+    setAdvisorPersonality: updateAdvisorPersonality,
     generateTrajectory,
   };
 };
