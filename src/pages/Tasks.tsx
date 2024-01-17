@@ -130,6 +130,10 @@ export const Tasks: React.FC = () => {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{task.title}</h3>
+                    <div className="flex items-center space-x-2 mb-1">
+                      <div className={`w-3 h-3 ${getStockColor(task.stockId)} rounded`}></div>
+                      <span className="text-xs text-gray-500">{getStockName(task.stockId)}</span>
+                    </div>
                     {task.description && (
                       <p className="text-sm text-gray-600 mb-2">{task.description}</p>
                     )}
@@ -148,14 +152,6 @@ export const Tasks: React.FC = () => {
                     <Flag className="w-4 h-4" />
                     <span className="capitalize">{task.priority}</span>
                   </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-4 h-4 ${getStockColor(task.stockId)} rounded`}></div>
-                    <span className="text-sm text-gray-600">{getStockName(task.stockId)}</span>
-                  </div>
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">{task.points} pts</div>
                 </div>
 
                 <Button 

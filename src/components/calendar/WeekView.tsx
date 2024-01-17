@@ -135,6 +135,7 @@ export const WeekView: React.FC<WeekViewProps> = ({ weekStart, onCreateTask, onR
                       </div>
                       <div className="flex items-center space-x-1 text-gray-600 dark:text-gray-400 mt-1">
                         <div className={`w-2 h-2 ${getStockColor(task.stockId)} rounded`}></div>
+                        <span>{getStockName(task.stockId)}</span>
                         <Clock className="w-3 h-3" />
                         <span>{task.estimatedDuration || 30}m</span>
                       </div>
