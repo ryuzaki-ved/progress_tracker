@@ -49,10 +49,11 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   useEffect(() => {
     setFormData(f => ({
       ...f,
+      stockId: defaultStockId || (stocks[0]?.id || ''),
       dueDate: defaultDate ? defaultDate.toISOString().split('T')[0] : '',
       scheduledTime: defaultTime || '',
     }));
-  }, [defaultDate, defaultTime]);
+  }, [defaultStockId, defaultDate, defaultTime, stocks]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
