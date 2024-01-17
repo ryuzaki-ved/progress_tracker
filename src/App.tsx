@@ -8,6 +8,7 @@ import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { Dashboard } from './pages/Dashboard';
 import { Stocks } from './pages/Stocks';
+import { TradingDesk } from './pages/TradingDesk';
 import { Tasks } from './pages/Tasks';
 import { Calendar } from './pages/Calendar';
 import { Forecasting } from './pages/Forecasting';
@@ -48,6 +49,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/stocks" element={<Stocks />} />
+                    <Route path="/trading-desk" element={<TradingDesk />} />
                     <Route path="/tasks" element={<Tasks />} />
                     <Route path="/calendar" element={<Calendar />} />
                     <Route path="/forecasting" element={<Forecasting />} />

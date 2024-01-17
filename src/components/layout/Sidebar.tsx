@@ -14,13 +14,15 @@ import {
   ChevronRight,
   Zap,
   Beaker,
-  Brain
+  Brain,
+  DollarSign
 } from 'lucide-react';
 import { useSidebar } from '../../contexts/SidebarContext';
 
 const menuItems = [
   { path: '/', icon: Home, label: 'Dashboard' },
   { path: '/stocks', icon: TrendingUp, label: 'Stocks' },
+  { path: '/trading-desk', icon: DollarSign, label: 'Trading Desk' },
   { path: '/tasks', icon: CheckSquare, label: 'Tasks' },
   { path: '/calendar', icon: Calendar, label: 'Calendar' },
   { path: '/forecasting', icon: Zap, label: 'Forecasting' },
