@@ -33,7 +33,7 @@ export const useTasks = () => {
           dueDate: taskObj.due_date ? new Date(taskObj.due_date) : null,
           priority: (taskObj.priority || 'medium') as 'low' | 'medium' | 'high' | 'critical',
           status: (taskObj.status || 'pending') as 'pending' | 'completed' | 'overdue' | 'failed',
-          stockId: taskObj.stock_id,
+          stockId: taskObj.stock_id.toString(),
           points: taskObj.points || 10,
           createdAt: taskObj.created_at ? new Date(taskObj.created_at) : new Date(),
           completedAt: taskObj.completed_at ? new Date(taskObj.completed_at) : undefined,
