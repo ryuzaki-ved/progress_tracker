@@ -66,10 +66,9 @@ export const TradingDesk: React.FC = () => {
   const generateMarketPrices = (): MarketPrice[] => {
     return stocks.map(stock => {
       const basePrice = stock.currentScore * 0.1;
-      const fluctuation = (Math.random() - 0.5) * 0.1; // ±5% fluctuation
-      const price = basePrice * (1 + fluctuation);
-      const change = price - basePrice;
-      const changePercent = (change / basePrice) * 100;
+      const price = basePrice; // Use actual stock score * 0.1
+      const change = 0; // No random fluctuation
+      const changePercent = 0; // No random fluctuation
 
       return {
         stockId: stock.id,
