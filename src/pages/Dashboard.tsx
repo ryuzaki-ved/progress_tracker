@@ -23,33 +23,16 @@ import { getDb, persistDb } from '../lib/sqlite';
 export const Dashboard: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
   const { tasks, loading: tasksLoading } = useTasks();
-  const { indexData, loading: indexLoading, refetch } = useIndex();
+  const { indexData, loading: indexLoading, refetch, updateMultipleIndexValues } = useIndex();
   const { streaks, loading: streaksLoading } = useStreaks();
   const { achievements, newlyUnlocked } = useAchievements();
   const { alerts, markAsRead, dismissAlert } = useAlerts();
   const { isDark } = useTheme();
   const { entries: journalEntries, getEntryByDate } = useJournal();
-  const [missingDays, setMissingDays] = useState<string[]>([]);
-  const [manualValues, setManualValues] = useState<Record<string, number>>({});
   const [editValues, setEditValues] = useState<Record<string, number>>({});
   const [editMode, setEditMode] = useState(false);
   const [editExpanded, setEditExpanded] = useState(false);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
-
-  useEffect(() => {
-    if (indexData && indexData.history) {
-      // Find missing days in the last 7 days
-      const days = [];
-      const today = new Date();
-      const historyDates = indexData.history.map(h => h.date.toISOString().split('T')[0]);
-      for (let i = 6; i >= 1; i--) {
-        const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-        const ds = d.toISOString().split('T')[0];
-        if (!historyDates.includes(ds)) days.push(ds);
-      }
-      setMissingDays(days);
-    }
-  }, [indexData]);
 
   useEffect(() => {
     if (newlyUnlocked.length > 0) {
@@ -71,43 +54,29 @@ export const Dashboard: React.FC = () => {
     return days;
   }, [indexData]);
 
-  const handleManualValueChange = (date: string, value: number) => {
-    setManualValues(v => ({ ...v, [date]: value }));
-  };
-
-  const handleAssignValues = async () => {
-    const db = await getDb();
-    for (const date of missingDays) {
-      const value = manualValues[date] ?? 500;
-      db.run(
-        `INSERT INTO index_history (user_id, date, index_value, daily_change, change_percent, created_at) VALUES (?, ?, ?, 0, 0, datetime('now'))`,
-        [1, date, value]
-      );
-    }
-    await persistDb();
-    setManualValues({});
-    setMissingDays([]);
-    refetch();
-  };
-
   const handleEditValueChange = (date: string, value: number) => {
     setEditValues(v => ({ ...v, [date]: value }));
   };
 
   const handleSaveEdits = async () => {
-    const db = await getDb();
-    for (const { date } of last7Days) {
-      if (editValues[date] !== undefined) {
-        db.run(
-          `UPDATE index_history SET index_value = ? WHERE user_id = ? AND date = ?`,
-          [editValues[date], 1, date]
-        );
+    try {
+      // Filter out only the values that have been changed
+      const updates: Record<string, number> = {};
+      for (const { date } of last7Days) {
+        if (editValues[date] !== undefined) {
+          updates[date] = editValues[date];
+        }
       }
+      
+      if (Object.keys(updates).length > 0) {
+        await updateMultipleIndexValues(updates);
+        setEditMode(false);
+        setEditValues({});
+      }
+    } catch (error) {
+      console.error('Failed to save index values:', error);
+      alert('Failed to save changes. Please try again.');
     }
-    await persistDb();
-    setEditMode(false);
-    setEditValues({});
-    refetch();
   };
 
   if (stocksLoading || tasksLoading || indexLoading || streaksLoading) {
@@ -218,33 +187,6 @@ export const Dashboard: React.FC = () => {
         </div>
       </Card>
 
-      {missingDays.length > 0 && (
-        <Card className="bg-yellow-50 border-yellow-200 mb-6">
-          <h3 className="text-lg font-semibold text-yellow-900 mb-2">Assign Index Value for Missing Days</h3>
-          <div className="space-y-2">
-            {missingDays.map(date => (
-              <div key={date} className="flex items-center space-x-4">
-                <span className="w-32 text-gray-800">{new Date(date).toLocaleDateString()}</span>
-                <input
-                  type="number"
-                  className="border rounded px-2 py-1 w-32"
-                  value={manualValues[date] ?? 500}
-                  onChange={e => handleManualValueChange(date, Number(e.target.value))}
-                  min={0}
-                  max={2000}
-                />
-              </div>
-            ))}
-          </div>
-          <button
-            className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-            onClick={handleAssignValues}
-          >
-            Assign Values
-          </button>
-        </Card>
-      )}
-
       {last7Days.length > 0 && (
         <Card className="bg-blue-50 border-blue-200 mb-6">
           <div className="flex items-center justify-between mb-2 cursor-pointer" onClick={() => setEditExpanded(v => !v)}>
@@ -257,7 +199,7 @@ export const Dashboard: React.FC = () => {
                 Edit
               </button>
             ) : (
-              <button className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700" onClick={e => { e.stopPropagation(); handleSaveEdits(); }}>
+              <button className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700" onClick={(e) => { e.stopPropagation(); handleSaveEdits(); }}>
                 Save Changes
               </button>
             )}
