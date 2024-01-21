@@ -40,13 +40,10 @@ export const useIndex = () => {
           value: obj.index_value,
         };
       });
-      
       // Get today's and yesterday's values
       const today = new Date().toISOString().split('T')[0];
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       const todayValue = getCurrentIndexValue();
-      
-      // Get yesterday's value from database
       const yesterdayRes = db.exec(
         `SELECT index_value FROM index_history WHERE user_id = ? AND date = ?`,
         [currentUserId, yesterday]
@@ -54,13 +51,15 @@ export const useIndex = () => {
       const yesterdayValue = yesterdayRes[0]?.values?.[0]?.[0] ?? todayValue;
       const change = todayValue - yesterdayValue;
       const changePercent = yesterdayValue > 0 ? (change / yesterdayValue) * 100 : 0;
-      
-      // Build history array - use the actual database history
+      // Build history array
+      const liveValue = getCurrentIndexValue();
+      const historyWithoutToday = history.filter((h: { date: Date }) => h.date.toISOString().split('T')[0] !== today);
+      const newHistory = [...historyWithoutToday, { date: new Date(), value: liveValue }];
       setIndexData({
         value: todayValue,
         change,
         changePercent,
-        history: history.length > 0 ? history : [{ date: new Date(), value: todayValue }],
+        history: newHistory.length > 0 ? newHistory : [{ date: new Date(), value: todayValue }],
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch index data');
@@ -75,33 +74,24 @@ export const useIndex = () => {
       const db = await getDb();
       const today = new Date().toISOString().split('T')[0];
       
-      // Check if today's record already exists
-      const todayRes = db.exec(
+      // Get yesterday's value
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const yesterdayRes = db.exec(
         `SELECT index_value FROM index_history WHERE user_id = ? AND date = ?`,
-        [currentUserId, today]
+        [currentUserId, yesterday]
       );
+      const yesterdayValue = yesterdayRes[0]?.values?.[0]?.[0] ?? 500;
+      const currentValue = getCurrentIndexValue();
+      const change = currentValue - yesterdayValue;
+      const changePercent = yesterdayValue > 0 ? (change / yesterdayValue) * 100 : 0;
       
-      // Only insert if today's record doesn't exist
-      if (!todayRes[0]?.values?.[0]) {
-        // Get yesterday's value
-        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        const yesterdayRes = db.exec(
-          `SELECT index_value FROM index_history WHERE user_id = ? AND date = ?`,
-          [currentUserId, yesterday]
-        );
-        const yesterdayValue = yesterdayRes[0]?.values?.[0]?.[0] ?? 500;
-        const currentValue = getCurrentIndexValue();
-        const change = currentValue - yesterdayValue;
-        const changePercent = yesterdayValue > 0 ? (change / yesterdayValue) * 100 : 0;
-        
-        // Insert the record for today
-        db.run(
-          `INSERT INTO index_history (user_id, date, index_value, daily_change, change_percent, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))`,
-          [currentUserId, today, currentValue, change, changePercent]
-        );
-        await persistDb();
-        await fetchIndexData();
-      }
+      // Use INSERT OR REPLACE to upsert the record
+      db.run(
+        `INSERT OR REPLACE INTO index_history (user_id, date, index_value, daily_change, change_percent, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))`,
+        [currentUserId, today, currentValue, change, changePercent]
+      );
+      await persistDb();
+      await fetchIndexData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update index history');
     }
@@ -115,16 +105,23 @@ export const useIndex = () => {
     // eslint-disable-next-line
   }, [stocks]);
 
+  return {
+    indexData,
+    loading,
+    error,
+    updateIndexHistory,
+    updateMultipleIndexValues,
+    refetch: fetchIndexData,
+  };
+};
+
   // Update multiple index values for specific dates
   const updateMultipleIndexValues = async (updates: Record<string, number>) => {
     setError(null);
-    console.log('Updating index values:', updates);
     try {
       const db = await getDb();
       
       for (const [date, value] of Object.entries(updates)) {
-        console.log(`Processing date: ${date}, value: ${value}`);
-        
         // Get the previous day's value for change calculation
         const prevDate = new Date(date);
         prevDate.setDate(prevDate.getDate() - 1);
@@ -138,34 +135,17 @@ export const useIndex = () => {
         const change = value - prevValue;
         const changePercent = prevValue > 0 ? (change / prevValue) * 100 : 0;
         
-        console.log(`Previous value: ${prevValue}, change: ${change}, changePercent: ${changePercent}`);
-        
-        // Insert or replace the record for this date
+        // Update the record for this date
         db.run(
-          `INSERT OR REPLACE INTO index_history (user_id, date, index_value, daily_change, change_percent, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))`,
-          [currentUserId, date, value, change, changePercent]
+          `UPDATE index_history SET index_value = ?, daily_change = ?, change_percent = ? WHERE user_id = ? AND date = ?`,
+          [value, change, changePercent, currentUserId, date]
         );
-        console.log(`Updated record for ${date}`);
       }
       
-      console.log('Persisting database...');
       await persistDb();
-      console.log('Refetching index data...');
       await fetchIndexData();
-      console.log('Update completed successfully');
     } catch (err) {
-      console.error('Error updating index values:', err);
       setError(err instanceof Error ? err.message : 'Failed to update index values');
       throw err;
     }
   };
-
-  return {
-    indexData,
-    loading,
-    error,
-    updateIndexHistory,
-    updateMultipleIndexValues,
-    refetch: fetchIndexData,
-  };
-};
