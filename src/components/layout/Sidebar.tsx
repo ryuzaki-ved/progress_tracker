@@ -15,7 +15,8 @@ import {
   Zap,
   Beaker,
   Brain,
-  DollarSign
+  DollarSign,
+  Edit3
 } from 'lucide-react';
 import { useSidebar } from '../../contexts/SidebarContext';
 
@@ -30,6 +31,7 @@ const menuItems = [
   { path: '/retrospective', icon: BookOpen, label: 'Retrospective' },
   { path: '/simulation', icon: Beaker, label: 'Simulation' },
   { path: '/analytics', icon: BarChart3, label: 'Analytics' },
+  { path: '/index-editor', icon: Edit3, label: 'Index Editor' },
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 

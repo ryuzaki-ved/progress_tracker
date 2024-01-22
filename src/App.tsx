@@ -17,6 +17,7 @@ import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
 import { Simulation } from './pages/Simulation';
 import { StrategicBrain } from './pages/StrategicBrain';
+import { IndexEditor } from './pages/IndexEditor';
 
 function App() {
   const { user, loading } = useAuth();
@@ -58,6 +59,7 @@ function App() {
                     <Route path="/simulation" element={<Simulation />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/strategic-brain" element={<StrategicBrain />} />
+                    <Route path="/index-editor" element={<IndexEditor />} />
                   </Routes>
                 </main>
               </div>

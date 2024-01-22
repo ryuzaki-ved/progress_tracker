@@ -23,15 +23,12 @@ import { getDb, persistDb } from '../lib/sqlite';
 export const Dashboard: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
   const { tasks, loading: tasksLoading } = useTasks();
-  const { indexData, loading: indexLoading, refetch, updateMultipleIndexValues } = useIndex();
+  const { indexData, loading: indexLoading, refetch } = useIndex();
   const { streaks, loading: streaksLoading } = useStreaks();
   const { achievements, newlyUnlocked } = useAchievements();
   const { alerts, markAsRead, dismissAlert } = useAlerts();
   const { isDark } = useTheme();
   const { entries: journalEntries, getEntryByDate } = useJournal();
-  const [editValues, setEditValues] = useState<Record<string, number>>({});
-  const [editMode, setEditMode] = useState(false);
-  const [editExpanded, setEditExpanded] = useState(false);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
 
   useEffect(() => {
@@ -39,45 +36,6 @@ export const Dashboard: React.FC = () => {
       setShowAchievementModal(true);
     }
   }, [newlyUnlocked]);
-
-  // Build last 7 days with values
-  const last7Days = React.useMemo(() => {
-    if (!indexData || !indexData.history) return [];
-    const today = new Date();
-    const days: { date: string, value: number }[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-      const ds = d.toISOString().split('T')[0];
-      const found = indexData.history.find(h => h.date.toISOString().split('T')[0] === ds);
-      days.push({ date: ds, value: found ? found.value : 500 });
-    }
-    return days;
-  }, [indexData]);
-
-  const handleEditValueChange = (date: string, value: number) => {
-    setEditValues(v => ({ ...v, [date]: value }));
-  };
-
-  const handleSaveEdits = async () => {
-    try {
-      // Filter out only the values that have been changed
-      const updates: Record<string, number> = {};
-      for (const { date } of last7Days) {
-        if (editValues[date] !== undefined) {
-          updates[date] = editValues[date];
-        }
-      }
-      
-      if (Object.keys(updates).length > 0) {
-        await updateMultipleIndexValues(updates);
-        setEditMode(false);
-        setEditValues({});
-      }
-    } catch (error) {
-      console.error('Failed to save index values:', error);
-      alert('Failed to save changes. Please try again.');
-    }
-  };
 
   if (stocksLoading || tasksLoading || indexLoading || streaksLoading) {
     return (
@@ -186,47 +144,6 @@ export const Dashboard: React.FC = () => {
           </ResponsiveContainer>
         </div>
       </Card>
-
-      {last7Days.length > 0 && (
-        <Card className="bg-blue-50 border-blue-200 mb-6">
-          <div className="flex items-center justify-between mb-2 cursor-pointer" onClick={() => setEditExpanded(v => !v)}>
-            <div className="flex items-center">
-              {editExpanded ? <ChevronDown className="w-5 h-5 mr-2 text-blue-700" /> : <ChevronRight className="w-5 h-5 mr-2 text-blue-700" />}
-              <h3 className="text-lg font-semibold text-blue-900">Edit Index Values (Last 7 Days)</h3>
-            </div>
-            {!editMode ? (
-              <button className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={e => { e.stopPropagation(); setEditMode(true); setEditExpanded(true); }}>
-                Edit
-              </button>
-            ) : (
-              <button className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700" onClick={(e) => { e.stopPropagation(); handleSaveEdits(); }}>
-                Save Changes
-              </button>
-            )}
-          </div>
-          {editExpanded && (
-            <div className="space-y-2 mt-2">
-              {last7Days.map(({ date, value }) => (
-                <div key={date} className="flex items-center space-x-4">
-                  <span className="w-32 text-gray-800">{new Date(date).toLocaleDateString()}</span>
-                  {editMode ? (
-                    <input
-                      type="number"
-                      className="border rounded px-2 py-1 w-32"
-                      value={editValues[date] !== undefined ? editValues[date] : value}
-                      onChange={e => handleEditValueChange(date, Number(e.target.value))}
-                      min={0}
-                      max={2000}
-                    />
-                  ) : (
-                    <span className="w-32 text-gray-900 font-semibold">{value}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      )}
 
       {/* Alerts Section */}
       {alerts.length > 0 && (
