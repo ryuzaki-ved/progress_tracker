@@ -87,3 +87,9 @@ export function calculateTaskScore({
   }
   return Math.round(baseScore * timeMultiplier);
 }
+
+export function normalizeDateToStartOfDay(date: Date): Date {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+}

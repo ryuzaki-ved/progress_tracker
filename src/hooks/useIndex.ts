@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getDb, persistDb } from '../lib/sqlite';
 import { useStocks } from './useStocks';
 import { IndexData } from '../types';
-import { calculateIndexValue } from '../utils/stockUtils';
+import { calculateIndexValue, normalizeDateToStartOfDay } from '../utils/stockUtils';
 
 const currentUserId = 1;
 
@@ -36,7 +36,7 @@ export const useIndex = () => {
         const obj: any = {};
         (columns as string[]).forEach((col: string, i: number) => (obj[col] = row[i]));
         return {
-          date: new Date(obj.date),
+          date: normalizeDateToStartOfDay(new Date(obj.date)),
           value: obj.index_value,
         };
       });
@@ -54,7 +54,7 @@ export const useIndex = () => {
       // Build history array
       const liveValue = getCurrentIndexValue();
       const historyWithoutToday = history.filter((h: { date: Date }) => h.date.toISOString().split('T')[0] !== today);
-      const newHistory = [...historyWithoutToday, { date: new Date(), value: liveValue }];
+      const newHistory = [...historyWithoutToday, { date: normalizeDateToStartOfDay(new Date()), value: liveValue }];
       setIndexData({
         value: todayValue,
         change,
