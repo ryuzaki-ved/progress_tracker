@@ -4,7 +4,8 @@ import { Calendar, Save, TrendingUp, Edit3, RefreshCw } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useIndex } from '../hooks/useIndex';
-import { format, subDays, addDays, startOfDay } from 'date-fns';
+import { format, subDays, addDays, startOfDay, isToday } from 'date-fns';
+import { getDb } from '../lib/sqlite';
 
 export const IndexEditor: React.FC = () => {
   const { indexData, loading, error, updateMultipleIndexValues, refetch } = useIndex();
@@ -48,6 +49,10 @@ export const IndexEditor: React.FC = () => {
   const dateRangeData = generateDateRangeData();
 
   const handleValueChange = (date: string, value: number) => {
+    // Prevent editing today's value
+    if (isToday(new Date(date))) {
+      return;
+    }
     setEditValues(prev => ({ ...prev, [date]: value }));
   };
 
@@ -77,6 +82,24 @@ export const IndexEditor: React.FC = () => {
   const handleRefresh = () => {
     refetch();
     setEditValues({});
+  };
+
+  // Debug: Log index_history table
+  const handleDebugLogIndexHistory = async () => {
+    const db = await getDb();
+    const res = db.exec('SELECT * FROM index_history ORDER BY date DESC LIMIT 50');
+    if (res[0]) {
+      const columns = res[0].columns;
+      const values = res[0].values;
+      const rows = values.map(row => {
+        const obj = {};
+        columns.forEach((col, i) => (obj[col] = row[i]));
+        return obj;
+      });
+      console.log('index_history rows:', rows);
+    } else {
+      console.log('No rows in index_history');
+    }
   };
 
   const hasChanges = Object.keys(editValues).length > 0;
@@ -110,6 +133,9 @@ export const IndexEditor: React.FC = () => {
           <Button variant="outline" onClick={handleRefresh}>
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
+          </Button>
+          <Button variant="outline" onClick={handleDebugLogIndexHistory}>
+            Debug: Log Index History
           </Button>
           <Button 
             onClick={handleSaveChanges} 
@@ -240,15 +266,25 @@ export const IndexEditor: React.FC = () => {
                         step="0.1"
                         value={currentValue}
                         onChange={(e) => handleValueChange(entry.date, parseFloat(e.target.value) || 0)}
+                        disabled={isToday(new Date(entry.date))}
                         className={`w-24 px-3 py-2 border rounded-lg text-sm ${
-                          hasEdit 
+                          isToday(new Date(entry.date))
+                            ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                            : hasEdit 
                             ? 'border-blue-300 bg-blue-50 dark:border-blue-600 dark:bg-blue-900/20' 
                             : 'border-gray-300 dark:border-gray-600'
                         } bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400`}
                       />
                     </td>
                     <td className="py-3 px-4">
-                      {hasEdit ? (
+                      {isToday(new Date(entry.date)) ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+                            Live Calculated
+                          </span>
+                        </div>
+                      ) : hasEdit ? (
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                           <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
@@ -294,7 +330,7 @@ export const IndexEditor: React.FC = () => {
               </h4>
               <p className="text-blue-700 dark:text-blue-300 text-sm">
                 You have {Object.keys(editValues).length} unsaved change{Object.keys(editValues).length !== 1 ? 's' : ''}. 
-                Click "Save Changes" to apply them to your charts.
+                Click "Save Changes" to apply them to your charts. Today's value is automatically calculated and cannot be edited.
               </p>
             </div>
             <Button 

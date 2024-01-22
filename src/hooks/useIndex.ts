@@ -25,87 +25,64 @@ export const useIndex = () => {
     setError(null);
     try {
       const db = await getDb();
-      
-      // Fetch the last 30 days of index history to ensure we have enough data
+      // Fetch all index history for the user
       const res = db.exec(
         `SELECT * FROM index_history WHERE user_id = ? ORDER BY date ASC`,
         [currentUserId]
       );
-      
       const rows = res[0]?.values || [];
       const columns = res[0]?.columns || [];
+      // Store all dates as strings in 'yyyy-MM-dd' format
       const rawHistory = rows.map((row: any[]) => {
         const obj: any = {};
         (columns as string[]).forEach((col: string, i: number) => (obj[col] = row[i]));
         return {
-          date: normalizeDateToStartOfDay(new Date(obj.date)),
+          date: obj.date, // keep as string
           value: obj.index_value,
         };
       });
 
       // Create a continuous history for the last 30 days
       const today = new Date();
-      const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-      const continuousHistory: { date: Date; value: number }[] = [];
-      
+      const todayString = today.toISOString().split('T')[0];
+      const continuousHistory: { date: string; value: number }[] = [];
       let lastKnownValue = 500; // Default starting value
-      
-      // Generate continuous daily data for the last 30 days
       for (let i = 29; i >= 0; i--) {
         const currentDate = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
         const dateString = currentDate.toISOString().split('T')[0];
-        
         // Check if we have a recorded value for this date
-        const recordedEntry = rawHistory.find(h => 
-          h.date.toISOString().split('T')[0] === dateString
-        );
-        
+        const recordedEntry = rawHistory.find(h => h.date === dateString);
         if (recordedEntry) {
-          // Use the recorded value and update our last known value
           lastKnownValue = recordedEntry.value;
           continuousHistory.push({
-            date: normalizeDateToStartOfDay(currentDate),
+            date: dateString,
             value: recordedEntry.value
           });
         } else {
-          // Use the last known value for missing days
           continuousHistory.push({
-            date: normalizeDateToStartOfDay(currentDate),
+            date: dateString,
             value: lastKnownValue
           });
         }
       }
-
       // For today specifically, always use the live calculated value
-      const todayString = today.toISOString().split('T')[0];
-      const todayIndex = continuousHistory.findIndex(h => 
-        h.date.toISOString().split('T')[0] === todayString
-      );
-      
       const liveIndexValue = getCurrentIndexValue();
-      
+      const todayIndex = continuousHistory.findIndex(h => h.date === todayString);
       if (todayIndex !== -1) {
         continuousHistory[todayIndex].value = liveIndexValue;
       } else {
-        // Add today if it's not in the array
         continuousHistory.push({
-          date: normalizeDateToStartOfDay(today),
+          date: todayString,
           value: liveIndexValue
         });
       }
-
       // Calculate today's change compared to yesterday
       const yesterdayString = new Date(today.getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const yesterdayEntry = rawHistory.find(h => 
-        h.date.toISOString().split('T')[0] === yesterdayString
-      );
-      
-      // Use yesterday's recorded value, or the last known value if no record exists
+      const yesterdayEntry = rawHistory.find(h => h.date === yesterdayString);
       const yesterdayValue = yesterdayEntry ? yesterdayEntry.value : lastKnownValue;
       const todayValue = liveIndexValue;
       const change = todayValue - yesterdayValue;
       const changePercent = yesterdayValue > 0 ? (change / yesterdayValue) * 100 : 0;
-
       setIndexData({
         value: todayValue,
         change,
@@ -168,10 +145,10 @@ export const useIndex = () => {
         const change = value - prevValue;
         const changePercent = prevValue > 0 ? (change / prevValue) * 100 : 0;
         
-        // Update the record for this date
+        // Insert or replace the record for this date
         db.run(
-          `UPDATE index_history SET index_value = ?, daily_change = ?, change_percent = ? WHERE user_id = ? AND date = ?`,
-          [value, change, changePercent, currentUserId, date]
+          `INSERT OR REPLACE INTO index_history (user_id, date, index_value, daily_change, change_percent, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))`,
+          [currentUserId, date, value, change, changePercent]
         );
       }
       

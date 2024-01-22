@@ -73,7 +73,8 @@ CREATE TABLE IF NOT EXISTS index_history (
   daily_change REAL DEFAULT 0,
   change_percent REAL DEFAULT 0,
   commentary TEXT,
-  created_at TEXT DEFAULT (datetime('now'))
+  created_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(user_id, date)
 );
 `;
 
@@ -134,6 +135,36 @@ function migrateIndexHistoryTable(db: Database) {
   if (!columns.includes('created_at')) {
     db.run("ALTER TABLE index_history ADD COLUMN created_at TEXT;");
     db.run("UPDATE index_history SET created_at = datetime('now') WHERE created_at IS NULL;");
+  }
+  // Add UNIQUE constraint if missing (SQLite doesn't support ALTER TABLE ADD CONSTRAINT directly)
+  // So, recreate the table if needed
+  const indexRes = db.exec("PRAGMA index_list('index_history')");
+  const hasUnique = indexRes[0]?.values?.some(row => row[2] === 1 && row[1].includes('user_id') && row[1].includes('date'));
+  if (!hasUnique) {
+    // Remove duplicates, keep latest by created_at
+    db.run(`DELETE FROM index_history WHERE id NOT IN (
+      SELECT MAX(id) FROM index_history GROUP BY user_id, date
+    )`);
+    // Rename old table
+    db.run("ALTER TABLE index_history RENAME TO index_history_old;");
+    // Recreate table with UNIQUE constraint
+    db.run(`CREATE TABLE index_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      date TEXT NOT NULL,
+      index_value REAL NOT NULL,
+      daily_change REAL DEFAULT 0,
+      change_percent REAL DEFAULT 0,
+      commentary TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(user_id, date)
+    );`);
+    // Copy data back
+    db.run(`INSERT INTO index_history (user_id, date, index_value, daily_change, change_percent, commentary, created_at)
+      SELECT user_id, date, index_value, daily_change, change_percent, commentary, created_at FROM index_history_old;
+    `);
+    // Drop old table
+    db.run("DROP TABLE index_history_old;");
   }
 }
 
