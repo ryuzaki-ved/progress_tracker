@@ -97,24 +97,6 @@ export const useIndex = () => {
     }
   };
 
-  useEffect(() => {
-    if (stocks && stocks.length > 0) {
-      fetchIndexData();
-      updateIndexHistory();
-    }
-    // eslint-disable-next-line
-  }, [stocks]);
-
-  return {
-    indexData,
-    loading,
-    error,
-    updateIndexHistory,
-    updateMultipleIndexValues,
-    refetch: fetchIndexData,
-  };
-};
-
   // Update multiple index values for specific dates
   const updateMultipleIndexValues = async (updates: Record<string, number>) => {
     setError(null);
@@ -149,3 +131,21 @@ export const useIndex = () => {
       throw err;
     }
   };
+
+  useEffect(() => {
+    if (stocks && stocks.length > 0) {
+      fetchIndexData();
+      updateIndexHistory();
+    }
+    // eslint-disable-next-line
+  }, [stocks]);
+
+  return {
+    indexData,
+    loading,
+    error,
+    updateIndexHistory,
+    updateMultipleIndexValues,
+    refetch: fetchIndexData,
+  };
+};
