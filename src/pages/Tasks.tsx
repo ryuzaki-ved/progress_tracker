@@ -16,6 +16,8 @@ export const Tasks: React.FC = () => {
   const { achievements } = useAchievements();
   const [filter, setFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('dueDate');
+  const [filterDate, setFilterDate] = useState<string>('');
+  const [filterStockId, setFilterStockId] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
 
   if (tasksLoading || stocksLoading) {
@@ -35,6 +37,18 @@ export const Tasks: React.FC = () => {
     if (filter === 'pending') return task.status === 'pending';
     if (filter === 'overdue') return task.status === 'overdue';
     return true;
+  }).filter(task => {
+    // Date filter
+    if (filterDate) {
+      if (!task.dueDate) return false;
+      const taskDate = task.dueDate.toISOString().split('T')[0];
+      if (taskDate !== filterDate) return false;
+    }
+    return true;
+  }).filter(task => {
+    // Stock filter
+    if (filterStockId === 'all') return true;
+    return task.stockId === filterStockId;
   });
 
   const sortedTasks = filteredTasks.sort((a, b) => {
@@ -83,36 +97,102 @@ export const Tasks: React.FC = () => {
 
       {/* Filters */}
       <Card>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Filter className="w-4 h-4 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Filter:</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filters</span>
             </div>
-            <select 
-              value={filter} 
-              onChange={(e) => setFilter(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-1 text-sm"
-            >
-              <option value="all">All Tasks</option>
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
-              <option value="overdue">Overdue</option>
-            </select>
-          </div>
-          <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-gray-700">Sort by:</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</span>
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)}
+                className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              >
+                <option value="dueDate">Due Date</option>
+                <option value="priority">Priority</option>
+              </select>
             </div>
-            <select 
-              value={sortBy} 
-              onChange={(e) => setSortBy(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-1 text-sm"
-            >
-              <option value="dueDate">Due Date</option>
-              <option value="priority">Priority</option>
-            </select>
           </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Status Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Status
+              </label>
+              <select 
+                value={filter} 
+                onChange={(e) => setFilter(e.target.value)}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              >
+                <option value="all">All Tasks</option>
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="overdue">Overdue</option>
+              </select>
+            </div>
+
+            {/* Date Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Due Date
+              </label>
+              <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              />
+            </div>
+
+            {/* Stock Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Stock Category
+              </label>
+              <select 
+                value={filterStockId} 
+                onChange={(e) => setFilterStockId(e.target.value)}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              >
+                <option value="all">All Stocks</option>
+                {stocks.map(stock => (
+                  <option key={stock.id} value={stock.id}>
+                    {stock.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Clear Filters */}
+            <div className="flex items-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFilter('all');
+                  setFilterDate('');
+                  setFilterStockId('all');
+                }}
+                className="w-full"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+          
+          {/* Filter Summary */}
+          {(filter !== 'all' || filterDate || filterStockId !== 'all') && (
+            <div className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+              <span className="font-medium">Active filters:</span>
+              {filter !== 'all' && <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded text-xs">Status: {filter}</span>}
+              {filterDate && <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded text-xs">Date: {new Date(filterDate).toLocaleDateString()}</span>}
+              {filterStockId !== 'all' && <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded text-xs">Stock: {stocks.find(s => s.id === filterStockId)?.name}</span>}
+              <span className="ml-2 text-gray-500">({filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} shown)</span>
+            </div>
+          )}
         </div>
       </Card>
 
