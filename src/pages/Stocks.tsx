@@ -67,7 +67,7 @@ export const Stocks: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Stocks Overview</h1>
           <p className="text-gray-600 mt-1">Monitor your life categories performance</p>
-          <div className="text-sm font-medium text-blue-700 mt-2">
+          <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mt-2">
             Total Weight: {totalWeight}%
           </div>
         </div>

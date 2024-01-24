@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Filter, Calendar, Flag } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Filter, Calendar, Flag, ChevronDown, ChevronRight } from 'lucide-react';
+import { isSameDay } from 'date-fns';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { AchievementBadge } from '../components/ui/AchievementBadge';
@@ -19,6 +20,7 @@ export const Tasks: React.FC = () => {
   const [filterDate, setFilterDate] = useState<string>('');
   const [filterStockId, setFilterStockId] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showOtherTasks, setShowOtherTasks] = useState(false);
 
   if (tasksLoading || stocksLoading) {
     return (
@@ -63,6 +65,20 @@ export const Tasks: React.FC = () => {
     }
     return 0;
   });
+
+  // Categorize tasks
+  const today = new Date();
+  const todayTasks = sortedTasks.filter(
+    (task) => task.dueDate && isSameDay(new Date(task.dueDate), today) && task.status === 'pending'
+  );
+  const pendingTasksNotToday = sortedTasks.filter(
+    (task) =>
+      task.status === 'pending' &&
+      (!task.dueDate || !isSameDay(new Date(task.dueDate), today))
+  );
+  const otherTasks = sortedTasks.filter(
+    (task) => task.status !== 'pending'
+  );
 
   const getStockName = (stockId: string) => {
     const stock = stocks.find(s => s.id === stockId);
@@ -196,101 +212,333 @@ export const Tasks: React.FC = () => {
         </div>
       </Card>
 
-      {/* Tasks Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sortedTasks.map((task, index) => (
-          <motion.div
-            key={task.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <Card hover className={`h-full border-l-4 ${getPriorityColor(task.priority)}`}>
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{task.title}</h3>
-                    <div className="flex items-center space-x-2 mb-1">
-                      <div className={`w-3 h-3 ${getStockColor(task.stockId)} rounded`}></div>
-                      <span className="text-xs text-gray-500">{getStockName(task.stockId)}</span>
+      {/* Today Tasks */}
+      {todayTasks.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold text-blue-700 dark:text-blue-300 mb-2 flex items-center">
+            Tasks Due Today
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            {todayTasks.map((task, index) => (
+              <motion.div
+                key={task.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card hover className={`h-full border-l-4 ${getPriorityColor(task.priority)}`}>
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{task.title}</h3>
+                        <div className="flex items-center space-x-2 mb-1">
+                          <div className={`w-3 h-3 ${getStockColor(task.stockId)} rounded`}></div>
+                          <span className="text-xs text-gray-500">{getStockName(task.stockId)}</span>
+                        </div>
+                        {task.description && (
+                          <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                        )}
+                      </div>
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                        {task.status === 'failed' ? 'Failed' : task.status}
+                      </div>
                     </div>
-                    {task.description && (
-                      <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <div className="flex items-center space-x-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>{task.dueDate ? task.dueDate.toLocaleDateString() : 'No due date'}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Flag className="w-4 h-4" />
+                        <span className="capitalize">{task.priority}</span>
+                      </div>
+                    </div>
+
+                    <Button 
+                      variant={task.status === 'completed' ? 'secondary' : 'primary'} 
+                      className="w-full"
+                      disabled={task.status === 'completed'}
+                     onClick={() => task.status !== 'completed' && handleCompleteTask(task.id)}
+                    >
+                      {task.status === 'completed' ? 'Completed' : 'Mark Complete'}
+                    </Button>
+                    
+                    {/* Show confetti effect when task is completed */}
+                    {task.status === 'completed' && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: [0, 1.2, 1] }}
+                        className="text-center py-2"
+                      >
+                        <span className="text-2xl">🎉</span>
+                      </motion.div>
                     )}
+                    
+                    {task.status === 'completed' && (
+                      <Button
+                        variant="outline"
+                        className="w-full mt-2"
+                        onClick={() => markAsNotCompleted(task.id)}
+                      >
+                        Mark as Not Completed
+                      </Button>
+                    )}
+                    {(task.status === 'pending' || task.status === 'overdue') && (
+                      <Button
+                        variant="destructive"
+                        className="w-full mt-2"
+                        onClick={() => {
+                          if (window.confirm(`Mark task '${task.title}' as failed? This cannot be undone.`)) {
+                            failTask(task.id);
+                          }
+                        }}
+                      >
+                        Mark as Failed
+                      </Button>
+                    )}
+                    <Button
+                      variant="destructive"
+                      className="w-full mt-2"
+                      onClick={() => {
+                        if (window.confirm(`Delete task '${task.title}'? This cannot be undone.`)) {
+                          deleteTask(task.id);
+                        }
+                      }}
+                    >
+                      Delete Task
+                    </Button>
                   </div>
-                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                    {task.status === 'failed' ? 'Failed' : task.status}
-                  </div>
-                </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* Pending Tasks Not Today */}
+      {pendingTasksNotToday.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold text-emerald-700 dark:text-emerald-300 mb-2 flex items-center">
+            Pending Tasks (Not Due Today)
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            {pendingTasksNotToday.map((task, index) => (
+              <motion.div
+                key={task.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card hover className={`h-full border-l-4 ${getPriorityColor(task.priority)}`}>
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{task.title}</h3>
+                        <div className="flex items-center space-x-2 mb-1">
+                          <div className={`w-3 h-3 ${getStockColor(task.stockId)} rounded`}></div>
+                          <span className="text-xs text-gray-500">{getStockName(task.stockId)}</span>
+                        </div>
+                        {task.description && (
+                          <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                        )}
+                      </div>
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                        {task.status === 'failed' ? 'Failed' : task.status}
+                      </div>
+                    </div>
 
-                <div className="flex items-center justify-between text-sm text-gray-600">
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="w-4 h-4" />
-                    <span>{task.dueDate ? task.dueDate.toLocaleDateString() : 'No due date'}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Flag className="w-4 h-4" />
-                    <span className="capitalize">{task.priority}</span>
-                  </div>
-                </div>
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <div className="flex items-center space-x-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>{task.dueDate ? task.dueDate.toLocaleDateString() : 'No due date'}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Flag className="w-4 h-4" />
+                        <span className="capitalize">{task.priority}</span>
+                      </div>
+                    </div>
 
-                <Button 
-                  variant={task.status === 'completed' ? 'secondary' : 'primary'} 
-                  className="w-full"
-                  disabled={task.status === 'completed'}
-                 onClick={() => task.status !== 'completed' && handleCompleteTask(task.id)}
-                >
-                  {task.status === 'completed' ? 'Completed' : 'Mark Complete'}
-                </Button>
-                
-                {/* Show confetti effect when task is completed */}
-                {task.status === 'completed' && (
+                    <Button 
+                      variant={task.status === 'completed' ? 'secondary' : 'primary'} 
+                      className="w-full"
+                      disabled={task.status === 'completed'}
+                     onClick={() => task.status !== 'completed' && handleCompleteTask(task.id)}
+                    >
+                      {task.status === 'completed' ? 'Completed' : 'Mark Complete'}
+                    </Button>
+                    
+                    {/* Show confetti effect when task is completed */}
+                    {task.status === 'completed' && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: [0, 1.2, 1] }}
+                        className="text-center py-2"
+                      >
+                        <span className="text-2xl">🎉</span>
+                      </motion.div>
+                    )}
+                    
+                    {task.status === 'completed' && (
+                      <Button
+                        variant="outline"
+                        className="w-full mt-2"
+                        onClick={() => markAsNotCompleted(task.id)}
+                      >
+                        Mark as Not Completed
+                      </Button>
+                    )}
+                    {(task.status === 'pending' || task.status === 'overdue') && (
+                      <Button
+                        variant="destructive"
+                        className="w-full mt-2"
+                        onClick={() => {
+                          if (window.confirm(`Mark task '${task.title}' as failed? This cannot be undone.`)) {
+                            failTask(task.id);
+                          }
+                        }}
+                      >
+                        Mark as Failed
+                      </Button>
+                    )}
+                    <Button
+                      variant="destructive"
+                      className="w-full mt-2"
+                      onClick={() => {
+                        if (window.confirm(`Delete task '${task.title}'? This cannot be undone.`)) {
+                          deleteTask(task.id);
+                        }
+                      }}
+                    >
+                      Delete Task
+                    </Button>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* Collapsible Other Tasks Section */}
+      <div className="mb-6">
+        <div className="flex items-center cursor-pointer select-none" onClick={() => setShowOtherTasks((v) => !v)}>
+          <span className="text-xl font-semibold text-gray-700 dark:text-gray-200 mr-2">Other Tasks</span>
+          {showOtherTasks ? (
+            <ChevronDown className="w-5 h-5" />
+          ) : (
+            <ChevronRight className="w-5 h-5" />
+          )}
+        </div>
+        <AnimatePresence initial={false}>
+          {showOtherTasks && (
+            <motion.div
+              key="otherTasks"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                {otherTasks.length === 0 && (
+                  <div className="text-gray-500 dark:text-gray-400 col-span-full">No other tasks.</div>
+                )}
+                {otherTasks.map((task, index) => (
                   <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: [0, 1.2, 1] }}
-                    className="text-center py-2"
+                    key={task.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
                   >
-                    <span className="text-2xl">🎉</span>
+                    <Card hover className={`h-full border-l-4 ${getPriorityColor(task.priority)}`}>
+                      <div className="space-y-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{task.title}</h3>
+                            <div className="flex items-center space-x-2 mb-1">
+                              <div className={`w-3 h-3 ${getStockColor(task.stockId)} rounded`}></div>
+                              <span className="text-xs text-gray-500">{getStockName(task.stockId)}</span>
+                            </div>
+                            {task.description && (
+                              <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                            )}
+                          </div>
+                          <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                            {task.status === 'failed' ? 'Failed' : task.status}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                          <div className="flex items-center space-x-1">
+                            <Calendar className="w-4 h-4" />
+                            <span>{task.dueDate ? task.dueDate.toLocaleDateString() : 'No due date'}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Flag className="w-4 h-4" />
+                            <span className="capitalize">{task.priority}</span>
+                          </div>
+                        </div>
+
+                        <Button 
+                          variant={task.status === 'completed' ? 'secondary' : 'primary'} 
+                          className="w-full"
+                          disabled={task.status === 'completed'}
+                         onClick={() => task.status !== 'completed' && handleCompleteTask(task.id)}
+                        >
+                          {task.status === 'completed' ? 'Completed' : 'Mark Complete'}
+                        </Button>
+                        
+                        {/* Show confetti effect when task is completed */}
+                        {task.status === 'completed' && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: [0, 1.2, 1] }}
+                            className="text-center py-2"
+                          >
+                            <span className="text-2xl">🎉</span>
+                          </motion.div>
+                        )}
+                        
+                        {task.status === 'completed' && (
+                          <Button
+                            variant="outline"
+                            className="w-full mt-2"
+                            onClick={() => markAsNotCompleted(task.id)}
+                          >
+                            Mark as Not Completed
+                          </Button>
+                        )}
+                        {(task.status === 'pending' || task.status === 'overdue') && (
+                          <Button
+                            variant="destructive"
+                            className="w-full mt-2"
+                            onClick={() => {
+                              if (window.confirm(`Mark task '${task.title}' as failed? This cannot be undone.`)) {
+                                failTask(task.id);
+                              }
+                            }}
+                          >
+                            Mark as Failed
+                          </Button>
+                        )}
+                        <Button
+                          variant="destructive"
+                          className="w-full mt-2"
+                          onClick={() => {
+                            if (window.confirm(`Delete task '${task.title}'? This cannot be undone.`)) {
+                              deleteTask(task.id);
+                            }
+                          }}
+                        >
+                          Delete Task
+                        </Button>
+                      </div>
+                    </Card>
                   </motion.div>
-                )}
-                
-                {task.status === 'completed' && (
-                  <Button
-                    variant="outline"
-                    className="w-full mt-2"
-                    onClick={() => markAsNotCompleted(task.id)}
-                  >
-                    Mark as Not Completed
-                  </Button>
-                )}
-                {(task.status === 'pending' || task.status === 'overdue') && (
-                  <Button
-                    variant="destructive"
-                    className="w-full mt-2"
-                    onClick={() => {
-                      if (window.confirm(`Mark task '${task.title}' as failed? This cannot be undone.`)) {
-                        failTask(task.id);
-                      }
-                    }}
-                  >
-                    Mark as Failed
-                  </Button>
-                )}
-                <Button
-                  variant="destructive"
-                  className="w-full mt-2"
-                  onClick={() => {
-                    if (window.confirm(`Delete task '${task.title}'? This cannot be undone.`)) {
-                      deleteTask(task.id);
-                    }
-                  }}
-                >
-                  Delete Task
-                </Button>
+                ))}
               </div>
-            </Card>
-          </motion.div>
-        ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Task Stats */}
