@@ -11,7 +11,8 @@ const SCHEMA = `
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL
+  password TEXT NOT NULL,
+  cash_balance REAL DEFAULT 10000 -- New column for cash balance, default $10,000
 );
 CREATE TABLE IF NOT EXISTS stocks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,6 +76,28 @@ CREATE TABLE IF NOT EXISTS index_history (
   commentary TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   UNIQUE(user_id, date)
+);
+CREATE TABLE IF NOT EXISTS holdings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  stock_id INTEGER NOT NULL,
+  quantity REAL NOT NULL,
+  avg_buy_price REAL NOT NULL,
+  UNIQUE(user_id, stock_id),
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  FOREIGN KEY(stock_id) REFERENCES stocks(id)
+);
+CREATE TABLE IF NOT EXISTS transactions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  stock_id INTEGER NOT NULL,
+  type TEXT NOT NULL, -- 'buy' or 'sell'
+  quantity REAL NOT NULL,
+  price REAL NOT NULL,
+  total_amount REAL NOT NULL,
+  transaction_date TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  FOREIGN KEY(stock_id) REFERENCES stocks(id)
 );
 `;
 
@@ -167,6 +190,50 @@ function migrateIndexHistoryTable(db: Database) {
     db.run("DROP TABLE index_history_old;");
   }
 }
+function migrateUsersTable(db: Database) {
+  const res = db.exec("PRAGMA table_info(users);");
+  const columns = res[0]?.values?.map(row => row[1]) || [];
+  if (!columns.includes('cash_balance')) {
+    try {
+      db.run("ALTER TABLE users ADD COLUMN cash_balance REAL DEFAULT 10000;");
+      db.run("UPDATE users SET cash_balance = 10000 WHERE cash_balance IS NULL;");
+    } catch (e) {
+      // Ignore error if column already exists
+    }
+  }
+}
+function migrateHoldingsTable(db: Database) {
+  const res = db.exec("PRAGMA table_info(holdings);");
+  if (!res[0]) {
+    db.run(`CREATE TABLE IF NOT EXISTS holdings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      stock_id INTEGER NOT NULL,
+      quantity REAL NOT NULL,
+      avg_buy_price REAL NOT NULL,
+      UNIQUE(user_id, stock_id),
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      FOREIGN KEY(stock_id) REFERENCES stocks(id)
+    );`);
+  }
+}
+function migrateTransactionsTable(db: Database) {
+  const res = db.exec("PRAGMA table_info(transactions);");
+  if (!res[0]) {
+    db.run(`CREATE TABLE IF NOT EXISTS transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      stock_id INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      quantity REAL NOT NULL,
+      price REAL NOT NULL,
+      total_amount REAL NOT NULL,
+      transaction_date TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      FOREIGN KEY(stock_id) REFERENCES stocks(id)
+    );`);
+  }
+}
 
 // Load database from IndexedDB
 async function loadDatabase(): Promise<Database> {
@@ -174,10 +241,13 @@ async function loadDatabase(): Promise<Database> {
   const saved = await loadFromIndexedDB(DB_KEY);
   db = saved ? new SQL.Database(new Uint8Array(saved)) : new SQL.Database();
   db.exec(SCHEMA);
+  migrateUsersTable(db); // New migration for users
   migrateStocksTable(db);
   migrateTasksTable(db);
   migrateIndexHistoryTable(db);
   migrateStockPerformanceHistoryTable(db);
+  migrateHoldingsTable(db); // New migration for holdings
+  migrateTransactionsTable(db); // New migration for transactions
   return db;
 }
 
