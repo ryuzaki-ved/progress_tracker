@@ -107,7 +107,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Index Overview */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900">
+      <Card hover className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Life Performance Index</h2>
@@ -167,7 +167,7 @@ export const Dashboard: React.FC = () => {
         
         {/* Journal Prompt */}
         {!hasJournaledToday && (
-          <Card className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-700">
+          <Card hover className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-amber-200 dark:bg-amber-800 rounded-lg flex items-center justify-center">
@@ -197,7 +197,7 @@ export const Dashboard: React.FC = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-green-50 border-green-200">
+        <Card hover className="bg-green-50 border-green-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-green-600 font-medium">Completed Today</p>
@@ -209,7 +209,7 @@ export const Dashboard: React.FC = () => {
           </div>
         </Card>
         
-        <Card className="bg-blue-50 border-blue-200">
+        <Card hover className="bg-blue-50 border-blue-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-blue-600 font-medium">Pending Tasks</p>
@@ -221,7 +221,7 @@ export const Dashboard: React.FC = () => {
           </div>
         </Card>
         
-        <Card className="bg-purple-50 border-purple-200">
+        <Card hover className="bg-purple-50 border-purple-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-purple-600 font-medium">Achievements</p>
@@ -233,7 +233,7 @@ export const Dashboard: React.FC = () => {
           </div>
         </Card>
         
-        <Card className="bg-orange-50 border-orange-200">
+        <Card hover className="bg-orange-50 border-orange-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-orange-600 font-medium">Active Streaks</p>
@@ -249,7 +249,7 @@ export const Dashboard: React.FC = () => {
       {/* Streaks & Achievements */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Streaks */}
-        <Card>
+        <Card hover>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
             🔥 Current Streaks
           </h3>
@@ -272,7 +272,7 @@ export const Dashboard: React.FC = () => {
         </Card>
 
         {/* Recent Achievements */}
-        <Card>
+        <Card hover>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
               🏆 Achievements
@@ -309,10 +309,11 @@ export const Dashboard: React.FC = () => {
             {topPerformers.map((stock, index) => (
               <motion.div
                 key={stock.id}
-                className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900 rounded-lg"
+                className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900 rounded-lg cursor-pointer"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
+                whileHover={{ y: -4, boxShadow: '0 8px 24px 0 rgba(16,185,129,0.10)' }}
               >
                 <div className="flex items-center space-x-3">
                   <div className={`w-8 h-8 ${stock.color} rounded-lg flex items-center justify-center text-white text-sm font-bold`}>
@@ -352,10 +353,11 @@ export const Dashboard: React.FC = () => {
             {worstPerformers.map((stock, index) => (
               <motion.div
                 key={stock.id}
-                className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900 rounded-lg"
+                className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900 rounded-lg cursor-pointer"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
+                whileHover={{ y: -4, boxShadow: '0 8px 24px 0 rgba(239,68,68,0.10)' }}
               >
                 <div className="flex items-center space-x-3">
                   <div className={`w-8 h-8 ${stock.color} rounded-lg flex items-center justify-center text-white text-sm font-bold`}>

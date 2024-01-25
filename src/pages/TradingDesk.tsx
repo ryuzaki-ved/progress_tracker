@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, DollarSign, BarChart3, Activity, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -126,7 +126,7 @@ export const TradingDesk: React.FC = () => {
 
       {/* Portfolio Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
           <div className="p-4 text-center">
             <div className="text-2xl font-bold text-blue-600">
               {holdingsWithStock.length}
@@ -134,7 +134,7 @@ export const TradingDesk: React.FC = () => {
             <div className="text-sm text-blue-700">Holdings</div>
           </div>
         </Card>
-        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
           <div className="p-4 text-center">
             <div className="text-2xl font-bold text-green-600">
               {formatCurrency(totalInvestment)}
@@ -142,7 +142,7 @@ export const TradingDesk: React.FC = () => {
             <div className="text-sm text-green-700">Invested</div>
           </div>
         </Card>
-        <Card className={`bg-gradient-to-r ${totalPnL >= 0 ? 'from-green-50 to-emerald-50 border-green-200' : 'from-red-50 to-pink-50 border-red-200'}`}>
+        <Card className={`bg-gradient-to-r ${totalPnL >= 0 ? 'from-green-50 to-emerald-50 border-green-200' : 'from-red-50 to-pink-50 border-red-200'} transition-transform duration-200 hover:scale-105 hover:shadow-lg`}>
           <div className="p-4 text-center">
             <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>              {showPnL ? formatPercent(totalPnLPercent) : '••••'}
             </div>
@@ -150,7 +150,7 @@ export const TradingDesk: React.FC = () => {
             </div>
           </div>
         </Card>
-        <Card className="bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200">
+        <Card className="bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
           <div className="p-4 text-center">
             <div className="text-2xl font-bold text-purple-600">
               {holdingsWithStock.filter(h => h.unrealizedPnL > 0).length}
@@ -179,12 +179,12 @@ export const TradingDesk: React.FC = () => {
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 dark:bg-gray-800">
-                    <th className="py-2 px-4 text-left">Stock</th>
-                    <th className="py-2 px-4 text-right">Qty</th>
-                    <th className="py-2 px-4 text-right">Avg Buy</th>
-                    <th className="py-2 px-4 text-right">Current</th>
-                    <th className="py-2 px-4 text-right">Unrealized P&L</th>
-                    <th className="py-2 px-4 text-right">Return</th>
+                    <th className="py-2 px-4 text-left text-gray-700 dark:text-gray-200">Stock</th>
+                    <th className="py-2 px-4 text-right text-gray-700 dark:text-gray-200">Qty</th>
+                    <th className="py-2 px-4 text-right text-gray-700 dark:text-gray-200">Avg Buy</th>
+                    <th className="py-2 px-4 text-right text-gray-700 dark:text-gray-200">Current</th>
+                    <th className="py-2 px-4 text-right text-gray-700 dark:text-gray-200">Unrealized P&L</th>
+                    <th className="py-2 px-4 text-right text-gray-700 dark:text-gray-200">Return</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -196,7 +196,7 @@ export const TradingDesk: React.FC = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        className="border-b border-gray-100 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150 cursor-pointer"
                       >
                         <td className="py-4 px-4">
                           <div className="flex items-center space-x-3">
@@ -258,7 +258,7 @@ export const TradingDesk: React.FC = () => {
                 <select
                   value={selectedStockId}
                   onChange={(e) => setSelectedStockId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-shadow duration-150 hover:border-blue-400 dark:hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-gray-800"
                 >
                   <option value="">Choose a stock...</option>
                   {stocks.map(stock => (
@@ -270,14 +270,22 @@ export const TradingDesk: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Order Type</label>
-                <select
-                  value={orderType}
-                  onChange={e => setOrderType(e.target.value as 'buy' | 'sell')}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                >
-                  <option value="buy">Buy</option>
-                  <option value="sell">Sell</option>
-                </select>
+                <div className="flex space-x-2">
+                  <Button
+                    type="button"
+                    onClick={() => setOrderType('buy')}
+                    className={`flex-1 py-2 transition-transform duration-100 active:scale-95 focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-shadow duration-150 ${orderType === 'buy' ? 'bg-green-600 text-white shadow-md' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'}`}
+                  >
+                    Buy
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => setOrderType('sell')}
+                    className={`flex-1 py-2 transition-transform duration-100 active:scale-95 focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-shadow duration-150 ${orderType === 'sell' ? 'bg-red-600 text-white shadow-md' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}
+                  >
+                    Sell
+                  </Button>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quantity</label>
@@ -286,7 +294,7 @@ export const TradingDesk: React.FC = () => {
                   min={1}
                   value={quantity}
                   onChange={e => setQuantity(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-shadow duration-150"
                 />
               </div>
               <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
@@ -297,51 +305,77 @@ export const TradingDesk: React.FC = () => {
                 <span>Total: <span className="font-medium text-gray-900 dark:text-white">₹{totalCost.toFixed(2)}</span></span>
               </div>
               {orderError && <div className="text-red-600 text-sm">{orderError}</div>}
-              <Button type="submit" className="w-full mt-2">Place Order</Button>
+              <Button
+                type="submit"
+                className="w-full mt-2 transition-transform duration-100 active:scale-95 hover:scale-105 focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500"
+              >
+                Place Order
+              </Button>
             </form>
           </Card>
         </div>
       </div>
       {/* Transactions Modal */}
+      <AnimatePresence>
       {showTxHistory && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-2xl w-full p-6 relative">
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-900" onClick={() => setShowTxHistory(false)}>
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-2xl w-full p-6 relative"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          >
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" onClick={() => setShowTxHistory(false)}>
               ×
             </button>
-            <h2 className="text-xl font-semibold mb-4">Transaction History</h2>
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Transaction History</h2>
             <div className="overflow-x-auto max-h-96">
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 dark:bg-gray-800">
-                    <th className="py-2 px-4">Type</th>
-                    <th className="py-2 px-4">Stock</th>
-                    <th className="py-2 px-4">Qty</th>
-                    <th className="py-2 px-4">Price</th>
-                    <th className="py-2 px-4">Brokerage</th>
-                    <th className="py-2 px-4">Time</th>
+                    <th className="py-2 px-4 text-gray-700 dark:text-gray-200">Type</th>
+                    <th className="py-2 px-4 text-gray-700 dark:text-gray-200">Stock</th>
+                    <th className="py-2 px-4 text-gray-700 dark:text-gray-200">Qty</th>
+                    <th className="py-2 px-4 text-gray-700 dark:text-gray-200">Price</th>
+                    <th className="py-2 px-4 text-gray-700 dark:text-gray-200">Brokerage</th>
+                    <th className="py-2 px-4 text-gray-700 dark:text-gray-200">Time</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map(tx => {
-                    const stock = stocks.find(s => s.id.toString() === tx.stockId.toString());
-                    return (
-                      <tr key={tx.id}>
-                        <td className="py-2 px-4 font-medium capitalize">{tx.type}</td>
-                        <td className="py-2 px-4">{stock?.name || tx.stockId}</td>
-                        <td className="py-2 px-4 text-right">{tx.quantity}</td>
-                        <td className="py-2 px-4 text-right">₹{tx.price.toFixed(2)}</td>
-                        <td className="py-2 px-4 text-right">₹{tx.brokerageFee.toFixed(2)}</td>
-                        <td className="py-2 px-4 text-right">{new Date(tx.timestamp).toLocaleString()}</td>
-                      </tr>
-                    );
-                  })}
+                  <AnimatePresence>
+                    {transactions.map((tx, idx) => {
+                      const stock = stocks.find(s => s.id.toString() === tx.stockId.toString());
+                      return (
+                        <motion.tr
+                          key={tx.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          transition={{ delay: idx * 0.04 }}
+                        >
+                          <td className="py-2 px-4 font-medium capitalize text-gray-900 dark:text-gray-100">{tx.type}</td>
+                          <td className="py-2 px-4 text-gray-900 dark:text-gray-100">{stock?.name || tx.stockId}</td>
+                          <td className="py-2 px-4 text-right text-gray-900 dark:text-gray-100">{tx.quantity}</td>
+                          <td className="py-2 px-4 text-right text-gray-900 dark:text-gray-100">₹{tx.price.toFixed(2)}</td>
+                          <td className="py-2 px-4 text-right text-gray-900 dark:text-gray-100">₹{tx.brokerageFee.toFixed(2)}</td>
+                          <td className="py-2 px-4 text-right text-gray-900 dark:text-gray-100">{new Date(tx.timestamp).toLocaleString()}</td>
+                        </motion.tr>
+                      );
+                    })}
+                  </AnimatePresence>
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 };
