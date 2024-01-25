@@ -225,3 +225,24 @@ export interface WhatIfScenario {
   isSaved: boolean;
   createdAt: Date;
 }
+
+export interface Holding {
+  id: number;
+  userId: number;
+  stockId: number;
+  quantity: number;
+  weightedAvgBuyPrice: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface Transaction {
+  id: number;
+  userId: number;
+  stockId: number;
+  type: 'buy' | 'sell';
+  quantity: number;
+  price: number;
+  brokerageFee: number;
+  timestamp: string;
+}

@@ -76,12 +76,42 @@ CREATE TABLE IF NOT EXISTS index_history (
   created_at TEXT DEFAULT (datetime('now')),
   UNIQUE(user_id, date)
 );
+CREATE TABLE IF NOT EXISTS user_settings (
+  user_id INTEGER PRIMARY KEY,
+  cash_balance REAL DEFAULT 10000000,
+  -- add other user settings columns here
+  FOREIGN KEY(user_id) REFERENCES users(id)
+);
+CREATE TABLE IF NOT EXISTS user_holdings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  stock_id INTEGER NOT NULL,
+  quantity REAL NOT NULL,
+  weighted_avg_buy_price REAL NOT NULL,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT,
+  UNIQUE(user_id, stock_id),
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  FOREIGN KEY(stock_id) REFERENCES stocks(id)
+);
+CREATE TABLE IF NOT EXISTS transactions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  stock_id INTEGER NOT NULL,
+  type TEXT NOT NULL, -- 'buy' or 'sell'
+  quantity REAL NOT NULL,
+  price REAL NOT NULL,
+  brokerage_fee REAL NOT NULL,
+  timestamp TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  FOREIGN KEY(stock_id) REFERENCES stocks(id)
+);
 `;
 
 // Migration: add created_at to stocks and tasks if missing
 function migrateStocksTable(db: Database) {
   const res = db.exec("PRAGMA table_info(stocks);");
-  const columns = res[0]?.values?.map(row => row[1]) || [];
+  const columns = res[0]?.values?.map((row: any) => row[1]) || [];
   if (!columns.includes('created_at')) {
     db.run("ALTER TABLE stocks ADD COLUMN created_at TEXT;");
     db.run("UPDATE stocks SET created_at = datetime('now') WHERE created_at IS NULL;");
@@ -96,7 +126,7 @@ function migrateStocksTable(db: Database) {
 }
 function migrateTasksTable(db: Database) {
   const res = db.exec("PRAGMA table_info(tasks);");
-  const columns = res[0]?.values?.map(row => row[1]) || [];
+  const columns = res[0]?.values?.map((row: any) => row[1]) || [];
   if (!columns.includes('created_at')) {
     db.run("ALTER TABLE tasks ADD COLUMN created_at TEXT;");
     db.run("UPDATE tasks SET created_at = datetime('now') WHERE created_at IS NULL;");
@@ -131,7 +161,7 @@ function migrateStockPerformanceHistoryTable(db: Database) {
 }
 function migrateIndexHistoryTable(db: Database) {
   const res = db.exec("PRAGMA table_info(index_history);");
-  const columns = res[0]?.values?.map(row => row[1]) || [];
+  const columns = res[0]?.values?.map((row: any) => row[1]) || [];
   if (!columns.includes('created_at')) {
     db.run("ALTER TABLE index_history ADD COLUMN created_at TEXT;");
     db.run("UPDATE index_history SET created_at = datetime('now') WHERE created_at IS NULL;");
@@ -139,7 +169,7 @@ function migrateIndexHistoryTable(db: Database) {
   // Add UNIQUE constraint if missing (SQLite doesn't support ALTER TABLE ADD CONSTRAINT directly)
   // So, recreate the table if needed
   const indexRes = db.exec("PRAGMA index_list('index_history')");
-  const hasUnique = indexRes[0]?.values?.some(row => row[2] === 1 && row[1].includes('user_id') && row[1].includes('date'));
+  const hasUnique = indexRes[0]?.values?.some((row: any) => row[2] === 1 && row[1].includes('user_id') && row[1].includes('date'));
   if (!hasUnique) {
     // Remove duplicates, keep latest by created_at
     db.run(`DELETE FROM index_history WHERE id NOT IN (
@@ -167,10 +197,102 @@ function migrateIndexHistoryTable(db: Database) {
     db.run("DROP TABLE index_history_old;");
   }
 }
+function migrateUserSettingsTable(db: Database) {
+  const res = db.exec("PRAGMA table_info(user_settings);");
+  if (!res[0]) {
+    db.run(`CREATE TABLE IF NOT EXISTS user_settings (
+      user_id INTEGER PRIMARY KEY,
+      cash_balance REAL DEFAULT 10000000,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    );`);
+  } else {
+    const columns = res[0]?.values?.map((row: any) => row[1]) || [];
+    if (!columns.includes('cash_balance')) {
+      db.run("ALTER TABLE user_settings ADD COLUMN cash_balance REAL DEFAULT 10000000;");
+    }
+  }
+  // Initialize cash_balance for all users if missing
+  const usersRes = db.exec("SELECT id FROM users;");
+  if (usersRes[0]) {
+    const userIds = usersRes[0].values.map((row: any) => row[0]);
+    userIds.forEach((userId: number) => {
+      const settingsRes = db.exec(`SELECT cash_balance FROM user_settings WHERE user_id = ${userId};`);
+      if (!settingsRes[0] || settingsRes[0].values.length === 0) {
+        db.run(`INSERT INTO user_settings (user_id, cash_balance) VALUES (${userId}, 10000000);`);
+      }
+    });
+  }
+}
+function migrateUserHoldingsTable(db: Database) {
+  const res = db.exec("PRAGMA table_info(user_holdings);");
+  if (!res[0]) {
+    db.run(`CREATE TABLE IF NOT EXISTS user_holdings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      stock_id INTEGER NOT NULL,
+      quantity REAL NOT NULL,
+      weighted_avg_buy_price REAL NOT NULL,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT,
+      UNIQUE(user_id, stock_id),
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      FOREIGN KEY(stock_id) REFERENCES stocks(id)
+    );`);
+  }
+}
+function migrateTransactionsTable(db: Database) {
+  const res = db.exec("PRAGMA table_info(transactions);");
+  if (!res[0]) {
+    db.run(`CREATE TABLE IF NOT EXISTS transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      stock_id INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      quantity REAL NOT NULL,
+      price REAL NOT NULL,
+      brokerage_fee REAL NOT NULL,
+      timestamp TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      FOREIGN KEY(stock_id) REFERENCES stocks(id)
+    );`);
+  } else {
+    const columns = res[0]?.values?.map((row: any) => row[1]) || [];
+    if (!columns.includes('brokerage_fee')) {
+      db.run('ALTER TABLE transactions ADD COLUMN brokerage_fee REAL NOT NULL DEFAULT 0;');
+    }
+    if (!columns.includes('timestamp')) {
+      db.run('ALTER TABLE transactions ADD COLUMN timestamp TEXT;');
+    }
+    // Remove total_amount column if it exists
+    if (columns.includes('total_amount')) {
+      // 1. Rename old table
+      db.run('ALTER TABLE transactions RENAME TO transactions_old;');
+      // 2. Create new table without total_amount
+      db.run(`CREATE TABLE transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        stock_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        price REAL NOT NULL,
+        brokerage_fee REAL NOT NULL,
+        timestamp TEXT,
+        FOREIGN KEY(user_id) REFERENCES users(id),
+        FOREIGN KEY(stock_id) REFERENCES stocks(id)
+      );`);
+      // 3. Copy data (excluding total_amount)
+      db.run(`INSERT INTO transactions (id, user_id, stock_id, type, quantity, price, brokerage_fee, timestamp)
+        SELECT id, user_id, stock_id, type, quantity, price, brokerage_fee, timestamp FROM transactions_old;
+      `);
+      // 4. Drop old table
+      db.run('DROP TABLE transactions_old;');
+    }
+  }
+}
 
 // Load database from IndexedDB
 async function loadDatabase(): Promise<Database> {
-  if (!SQL) SQL = await initSqlJs({ locateFile: file => 'public/sql-wasm.wasm' });
+  if (!SQL) SQL = await initSqlJs({ locateFile: (file: any) => 'public/sql-wasm.wasm' });
   const saved = await loadFromIndexedDB(DB_KEY);
   db = saved ? new SQL.Database(new Uint8Array(saved)) : new SQL.Database();
   db.exec(SCHEMA);
@@ -178,6 +300,9 @@ async function loadDatabase(): Promise<Database> {
   migrateTasksTable(db);
   migrateIndexHistoryTable(db);
   migrateStockPerformanceHistoryTable(db);
+  migrateUserSettingsTable(db);
+  migrateUserHoldingsTable(db);
+  migrateTransactionsTable(db);
   return db;
 }
 
