@@ -4,7 +4,6 @@ import { TrendingUp, TrendingDown, DollarSign, BarChart3, Activity, RefreshCw, E
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useStocks } from '../hooks/useStocks';
-import { useTrading } from '../hooks/useTrading';
 
 interface Holding {
   stockId: string;
@@ -27,61 +26,105 @@ interface MarketPrice {
 }
 
 export const TradingDesk: React.FC = () => {
-  const { stocks, loading: stocksLoading } = useStocks();
-  const {
-    cashBalance,
-    holdings,
-    transactions,
-    loading: tradingLoading,
-    error,
-    success,
-    buyStock,
-    sellStock,
-    initialize,
-    fetchPortfolio,
-    fetchTransactions,
-  } = useTrading();
+  const { stocks, loading } = useStocks();
+  const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [marketPrices, setMarketPrices] = useState<MarketPrice[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showPnL, setShowPnL] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  
+  // Trading form state
   const [selectedStockId, setSelectedStockId] = useState('');
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
   const [quantity, setQuantity] = useState<number>(0);
   const [priceType, setPriceType] = useState('market');
 
-  // Map holdings to UI shape, join with stocks
-  const uiHoldings = holdings.map(h => {
-    const stock = stocks.find(s => s.id === String(h.stock_id));
-    const currentPrice = stock ? stock.currentScore * 0.1 : 0;
-    const unrealizedPnL = (currentPrice - h.avg_buy_price) * h.quantity;
-    const unrealizedPnLPercent = h.avg_buy_price > 0 ? ((currentPrice - h.avg_buy_price) / h.avg_buy_price) * 100 : 0;
-    return {
-      stockId: String(h.stock_id),
-      stockName: stock?.name || '',
-      quantity: h.quantity,
-      avgBuyPrice: h.avg_buy_price,
-      currentPrice,
-      unrealizedPnL,
-      unrealizedPnLPercent,
-      category: stock?.category || '',
-      color: stock?.color || '',
-    };
-  });
+  // Generate mock holdings based on actual stocks
+  const generateMockHoldings = (): Holding[] => {
+    return stocks.map(stock => {
+      const quantity = Math.floor(Math.random() * 50) + 10; // 10-60 shares
+      const avgBuyPrice = (stock.currentScore * 0.08) + (Math.random() * 20 - 10); // Base price with variation
+      const currentPrice = stock.currentScore * 0.1; // Current market price
+      const unrealizedPnL = (currentPrice - avgBuyPrice) * quantity;
+      const unrealizedPnLPercent = ((currentPrice - avgBuyPrice) / avgBuyPrice) * 100;
 
-  // Price refresh: just update lastRefresh (prices are derived from stocks)
+      return {
+        stockId: stock.id,
+        stockName: stock.name,
+        quantity,
+        avgBuyPrice: Math.max(1, avgBuyPrice),
+        currentPrice,
+        unrealizedPnL,
+        unrealizedPnLPercent,
+        category: stock.category,
+        color: stock.color,
+      };
+    });
+  };
+
+  // Generate mock market prices with realistic fluctuations
+  const generateMarketPrices = (): MarketPrice[] => {
+    return stocks.map(stock => {
+      const basePrice = stock.currentScore * 0.1;
+      const price = basePrice; // Use actual stock score * 0.1
+      const change = 0; // No random fluctuation
+      const changePercent = 0; // No random fluctuation
+
+      return {
+        stockId: stock.id,
+        price,
+        change,
+        changePercent,
+        lastUpdated: new Date(),
+      };
+    });
+  };
+
+  // Initialize holdings and market prices
+  useEffect(() => {
+    if (stocks.length > 0) {
+      setHoldings(generateMockHoldings());
+      setMarketPrices(generateMarketPrices());
+    }
+  }, [stocks]);
+
+  // Simulate real-time price updates
   const refreshMarketPrices = async () => {
     setIsRefreshing(true);
-    await fetchPortfolio();
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const newPrices = generateMarketPrices();
+    setMarketPrices(newPrices);
+    
+    // Update holdings with new prices
+    setHoldings(prevHoldings => 
+      prevHoldings.map(holding => {
+        const newPrice = newPrices.find(p => p.stockId === holding.stockId)?.price || holding.currentPrice;
+        const unrealizedPnL = (newPrice - holding.avgBuyPrice) * holding.quantity;
+        const unrealizedPnLPercent = ((newPrice - holding.avgBuyPrice) / holding.avgBuyPrice) * 100;
+        
+        return {
+          ...holding,
+          currentPrice: newPrice,
+          unrealizedPnL,
+          unrealizedPnLPercent,
+        };
+      })
+    );
+    
     setLastRefresh(new Date());
     setIsRefreshing(false);
   };
 
+  // Auto-refresh prices every 30 seconds
   useEffect(() => {
-    initialize();
-    // eslint-disable-next-line
-  }, []);
+    const interval = setInterval(refreshMarketPrices, 30000);
+    return () => clearInterval(interval);
+  }, [stocks]);
 
-  if (stocksLoading || tradingLoading) {
+  if (loading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-96">
         <div className="text-center">
@@ -93,8 +136,8 @@ export const TradingDesk: React.FC = () => {
   }
 
   // Calculate portfolio totals
-  const totalInvestment = uiHoldings.reduce((sum, h) => sum + (h.avgBuyPrice * h.quantity), 0);
-  const currentValue = uiHoldings.reduce((sum, h) => sum + (h.currentPrice * h.quantity), 0);
+  const totalInvestment = holdings.reduce((sum, holding) => sum + (holding.avgBuyPrice * holding.quantity), 0);
+  const currentValue = holdings.reduce((sum, holding) => sum + (holding.currentPrice * holding.quantity), 0);
   const totalPnL = currentValue - totalInvestment;
   const totalPnLPercent = totalInvestment > 0 ? (totalPnL / totalInvestment) * 100 : 0;
 
@@ -111,28 +154,13 @@ export const TradingDesk: React.FC = () => {
   };
 
   // Get selected stock details
-  const selectedStock = stocks.find(s => s.id === selectedStockId);
-  const selectedHolding = uiHoldings.find(h => h.stockId === selectedStockId);
-  const currentPrice = selectedStock ? selectedStock.currentScore * 0.1 : 0;
-
+  const selectedHolding = holdings.find(h => h.stockId === selectedStockId);
+  const currentPrice = selectedHolding?.currentPrice || 0;
+  
   // Calculate order costs
   const estimatedCost = quantity * currentPrice;
   const brokerage = estimatedCost > 0 ? Math.max(20, estimatedCost * 0.0003) : 0; // ₹20 or 0.03% whichever is higher
   const totalCost = estimatedCost + brokerage;
-
-  // Place order handler
-  const handlePlaceOrder = async () => {
-    if (!selectedStockId || quantity <= 0) return;
-    if (orderType === 'buy') {
-      await buyStock(Number(selectedStockId), quantity, currentPrice);
-    } else {
-      await sellStock(Number(selectedStockId), quantity, currentPrice);
-    }
-    setQuantity(0);
-    fetchPortfolio();
-    fetchTransactions();
-  };
-
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -163,7 +191,7 @@ export const TradingDesk: React.FC = () => {
           <div className="text-right">
             <div className="text-sm text-gray-500 dark:text-gray-400">Cash Balance</div>
             <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(cashBalance)}
+              ₹1,00,000.00
             </div>
           </div>
         </div>
@@ -174,7 +202,7 @@ export const TradingDesk: React.FC = () => {
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
           <div className="p-4 text-center">
             <div className="text-2xl font-bold text-blue-600">
-              {uiHoldings.length}
+              {holdings.length}
             </div>
             <div className="text-sm text-blue-700">Holdings</div>
           </div>
@@ -203,7 +231,7 @@ export const TradingDesk: React.FC = () => {
         <Card className="bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200">
           <div className="p-4 text-center">
             <div className="text-2xl font-bold text-purple-600">
-              {uiHoldings.filter(h => h.unrealizedPnL > 0).length}
+              {holdings.filter(h => h.unrealizedPnL > 0).length}
             </div>
             <div className="text-sm text-purple-700">Gainers</div>
           </div>
@@ -259,8 +287,8 @@ export const TradingDesk: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {uiHoldings.map((holding, index) => {
-                    const marketPrice = stocks.find(s => s.id === holding.stockId);
+                  {holdings.map((holding, index) => {
+                    const marketPrice = marketPrices.find(p => p.stockId === holding.stockId);
                     const isGainer = holding.unrealizedPnL >= 0;
                     
                     return (
@@ -294,14 +322,14 @@ export const TradingDesk: React.FC = () => {
                           </div>
                           {marketPrice && (
                             <div className={`text-sm flex items-center justify-end ${
-                              marketPrice.currentScore * 0.1 >= 0 ? 'text-green-600' : 'text-red-600'
+                              marketPrice.changePercent >= 0 ? 'text-green-600' : 'text-red-600'
                             }`}>
-                              {marketPrice.currentScore * 0.1 >= 0 ? (
+                              {marketPrice.changePercent >= 0 ? (
                                 <TrendingUp className="w-3 h-3 mr-1" />
                               ) : (
                                 <TrendingDown className="w-3 h-3 mr-1" />
                               )}
-                              {formatPercent(marketPrice.currentScore * 0.1)}
+                              {formatPercent(marketPrice.changePercent)}
                             </div>
                           )}
                         </td>
@@ -330,7 +358,7 @@ export const TradingDesk: React.FC = () => {
               </table>
             </div>
 
-            {uiHoldings.length === 0 && (
+            {holdings.length === 0 && (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">📈</div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -366,9 +394,9 @@ export const TradingDesk: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="">Choose a stock...</option>
-                  {stocks.map(stock => (
-                    <option key={stock.id} value={stock.id}>
-                      {stock.name} - ₹{(stock.currentScore * 0.1).toFixed(2)}
+                  {holdings.map(holding => (
+                    <option key={holding.stockId} value={holding.stockId}>
+                      {holding.stockName} - ₹{holding.currentPrice.toFixed(2)}
                     </option>
                   ))}
                 </select>
@@ -381,10 +409,6 @@ export const TradingDesk: React.FC = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-400">You own:</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{selectedHolding.quantity} shares</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Avg Buy Price:</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">₹{selectedHolding.avgBuyPrice.toFixed(2)}</span>
                     </div>
                   </div>
                 )}
@@ -502,27 +526,14 @@ export const TradingDesk: React.FC = () => {
                     ? 'bg-green-600 hover:bg-green-700' 
                     : 'bg-red-600 hover:bg-red-700'
                 }`}
-                disabled={
-                  !selectedStockId ||
-                  quantity <= 0 ||
-                  (orderType === 'sell' && (!selectedHolding || quantity > selectedHolding.quantity)) ||
-                  tradingLoading ||
-                  error ||
-                  (orderType === 'buy' && totalCost > cashBalance)
-                }
-                onClick={handlePlaceOrder}
+                disabled={!selectedStockId || quantity <= 0 || (orderType === 'sell' && selectedHolding && quantity > selectedHolding.quantity)}
               >
                 {orderType === 'buy' ? 'Place Buy Order' : 'Place Sell Order'}
               </Button>
-              {orderType === 'buy' && totalCost > cashBalance && (
-                <div className="text-red-600 text-sm mb-2">Insufficient funds for this order.</div>
-              )}
-              {orderType === 'sell' && selectedHolding && quantity > selectedHolding.quantity && (
-                <div className="text-red-600 text-sm mb-2">You only own {selectedHolding.quantity} shares.</div>
-              )}
-              {error && <div className="text-red-600 text-sm mb-2">{error}</div>}
-              {success && <div className="text-green-600 text-sm mb-2">{success}</div>}
 
+              <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                Trading functionality coming soon
+              </div>
             </div>
           </Card>
 
@@ -538,18 +549,18 @@ export const TradingDesk: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Total Holdings:</span>
-                <span className="font-medium text-gray-900 dark:text-white">{uiHoldings.length}</span>
+                <span className="font-medium text-gray-900 dark:text-white">{holdings.length}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Gainers:</span>
                 <span className="font-medium text-green-600">
-                  {uiHoldings.filter(h => h.unrealizedPnL > 0).length}
+                  {holdings.filter(h => h.unrealizedPnL > 0).length}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Losers:</span>
                 <span className="font-medium text-red-600">
-                  {uiHoldings.filter(h => h.unrealizedPnL < 0).length}
+                  {holdings.filter(h => h.unrealizedPnL < 0).length}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -567,7 +578,7 @@ export const TradingDesk: React.FC = () => {
               Top Performers
             </h3>
             <div className="space-y-2">
-              {uiHoldings
+              {holdings
                 .sort((a, b) => b.unrealizedPnLPercent - a.unrealizedPnLPercent)
                 .slice(0, 3)
                 .map((holding, index) => (
@@ -585,39 +596,6 @@ export const TradingDesk: React.FC = () => {
                     </span>
                   </div>
                 ))}
-            </div>
-          </Card>
-
-          {/* Transaction History */}
-          <Card className="mt-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Transaction History</h3>
-            <div className="overflow-x-auto max-h-64">
-              {transactions.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">No transactions yet.</div>
-              ) : (
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr>
-                      <th>Date</th><th>Type</th><th>Stock</th><th>Qty</th><th>Price</th><th>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.map(tx => {
-                      const stock = stocks.find(s => s.id === String(tx.stock_id));
-                      return (
-                        <tr key={tx.id}>
-                          <td>{new Date(tx.transaction_date).toLocaleString()}</td>
-                          <td className={tx.type === 'buy' ? 'text-green-600' : 'text-red-600'}>{tx.type}</td>
-                          <td>{stock?.name || tx.stock_id}</td>
-                          <td>{tx.quantity}</td>
-                          <td>₹{tx.price.toFixed(2)}</td>
-                          <td>₹{tx.total_amount.toFixed(2)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
             </div>
           </Card>
         </div>
