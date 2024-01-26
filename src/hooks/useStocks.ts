@@ -44,7 +44,7 @@ export const useStocks = () => {
           change,
           changePercent,
           volatility: 'low', // Placeholder
-          lastActivity: new Date(), // Placeholder
+          lastActivity: stockObj.last_activity_at ? new Date(stockObj.last_activity_at) : new Date(),
           color: stockObj.color,
           weight: Number(stockObj.weight),
           history: [], // Placeholder
@@ -56,6 +56,30 @@ export const useStocks = () => {
       setError(err instanceof Error ? err.message : 'Failed to fetch stocks');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Apply decay to stocks based on last activity and settings
+  const applyDecayToStocks = async () => {
+    const autoDecayEnabled = localStorage.getItem('auto_decay_enabled') === 'true';
+    const decayRate = parseFloat(localStorage.getItem('decay_rate') || '0');
+    if (!autoDecayEnabled || !stocks.length || isNaN(decayRate) || decayRate <= 0) return;
+    const db = await getDb();
+    const now = new Date();
+    let updated = false;
+    for (const stock of stocks) {
+      const lastActivity = stock.lastActivity instanceof Date ? stock.lastActivity : new Date(stock.lastActivity);
+      const daysPassed = Math.floor((now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysPassed > 0) {
+        const decayAmount = daysPassed * (decayRate / 100) * stock.currentScore;
+        const newScore = Math.max(0, stock.currentScore - decayAmount);
+        db.run('UPDATE stocks SET current_score = ?, last_activity_at = ? WHERE id = ?', [newScore, now.toISOString(), stock.id]);
+        updated = true;
+      }
+    }
+    if (updated) {
+      await persistDb();
+      await fetchStocks(); // Refresh state after decay
     }
   };
 
@@ -135,7 +159,9 @@ export const useStocks = () => {
   };
 
   useEffect(() => {
-    fetchStocks();
+    fetchStocks().then(() => {
+      applyDecayToStocks();
+    });
     // eslint-disable-next-line
   }, []);
 
