@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, DollarSign, BarChart3, Activity, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useStocks } from '../hooks/useStocks';
@@ -44,6 +45,26 @@ export const TradingDesk: React.FC = () => {
       unrealizedPnLPercent: holding.weightedAvgBuyPrice > 0 ? ((currentPrice - holding.weightedAvgBuyPrice) / holding.weightedAvgBuyPrice) * 100 : 0,
     };
   });
+
+  // Pie chart data: distribution of holdings by value
+  const holdingsDistribution = holdingsWithStock.map(h => ({
+    name: h.stockName,
+    value: h.quantity * h.currentPrice,
+  }));
+
+  // Pie chart colors
+  const pieColors = [
+    '#6366F1', // indigo
+    '#10B981', // emerald
+    '#F59E42', // orange
+    '#EF4444', // red
+    '#8B5CF6', // violet
+    '#FBBF24', // amber
+    '#3B82F6', // blue
+    '#F472B6', // pink
+    '#22D3EE', // cyan
+    '#A3E635', // lime
+  ];
   const totalInvestment = holdingsWithStock.reduce((sum, h) => sum + (h.weightedAvgBuyPrice * h.quantity), 0);
   const currentValue = holdingsWithStock.reduce((sum, h) => sum + (h.currentPrice * h.quantity), 0);
   const totalPnL = currentValue - totalInvestment;
@@ -163,7 +184,7 @@ export const TradingDesk: React.FC = () => {
       {/* Main Trading Interface */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Section - Stock Holdings */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <Card>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
@@ -238,6 +259,35 @@ export const TradingDesk: React.FC = () => {
                 </p>
               </div>
             )}
+          </Card>
+          {/* Holdings Distribution Pie Chart */}
+          <Card>
+            <div className="p-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
+                <PieChart className="w-5 h-5 mr-2 text-indigo-500" />
+                Holdings Distribution
+              </h3>
+              <div style={{ width: '100%', height: 260 }}>
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={holdingsDistribution}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={90}
+                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
+                    >
+                      {holdingsDistribution.map((entry, idx) => (
+                        <Cell key={`cell-${idx}`} fill={pieColors[idx % pieColors.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </Card>
         </div>
         {/* Right Section - Place Order */}
