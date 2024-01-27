@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getDb, persistDb } from '../lib/sqlite';
 import { Stock } from '../types';
+import { subDays } from 'date-fns';
 
 // TEMP: Hardcoded user id for demo (replace with real auth integration)
 const currentUserId = 1;
@@ -35,6 +36,38 @@ export const useStocks = () => {
         const perfRow = perfRes[0]?.values?.[0];
         const change = perfRow ? perfRow[0] : 0;
         const changePercent = perfRow ? perfRow[1] : 0;
+
+        // Fetch last 30 days of performance history for this stock
+        const today = new Date();
+        const startDate = subDays(today, 30);
+        const histRes = db.exec(
+          'SELECT date, daily_score, score_delta FROM stock_performance_history WHERE stock_id = ? AND date >= ? ORDER BY date ASC',
+          [stockObj.id, startDate.toISOString().slice(0, 10)]
+        );
+        const histRows = histRes[0]?.values || [];
+        const history = histRows.map((h: any[]) => ({
+          date: new Date(h[0]),
+          value: h[1],
+        }));
+        const scoreDeltas = histRows.map((h: any[]) => h[2]);
+
+        // Calculate standard deviation of score_delta
+        let volatility: 'low' | 'medium' | 'high' = 'low';
+        if (scoreDeltas.length >= 5) {
+          const mean = scoreDeltas.reduce((a, b) => a + b, 0) / scoreDeltas.length;
+          const variance = scoreDeltas.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / scoreDeltas.length;
+          const stdDev = Math.sqrt(variance);
+          if (stdDev < 10) volatility = 'low';
+          else if (stdDev < 30) volatility = 'medium';
+          else volatility = 'high';
+        } else if (scoreDeltas.length > 0) {
+          // Fallback: use max absolute delta
+          const maxAbsDelta = Math.max(...scoreDeltas.map((d: number) => Math.abs(d)));
+          if (maxAbsDelta < 10) volatility = 'low';
+          else if (maxAbsDelta < 30) volatility = 'medium';
+          else volatility = 'high';
+        }
+
         stocksList.push({
           id: stockObj.id.toString(),
           name: stockObj.name,
@@ -43,11 +76,11 @@ export const useStocks = () => {
           currentScore: stockObj.current_score ?? 500,
           change,
           changePercent,
-          volatility: 'low', // Placeholder
+          volatility,
           lastActivity: stockObj.last_activity_at ? new Date(stockObj.last_activity_at) : new Date(),
           color: stockObj.color,
           weight: Number(stockObj.weight),
-          history: [], // Placeholder
+          history,
         });
       }
       setStocks(stocksList);
