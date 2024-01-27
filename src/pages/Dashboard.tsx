@@ -19,6 +19,7 @@ import { useJournal } from '../hooks/useJournal';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../contexts/ThemeContext';
 import { getDb, persistDb } from '../lib/sqlite';
+import { Button } from '../components/ui/Button';
 
 export const Dashboard: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
@@ -36,6 +37,12 @@ export const Dashboard: React.FC = () => {
       setShowAchievementModal(true);
     }
   }, [newlyUnlocked]);
+
+  const handleClearAllAlerts = async () => {
+    for (const alert of alerts) {
+      await dismissAlert(alert.id);
+    }
+  };
 
   if (stocksLoading || tasksLoading || indexLoading || streaksLoading) {
     return (
@@ -148,7 +155,10 @@ export const Dashboard: React.FC = () => {
       {/* Alerts Section */}
       {alerts.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">🔔 Alerts & Notifications</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">🔔 Alerts & Notifications</h3>
+            <Button variant="outline" size="sm" onClick={handleClearAllAlerts}>Clear All</Button>
+          </div>
           {alerts.slice(0, 3).map(alert => (
             <AlertCard
               key={alert.id}

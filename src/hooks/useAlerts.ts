@@ -3,6 +3,7 @@ import { getDb, persistDb } from '../lib/sqlite';
 import { Alert } from '../types';
 import { useStocks } from './useStocks';
 import { useTasks } from './useTasks';
+import { normalizeDateToStartOfDay } from '../utils/stockUtils';
 
 const currentUserId = 1;
 
@@ -176,7 +177,7 @@ export const useAlerts = () => {
     // Check for overdue tasks
     const overdueTasks = tasks.filter(task => 
       task.status === 'overdue' || 
-      (task.dueDate && task.dueDate < now && task.status === 'pending')
+      (task.dueDate && task.dueDate < normalizeDateToStartOfDay(now) && task.status === 'pending')
     );
 
     if (overdueTasks.length > 0) {
