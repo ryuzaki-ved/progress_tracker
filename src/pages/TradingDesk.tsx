@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, DollarSign, BarChart3, Activity, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
+import { Button, PlaceOrderButton } from '../components/ui/Button';
 import { ToggleSwitch } from '../components/ui/ToggleSwitch';
 import { useStocks } from '../hooks/useStocks';
 import { useTrading } from '../hooks/useTrading';
@@ -348,12 +348,11 @@ export const TradingDesk: React.FC = () => {
                 <span>Total: <span className="font-medium text-gray-900 dark:text-white">₹{totalCost.toFixed(2)}</span></span>
               </div>
               {orderError && <div className="text-red-600 text-sm">{orderError}</div>}
-              <Button
-                type="submit"
-                className="w-full mt-2 transition-transform duration-100 active:scale-95 hover:scale-105 focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500"
-              >
+              {/* Replace Button with PlaceOrderButton for Place Order */}
+              <PlaceOrderButton type="submit">
                 Place Order
-              </Button>
+                <span className="stripe" />
+              </PlaceOrderButton>
             </form>
           </Card>
         </div>
