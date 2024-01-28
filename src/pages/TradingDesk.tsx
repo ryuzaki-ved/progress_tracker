@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, DollarSign, BarChart3, Activity, RefreshCw, E
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { ToggleSwitch } from '../components/ui/ToggleSwitch';
 import { useStocks } from '../hooks/useStocks';
 import { useTrading } from '../hooks/useTrading';
 
@@ -320,21 +321,13 @@ export const TradingDesk: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Order Type</label>
-                <div className="flex space-x-2">
-                  <Button
-                    type="button"
-                    onClick={() => setOrderType('buy')}
-                    className={`flex-1 py-2 transition-transform duration-100 active:scale-95 focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-shadow duration-150 ${orderType === 'buy' ? 'bg-green-600 text-white shadow-md' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'}`}
-                  >
-                    Buy
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => setOrderType('sell')}
-                    className={`flex-1 py-2 transition-transform duration-100 active:scale-95 focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-shadow duration-150 ${orderType === 'sell' ? 'bg-red-600 text-white shadow-md' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}
-                  >
-                    Sell
-                  </Button>
+                <div className="flex justify-center">
+                  <ToggleSwitch
+                    value={orderType}
+                    onChange={setOrderType}
+                    option1Label="Buy"
+                    option2Label="Sell"
+                  />
                 </div>
               </div>
               <div>
