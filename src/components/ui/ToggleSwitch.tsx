@@ -32,7 +32,7 @@ const SlidingBg = styled.div<{ selected: number }>`
   z-index: 1;
 `;
 
-const OptionLabel = styled.label<{ selected: boolean; sell?: boolean }>`
+const OptionLabel = styled.label<{ selected: boolean; $sell?: boolean }>`
   flex: 1;
   text-align: center;
   z-index: 2;
@@ -41,7 +41,7 @@ const OptionLabel = styled.label<{ selected: boolean; sell?: boolean }>`
   font-weight: ${props => (props.selected ? 'bold' : 'normal')};
   color: ${props =>
     props.selected
-      ? props.sell
+      ? props.$sell
         ? '#fff'
         : '#212121'
       : '#7d7d7d'};
@@ -91,7 +91,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         checked={value === 'sell'}
         onChange={() => onChange('sell')}
       />
-      <OptionLabel htmlFor="sell" selected={value === 'sell'} sell={true}>
+      <OptionLabel htmlFor="sell" selected={value === 'sell'} $sell={true}>
         {option2Label}
       </OptionLabel>
     </Container>

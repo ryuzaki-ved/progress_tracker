@@ -17,8 +17,21 @@ export const useTrading = () => {
   const fetchCashBalance = useCallback(async () => {
     if (!currentUserId) return;
     const db = await getDb();
+    // Debug: log currentUserId
+    console.log('useTrading: currentUserId:', currentUserId);
+    // Debug: log all user_settings
+    const allSettings = db.exec('SELECT * FROM user_settings');
+    console.log('All user_settings:', allSettings[0]?.values);
+    // Ensure row exists for current user
     const res = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = ?', [currentUserId]);
-    const value = res[0]?.values?.[0]?.[0];
+    if (!res[0] || !res[0].values.length) {
+      db.run('INSERT INTO user_settings (user_id, cash_balance) VALUES (?, ?)', [currentUserId, 10000000]);
+      console.log('Inserted new user_settings row for user:', currentUserId);
+    }
+    const res2 = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = ?', [currentUserId]);
+    const value = res2[0]?.values?.[0]?.[0];
+    // Log fetched cash balance
+    console.log('useTrading: Fetched cash_balance:', value);
     setCashBalance(value !== undefined ? Number(value) : 10000000);
   }, [currentUserId]);
 
@@ -85,16 +98,31 @@ export const useTrading = () => {
     if (quantity <= 0) throw new Error('Quantity must be positive');
     if (price <= 0) throw new Error('Price must be positive');
     const db = await getDb();
-    // Calculate total cost and brokerage
+    // Debug: log currentUserId
+    console.log('useTrading: currentUserId:', currentUserId);
+    // Debug: log all user_settings
+    const allSettings = db.exec('SELECT * FROM user_settings');
+    console.log('All user_settings:', allSettings[0]?.values);
+    // Ensure row exists for current user
+    const res = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = ?', [currentUserId]);
+    if (!res[0] || !res[0].values.length) {
+      db.run('INSERT INTO user_settings (user_id, cash_balance) VALUES (?, ?)', [currentUserId, 10000000]);
+      console.log('Inserted new user_settings row for user:', currentUserId);
+    }
+    const res2 = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = ?', [currentUserId]);
+    const currentBalance = res2[0]?.values?.[0]?.[0] ?? 10000000;
+    // Log balance before update and total cost
     const estimatedCost = quantity * price;
     const brokerage = Math.max(20, estimatedCost * 0.0003);
     const totalCost = estimatedCost + brokerage;
-    // Check cash balance
-    const res = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = ?', [currentUserId]);
-    const currentBalance = res[0]?.values?.[0]?.[0] ?? 10000000;
+    console.log('useTrading: Buy - Current balance before update:', currentBalance);
+    console.log('useTrading: Buy - Total cost:', totalCost);
     if (totalCost > currentBalance) throw new Error('Insufficient cash balance');
     // Update cash balance
     db.run('UPDATE user_settings SET cash_balance = cash_balance - ? WHERE user_id = ?', [totalCost, currentUserId]);
+    // Log balance after update
+    const updatedBalanceRes = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = ?', [currentUserId]);
+    console.log('useTrading: Buy - Balance after update query:', updatedBalanceRes[0]?.values?.[0]?.[0]);
     // Update holdings (weighted average)
     const holdingRes = db.exec('SELECT * FROM user_holdings WHERE user_id = ? AND stock_id = ?', [currentUserId, stockId]);
     if (holdingRes[0]?.values?.length) {
@@ -126,7 +154,31 @@ export const useTrading = () => {
     if (quantity <= 0) throw new Error('Quantity must be positive');
     if (price <= 0) throw new Error('Price must be positive');
     const db = await getDb();
-    // Check holding
+    // Debug: log currentUserId
+    console.log('useTrading: currentUserId:', currentUserId);
+    // Debug: log all user_settings
+    const allSettings = db.exec('SELECT * FROM user_settings');
+    console.log('All user_settings:', allSettings[0]?.values);
+    // Ensure row exists for current user
+    const res = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = ?', [currentUserId]);
+    if (!res[0] || !res[0].values.length) {
+      db.run('INSERT INTO user_settings (user_id, cash_balance) VALUES (?, ?)', [currentUserId, 10000000]);
+      console.log('Inserted new user_settings row for user:', currentUserId);
+    }
+    const res2 = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = ?', [currentUserId]);
+    const currentBalance = res2[0]?.values?.[0]?.[0] ?? 10000000;
+    // Log balance before update and net proceeds
+    const proceeds = quantity * price;
+    const brokerage = Math.max(20, proceeds * 0.0003);
+    const netProceeds = proceeds - brokerage;
+    console.log('useTrading: Sell - Current balance before update:', currentBalance);
+    console.log('useTrading: Sell - Net proceeds:', netProceeds);
+    // Update cash balance
+    db.run('UPDATE user_settings SET cash_balance = cash_balance + ? WHERE user_id = ?', [netProceeds, currentUserId]);
+    // Log balance after update
+    const updatedBalanceRes = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = ?', [currentUserId]);
+    console.log('useTrading: Sell - Balance after update query:', updatedBalanceRes[0]?.values?.[0]?.[0]);
+    // Update holdings
     const holdingRes = db.exec('SELECT * FROM user_holdings WHERE user_id = ? AND stock_id = ?', [currentUserId, stockId]);
     if (!holdingRes[0]?.values?.length) throw new Error('No holdings to sell');
     const row = holdingRes[0].values[0];
@@ -135,13 +187,6 @@ export const useTrading = () => {
     columns.forEach((col: any, i: any) => (obj[col] = row[i]));
     const prevQty = Number(obj.quantity);
     if (quantity > prevQty) throw new Error('Insufficient quantity to sell');
-    // Calculate proceeds and brokerage
-    const proceeds = quantity * price;
-    const brokerage = Math.max(20, proceeds * 0.0003);
-    const netProceeds = proceeds - brokerage;
-    // Update cash balance
-    db.run('UPDATE user_settings SET cash_balance = cash_balance + ? WHERE user_id = ?', [netProceeds, currentUserId]);
-    // Update holdings
     const newQty = prevQty - quantity;
     if (newQty > 0) {
       db.run('UPDATE user_holdings SET quantity = ?, updated_at = datetime("now") WHERE id = ?', [newQty, obj.id]);

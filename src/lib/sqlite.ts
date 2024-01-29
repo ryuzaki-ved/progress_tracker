@@ -303,6 +303,9 @@ async function loadDatabase(): Promise<Database> {
   migrateUserSettingsTable(db);
   migrateUserHoldingsTable(db);
   migrateTransactionsTable(db);
+  // Log initial cash balance after migrations
+  const initialSettings = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = 1');
+  console.log('SQLite: Initial cash_balance after load/migrations:', initialSettings[0]?.values?.[0]?.[0]);
   return db;
 }
 
@@ -338,6 +341,8 @@ function saveToIndexedDB(key: string, data: Uint8Array): Promise<void> {
       const db = req.result;
       const tx = db.transaction('db', 'readwrite');
       const store = tx.objectStore('db');
+      // Log before saving to IndexedDB
+      console.log('SQLite: Saving database to IndexedDB...');
       store.put(data, 'sqlite');
       tx.oncomplete = () => resolve();
       tx.onerror = () => resolve();
