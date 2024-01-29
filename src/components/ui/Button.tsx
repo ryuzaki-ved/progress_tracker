@@ -100,7 +100,7 @@ export const PlaceOrderButton = styled.button`
   }
 
   &:hover .stripe {
-    animation: ${stripeAnim} 0.5s forwards;
+    animation: ${stripeAnim} 0.9s forwards;
   }
 
   &:active {
