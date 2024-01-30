@@ -106,6 +106,20 @@ CREATE TABLE IF NOT EXISTS transactions (
   FOREIGN KEY(user_id) REFERENCES users(id),
   FOREIGN KEY(stock_id) REFERENCES stocks(id)
 );
+CREATE TABLE IF NOT EXISTS notes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  category TEXT DEFAULT 'General',
+  tags TEXT DEFAULT '[]',
+  is_pinned BOOLEAN DEFAULT false,
+  is_archived BOOLEAN DEFAULT false,
+  color TEXT DEFAULT '#3B82F6',
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY(user_id) REFERENCES users(id)
+);
 `;
 
 // Migration: add created_at to stocks and tasks if missing
@@ -289,6 +303,25 @@ function migrateTransactionsTable(db: Database) {
     }
   }
 }
+function migrateNotesTable(db: Database) {
+  const res = db.exec("PRAGMA table_info(notes);");
+  if (!res[0]) {
+    db.run(`CREATE TABLE IF NOT EXISTS notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      category TEXT DEFAULT 'General',
+      tags TEXT DEFAULT '[]',
+      is_pinned BOOLEAN DEFAULT false,
+      is_archived BOOLEAN DEFAULT false,
+      color TEXT DEFAULT '#3B82F6',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    );`);
+  }
+}
 
 // Load database from IndexedDB
 async function loadDatabase(): Promise<Database> {
@@ -303,6 +336,7 @@ async function loadDatabase(): Promise<Database> {
   migrateUserSettingsTable(db);
   migrateUserHoldingsTable(db);
   migrateTransactionsTable(db);
+  migrateNotesTable(db);
   // Log initial cash balance after migrations
   const initialSettings = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = 1');
   console.log('SQLite: Initial cash_balance after load/migrations:', initialSettings[0]?.values?.[0]?.[0]);
