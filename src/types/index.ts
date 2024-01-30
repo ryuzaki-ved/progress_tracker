@@ -246,3 +246,17 @@ export interface Transaction {
   brokerageFee: number;
   timestamp: string;
 }
+
+export interface Note {
+  id: string;
+  userId: string;
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  isPinned: boolean;
+  isArchived: boolean;
+  color: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
