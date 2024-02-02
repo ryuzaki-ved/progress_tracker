@@ -16,7 +16,8 @@ import {
   Beaker,
   Brain,
   DollarSign,
-  Edit3
+  Edit3,
+  StickyNote
 } from 'lucide-react';
 import { useSidebar } from '../../contexts/SidebarContext';
 
@@ -25,6 +26,7 @@ const menuItems = [
   { path: '/stocks', icon: TrendingUp, label: 'Stocks' },
   { path: '/trading-desk', icon: DollarSign, label: 'Trading Desk' },
   { path: '/tasks', icon: CheckSquare, label: 'Tasks' },
+  { path: '/notes', icon: StickyNote, label: 'Notes' },
   { path: '/calendar', icon: Calendar, label: 'Calendar' },
   { path: '/forecasting', icon: Zap, label: 'Forecasting' },
   { path: '/strategic-brain', icon: Brain, label: 'Strategic Brain' },
