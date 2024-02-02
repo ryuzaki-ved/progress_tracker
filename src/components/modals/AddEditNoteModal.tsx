@@ -183,13 +183,19 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
                   Content *
                 </label>
                 <textarea
+                  id="note-content"
+                  className="journal-textarea w-full min-h-[120px] px-4 py-3 border border-blue-200 dark:border-blue-600 rounded-lg bg-white dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 placeholder-blue-500 dark:placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 font-semibold resize-y"
                   value={formData.content}
                   onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                  className="w-full px-4 py-3 border border-blue-200 dark:border-blue-600 rounded-lg bg-white dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 placeholder-blue-500 dark:placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-                  rows={8}
-                  placeholder="Write your note content here..."
+                  placeholder="Write your note here..."
                   required
+                  style={{ background: `linear-gradient(0deg, ${formData.color}10 0%, ${formData.color}10 100%), ${formData.color}10` }}
                 />
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <strong>Markdown supported:</strong> <br />
+                  <span><code>**bold**</code> for <strong>bold</strong>, <code>*italic*</code> for <em>italic</em>, <code>~~strikethrough~~</code> for <del>strikethrough</del>, <code>__underline__</code> for <u>underline</u></span><br />
+                  <span><code>[ ]</code> Task item (checkbox), <code>[x]</code> Completed task item (checked)</span>
+                </div>
               </div>
 
               {/* Category and Color */}

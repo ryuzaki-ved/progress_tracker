@@ -22,6 +22,7 @@ import { AddEditNoteModal } from '../components/modals/AddEditNoteModal';
 import { useNotes } from '../hooks/useNotes';
 import { Note } from '../types';
 import { format } from 'date-fns';
+import { renderMarkdownContent, CheckboxToggleHandler } from '../utils/noteUtils';
 
 export const Notes: React.FC = () => {
   const { 
@@ -105,6 +106,26 @@ export const Notes: React.FC = () => {
     }
   };
 
+  // Checkbox toggle handler for interactive checkboxes in notes
+  const handleCheckboxToggle: CheckboxToggleHandler = async (
+    noteId,
+    lineIndex,
+    charIndex,
+    isChecked
+  ) => {
+    const note = notes.find(n => n.id === noteId);
+    if (!note) return;
+    const lines = note.content.split(/\r?\n/);
+    if (lineIndex < 0 || lineIndex >= lines.length) return;
+    // Only update [ ] or [x] at the start of the line
+    lines[lineIndex] = lines[lineIndex].replace(
+      /^\s*\[( |x)\]/i,
+      isChecked ? '[x]' : '[ ]'
+    );
+    const newContent = lines.join('\n');
+    await updateNote(noteId, { content: newContent });
+  };
+
   const NoteCard: React.FC<{ note: Note; index: number }> = ({ note, index }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -142,8 +163,11 @@ export const Notes: React.FC = () => {
             </div>
           </div>
 
-          <div className="text-sm text-gray-600 dark:text-gray-300 line-clamp-4">
-            {note.content}
+          <div
+            className="text-sm text-gray-600 dark:text-gray-300 line-clamp-4 rounded-lg p-3"
+            style={{ background: note.color + '10' }}
+          >
+            {renderMarkdownContent(note.content, note.id, handleCheckboxToggle)}
           </div>
 
           {/* Tags */}
@@ -244,9 +268,12 @@ export const Notes: React.FC = () => {
               </span>
             </div>
             
-            <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-2">
-              {note.content}
-            </p>
+            <div
+              className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-2 rounded-lg p-3"
+              style={{ background: note.color + '10' }}
+            >
+              {renderMarkdownContent(note.content, note.id, handleCheckboxToggle)}
+            </div>
             
             <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
               <span>{format(note.updatedAt, 'MMM d, yyyy h:mm a')}</span>
