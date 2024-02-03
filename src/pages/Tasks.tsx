@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Filter, Calendar, Flag, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Filter, Calendar, Flag, ChevronDown, ChevronRight, ArrowUpDown } from 'lucide-react';
 import { isSameDay } from 'date-fns';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -21,6 +21,8 @@ export const Tasks: React.FC = () => {
   const [filterStockId, setFilterStockId] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showOtherTasks, setShowOtherTasks] = useState(false);
+  const [pastTasksReverseOrder, setPastTasksReverseOrder] = useState(false);
+  const [upcomingTasksReverseOrder, setUpcomingTasksReverseOrder] = useState(false);
 
   if (tasksLoading || stocksLoading) {
     return (
@@ -99,6 +101,9 @@ export const Tasks: React.FC = () => {
     (task) => task.status !== 'pending'
   );
 
+  // Apply reverse order if needed
+  const displayPastTasks = pastTasksReverseOrder ? [...pastTasks].reverse() : pastTasks;
+  const displayUpcomingTasks = upcomingTasksReverseOrder ? [...upcomingTasks].reverse() : upcomingTasks;
   const getStockName = (stockId: string) => {
     const stock = stocks.find(s => s.id === stockId);
     return stock ? stock.name : 'Unknown';
@@ -338,11 +343,22 @@ export const Tasks: React.FC = () => {
       {/* Past Tasks */}
       {pastTasks.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold text-emerald-700 dark:text-emerald-300 mb-2 flex items-center">
-            Past Tasks (Overdue)
-          </h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl font-semibold text-emerald-700 dark:text-emerald-300 flex items-center">
+              Past Tasks (Overdue)
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPastTasksReverseOrder(!pastTasksReverseOrder)}
+              className="text-emerald-600 border-emerald-300 hover:bg-emerald-50"
+            >
+              <ArrowUpDown className="w-4 h-4 mr-1" />
+              {pastTasksReverseOrder ? 'Newest First' : 'Oldest First'}
+            </Button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            {pastTasks.map((task, index) => (
+            {displayPastTasks.map((task, index) => (
               <motion.div
                 key={task.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -442,11 +458,22 @@ export const Tasks: React.FC = () => {
       {/* Upcoming Tasks */}
       {upcomingTasks.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold text-blue-700 dark:text-blue-300 mb-2 flex items-center">
-            Upcoming Tasks
-          </h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl font-semibold text-blue-700 dark:text-blue-300 flex items-center">
+              Upcoming Tasks
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setUpcomingTasksReverseOrder(!upcomingTasksReverseOrder)}
+              className="text-blue-600 border-blue-300 hover:bg-blue-50"
+            >
+              <ArrowUpDown className="w-4 h-4 mr-1" />
+              {upcomingTasksReverseOrder ? 'Latest First' : 'Earliest First'}
+            </Button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            {upcomingTasks.map((task, index) => (
+            {displayUpcomingTasks.map((task, index) => (
               <motion.div
                 key={task.id}
                 initial={{ opacity: 0, y: 20 }}
