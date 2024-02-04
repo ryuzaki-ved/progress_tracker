@@ -186,11 +186,28 @@ export const useTrading = () => {
     const obj: any = {};
     columns.forEach((col: any, i: any) => (obj[col] = row[i]));
     const prevQty = Number(obj.quantity);
+    const prevAvgPrice = Number(obj.weighted_avg_buy_price);
     if (quantity > prevQty) throw new Error('Insufficient quantity to sell');
     const newQty = prevQty - quantity;
     if (newQty > 0) {
-      db.run('UPDATE user_holdings SET quantity = ?, updated_at = datetime("now") WHERE id = ?', [newQty, obj.id]);
+      // Calculate new weighted average buy price for remaining shares
+      // Formula: (Total original cost - Cost of sold shares) / Remaining quantity
+      const totalOriginalCost = prevQty * prevAvgPrice;
+      const soldSharesCost = quantity * prevAvgPrice; // Use original avg price for sold shares
+      const remainingCost = totalOriginalCost - soldSharesCost;
+      const newWeightedAvgPrice = remainingCost / newQty;
+      
+      console.log('useTrading: Sell - Rebalancing weighted avg price:');
+      console.log('  - Previous quantity:', prevQty, 'Previous avg price:', prevAvgPrice);
+      console.log('  - Selling quantity:', quantity, 'at price:', price);
+      console.log('  - Total original cost:', totalOriginalCost);
+      console.log('  - Cost of sold shares:', soldSharesCost);
+      console.log('  - Remaining cost:', remainingCost);
+      console.log('  - New quantity:', newQty, 'New weighted avg price:', newWeightedAvgPrice);
+      
+      db.run('UPDATE user_holdings SET quantity = ?, weighted_avg_buy_price = ?, updated_at = datetime("now") WHERE id = ?', [newQty, newWeightedAvgPrice, obj.id]);
     } else {
+      console.log('useTrading: Sell - Removing holding completely (sold all shares)');
       db.run('DELETE FROM user_holdings WHERE id = ?', [obj.id]);
     }
     // Record transaction
