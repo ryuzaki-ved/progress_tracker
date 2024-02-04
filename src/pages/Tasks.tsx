@@ -23,6 +23,8 @@ export const Tasks: React.FC = () => {
   const [showOtherTasks, setShowOtherTasks] = useState(false);
   const [pastTasksReverseOrder, setPastTasksReverseOrder] = useState(false);
   const [upcomingTasksReverseOrder, setUpcomingTasksReverseOrder] = useState(false);
+  const [showPastTasks, setShowPastTasks] = useState(true);
+  const [showUpcomingTasks, setShowUpcomingTasks] = useState(true);
 
   if (tasksLoading || stocksLoading) {
     return (
@@ -344,9 +346,14 @@ export const Tasks: React.FC = () => {
       {pastTasks.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xl font-semibold text-emerald-700 dark:text-emerald-300 flex items-center">
-              Past Tasks (Overdue)
-            </h2>
+            <div className="flex items-center cursor-pointer select-none" onClick={() => setShowPastTasks((v) => !v)}>
+              <span className="text-xl font-semibold text-emerald-700 dark:text-emerald-300 mr-2">Past Tasks (Overdue)</span>
+              {showPastTasks ? (
+                <ChevronDown className="w-5 h-5" />
+              ) : (
+                <ChevronRight className="w-5 h-5" />
+              )}
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -357,7 +364,17 @@ export const Tasks: React.FC = () => {
               {pastTasksReverseOrder ? 'Newest First' : 'Oldest First'}
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          <AnimatePresence initial={false}>
+            {showPastTasks && (
+              <motion.div
+                key="pastTasks"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             {displayPastTasks.map((task, index) => (
               <motion.div
                 key={task.id}
@@ -452,6 +469,9 @@ export const Tasks: React.FC = () => {
               </motion.div>
             ))}
           </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
       
@@ -459,9 +479,14 @@ export const Tasks: React.FC = () => {
       {upcomingTasks.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xl font-semibold text-blue-700 dark:text-blue-300 flex items-center">
-              Upcoming Tasks
-            </h2>
+            <div className="flex items-center cursor-pointer select-none" onClick={() => setShowUpcomingTasks((v) => !v)}>
+              <span className="text-xl font-semibold text-blue-700 dark:text-blue-300 mr-2">Upcoming Tasks</span>
+              {showUpcomingTasks ? (
+                <ChevronDown className="w-5 h-5" />
+              ) : (
+                <ChevronRight className="w-5 h-5" />
+              )}
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -472,7 +497,17 @@ export const Tasks: React.FC = () => {
               {upcomingTasksReverseOrder ? 'Latest First' : 'Earliest First'}
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          <AnimatePresence initial={false}>
+            {showUpcomingTasks && (
+              <motion.div
+                key="upcomingTasks"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             {displayUpcomingTasks.map((task, index) => (
               <motion.div
                 key={task.id}
@@ -567,6 +602,9 @@ export const Tasks: React.FC = () => {
               </motion.div>
             ))}
           </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
       
