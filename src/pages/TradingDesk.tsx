@@ -15,7 +15,7 @@ export const TradingDesk: React.FC = () => {
   const [showPnL, setShowPnL] = useState(true);
   const [selectedStockId, setSelectedStockId] = useState('');
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
-  const [quantity, setQuantity] = useState<number>(0);
+  const [quantity, setQuantity] = useState<string>('');
   const [orderError, setOrderError] = useState<string | null>(null);
   const [showTxHistory, setShowTxHistory] = useState(false);
   
@@ -91,7 +91,8 @@ export const TradingDesk: React.FC = () => {
   const currentPrice = selectedStock ? selectedStock.currentScore * 0.1 : 0;
 
   // Calculate order costs
-  const estimatedCost = quantity * currentPrice;
+  const numericQuantity = quantity === '' ? 0 : Number(quantity);
+  const estimatedCost = numericQuantity * currentPrice;
   const brokerage = estimatedCost > 0 ? Math.max(20, estimatedCost * 0.0003) : 0; // ₹20 or 0.03% whichever is higher
   const totalCost = estimatedCost + brokerage;
 
@@ -101,13 +102,13 @@ export const TradingDesk: React.FC = () => {
     setOrderError(null);
     try {
       if (!selectedStockId) throw new Error('Select a stock');
-      if (quantity <= 0) throw new Error('Enter a valid quantity');
+      if (numericQuantity <= 0) throw new Error('Enter a valid quantity');
       if (orderType === 'buy') {
-        await buyStock(Number(selectedStockId), quantity, currentPrice);
+        await buyStock(Number(selectedStockId), numericQuantity, currentPrice);
       } else {
-        await sellStock(Number(selectedStockId), quantity, currentPrice);
+        await sellStock(Number(selectedStockId), numericQuantity, currentPrice);
       }
-      setQuantity(0);
+      setQuantity('');
     } catch (err: any) {
       setOrderError(err.message || 'Order failed');
     }
@@ -348,7 +349,15 @@ export const TradingDesk: React.FC = () => {
                   type="number"
                   min={1}
                   value={quantity}
-                  onChange={e => setQuantity(Number(e.target.value))}
+                  placeholder="0"
+                  onChange={e => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      setQuantity('');
+                    } else if (/^\d+$/.test(val)) {
+                      setQuantity(val);
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-shadow duration-150"
                 />
               </div>

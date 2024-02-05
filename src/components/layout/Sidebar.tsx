@@ -20,6 +20,7 @@ import {
   StickyNote
 } from 'lucide-react';
 import { useSidebar } from '../../contexts/SidebarContext';
+import { Tooltip } from '../ui/Tooltip';
 
 const menuItems = [
   { path: '/', icon: Home, label: 'Dashboard' },
@@ -80,33 +81,34 @@ export const Sidebar: React.FC = () => {
             const isActive = location.pathname === item.path;
             return (
               <Link key={item.path} to={item.path}>
-                <motion.div
-                  className={`flex items-center px-3 py-2 rounded-lg transition-colors duration-200 ${
-                    isActive 
-                      ? 'bg-primary/10 text-primary dark:bg-primary/20' 
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
-                  } ${isCollapsed ? 'justify-center' : 'space-x-3'}`}
-                  whileHover={{ x: isCollapsed ? 0 : 2 }}
-                  whileTap={{ scale: 0.98 }}
-                  title={item.label}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <motion.span
-                    className="font-medium"
-                    initial={false}
-                    animate={{ opacity: isCollapsed ? 0 : 1, x: isCollapsed ? -10 : 0 }}
-                    transition={{ 
-                      type: 'spring', 
-                      stiffness: 300, 
-                      damping: 30, 
-                      duration: 0.3,
-                      mass: 1.0
-                    }}
-                    style={{ display: isCollapsed ? 'none' : 'inline' }}
+                <Tooltip content={item.label} show={isCollapsed} placement="right">
+                  <motion.div
+                    className={`flex items-center px-3 py-2 rounded-lg transition-colors duration-200 ${
+                      isActive 
+                        ? 'bg-primary/10 text-primary dark:bg-primary/20' 
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                    } ${isCollapsed ? 'justify-center' : 'space-x-3'}`}
+                    whileHover={{ x: isCollapsed ? 0 : 2 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    {item.label}
-                  </motion.span>
-                </motion.div>
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <motion.span
+                      className="font-medium"
+                      initial={false}
+                      animate={{ opacity: isCollapsed ? 0 : 1, x: isCollapsed ? -10 : 0 }}
+                      transition={{ 
+                        type: 'spring', 
+                        stiffness: 300, 
+                        damping: 30, 
+                        duration: 0.3,
+                        mass: 1.0
+                      }}
+                      style={{ display: isCollapsed ? 'none' : 'inline' }}
+                    >
+                      {item.label}
+                    </motion.span>
+                  </motion.div>
+                </Tooltip>
               </Link>
             );
           })}
