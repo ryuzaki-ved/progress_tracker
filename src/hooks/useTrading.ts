@@ -218,6 +218,21 @@ export const useTrading = () => {
     await fetchTransactions();
   };
 
+  // Add funds to cash balance
+  const addFunds = async (amount: number) => {
+    if (!currentUserId) throw new Error('No user');
+    if (amount <= 0) throw new Error('Amount must be positive');
+    const db = await getDb();
+    // Ensure row exists for current user
+    const res = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = ?', [currentUserId]);
+    if (!res[0] || !res[0].values.length) {
+      db.run('INSERT INTO user_settings (user_id, cash_balance) VALUES (?, ?)', [currentUserId, 10000000]);
+    }
+    db.run('UPDATE user_settings SET cash_balance = cash_balance + ? WHERE user_id = ?', [amount, currentUserId]);
+    await persistDb();
+    await fetchCashBalance();
+  };
+
   return {
     cashBalance,
     holdings,
@@ -229,5 +244,6 @@ export const useTrading = () => {
     fetchTransactions,
     buyStock,
     sellStock,
+    addFunds, // Export addFunds
   };
 }; 

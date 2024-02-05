@@ -7,10 +7,11 @@ import { Button, PlaceOrderButton } from '../components/ui/Button';
 import { ToggleSwitch } from '../components/ui/ToggleSwitch';
 import { useStocks } from '../hooks/useStocks';
 import { useTrading } from '../hooks/useTrading';
+import { AddFundsModal } from '../components/modals/AddFundsModal';
 
 export const TradingDesk: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
-  const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error } = useTrading();
+  const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error, addFunds } = useTrading();
   const [showPnL, setShowPnL] = useState(true);
   const [selectedStockId, setSelectedStockId] = useState('');
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
@@ -20,6 +21,7 @@ export const TradingDesk: React.FC = () => {
   
   // Trading form state
   const [priceType, setPriceType] = useState('market');
+  const [showAddFundsModal, setShowAddFundsModal] = useState(false);
 
   if (stocksLoading || tradingLoading) {
     return (
@@ -111,6 +113,11 @@ export const TradingDesk: React.FC = () => {
     }
   };
 
+  // Add Funds handler
+  const handleAddFunds = async (amount: number) => {
+    await addFunds(amount);
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -134,14 +141,19 @@ export const TradingDesk: React.FC = () => {
           <div className="text-right">
             <div className="text-sm text-gray-500 dark:text-gray-400">Total P&L</div>
             <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {showPnL ? formatCurrency(totalPnL) : '••••••'}
+              {showPnL ? formatCurrency(totalPnL) : '\u2022\u2022\u2022\u2022\u2022\u2022'}
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Cash Balance</div>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(cashBalance)}
+          <div className="text-right flex items-center space-x-2">
+            <div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">Cash Balance</div>
+              <div className="text-2xl font-bold text-green-600">
+                {formatCurrency(cashBalance)}
+              </div>
             </div>
+            <Button variant="outline" size="sm" onClick={() => setShowAddFundsModal(true)}>
+              Add Funds
+            </Button>
           </div>
         </div>
       </div>
@@ -418,6 +430,11 @@ export const TradingDesk: React.FC = () => {
         </motion.div>
       )}
       </AnimatePresence>
+      <AddFundsModal
+        isOpen={showAddFundsModal}
+        onClose={() => setShowAddFundsModal(false)}
+        onSubmit={handleAddFunds}
+      />
     </div>
   );
 };
