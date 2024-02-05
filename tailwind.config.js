@@ -11,6 +11,9 @@ export default {
           dark: 'var(--color-primary-dark)',
         },
       },
+      fontFamily: {
+        'share-tech-mono': ['"Share Tech Mono"', 'monospace'],
+      },
     },
   },
   plugins: [],

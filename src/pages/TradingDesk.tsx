@@ -124,7 +124,7 @@ export const TradingDesk: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+          <h1 className="text-3xl font-semibold font-sans tracking-wide text-gray-900 dark:text-white flex items-center drop-shadow-sm">
             <TrendingUp className="w-8 h-8 mr-3 text-green-600" />
             Trading Desk
           </h1>
@@ -135,20 +135,18 @@ export const TradingDesk: React.FC = () => {
         <div className="flex items-center space-x-4">
           <div className="text-right">
             <div className="text-sm text-gray-500 dark:text-gray-400">Portfolio Value</div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white font-share-tech-mono text-digital-shadow">
               {formatCurrency(currentValue)}
             </div>
           </div>
           <div className="text-right">
             <div className="text-sm text-gray-500 dark:text-gray-400">Total P&L</div>
-            <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {showPnL ? formatCurrency(totalPnL) : '\u2022\u2022\u2022\u2022\u2022\u2022'}
-            </div>
+            <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'} font-share-tech-mono text-digital-shadow`}>{showPnL ? formatCurrency(totalPnL) : '\u2022\u2022\u2022\u2022\u2022\u2022'}</div>
           </div>
           <div className="text-right flex items-center space-x-2">
             <div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Cash Balance</div>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-green-600 font-share-tech-mono text-digital-shadow">
                 {formatCurrency(cashBalance)}
               </div>
             </div>
@@ -171,7 +169,7 @@ export const TradingDesk: React.FC = () => {
         </Card>
         <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
           <div className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-blue-600 font-share-tech-mono text-digital-shadow">
               {formatCurrency(totalInvestment)}
             </div>
             <div className="text-sm text-green-700">Invested</div>
@@ -179,7 +177,7 @@ export const TradingDesk: React.FC = () => {
         </Card>
         <Card className={`bg-gradient-to-r ${totalPnL >= 0 ? 'from-green-50 to-emerald-50 border-green-200' : 'from-red-50 to-pink-50 border-red-200'} transition-transform duration-200 hover:scale-105 hover:shadow-lg`}>
           <div className="p-4 text-center">
-            <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>              {showPnL ? formatPercent(totalPnLPercent) : '••••'}
+            <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'} font-share-tech-mono text-digital-shadow`}>              {showPnL ? formatPercent(totalPnLPercent) : '••••'}
             </div>
             <div className={`text-sm ${totalPnL >= 0 ? 'text-green-700' : 'text-red-700'}`}>              Total Return
             </div>
@@ -187,7 +185,7 @@ export const TradingDesk: React.FC = () => {
         </Card>
         <Card className="bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
           <div className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-purple-600 font-share-tech-mono text-digital-shadow">
               {holdingsWithStock.filter(h => h.unrealizedPnL > 0).length}
             </div>
             <div className="text-sm text-purple-700">Gainers</div>
@@ -201,7 +199,7 @@ export const TradingDesk: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center" style={{ fontFamily: 'Times New Roman, Times, serif' }}>
                 <BarChart3 className="w-5 h-5 mr-2" />
                 My Holdings
               </h2>
@@ -239,22 +237,26 @@ export const TradingDesk: React.FC = () => {
                               <Activity className="w-4 h-4 text-white" />
                             </div>
                             <div>
-                              <div className="font-medium text-gray-900 dark:text-white">{holding.stockName}</div>
+                              <div className="font-medium text-gray-900 dark:text-white" style={{ fontFamily: 'Times New Roman, Times, serif' }}>{holding.stockName}</div>
                               <div className="text-sm text-gray-600 dark:text-gray-400">{holding.category}</div>
                             </div>
                           </div>
                         </td>
                         <td className="py-4 px-4 text-right font-medium text-gray-900 dark:text-white">
-                          {holding.quantity}
+                          <div className="font-medium text-gray-900 dark:text-white font-share-tech-mono text-digital-shadow">{holding.quantity}</div>
                         </td>
                         <td className="py-4 px-4 text-right font-medium text-gray-900 dark:text-white">
-                          ₹{holding.weightedAvgBuyPrice.toFixed(2)}
+                          <div className="font-medium text-gray-900 dark:text-white font-share-tech-mono text-digital-shadow">₹{holding.weightedAvgBuyPrice.toFixed(2)}</div>
                         </td>
                         <td className="py-4 px-4 text-right font-medium text-gray-900 dark:text-white">
-                          ₹{holding.currentPrice.toFixed(2)}
+                          <div className="font-medium text-gray-900 dark:text-white font-share-tech-mono text-digital-shadow">₹{holding.currentPrice.toFixed(2)}</div>
                         </td>
-                        <td className={`py-4 px-4 text-right font-medium ${isGainer ? 'text-green-600' : 'text-red-600'}`}>₹{holding.unrealizedPnL.toFixed(2)}</td>
-                        <td className={`py-4 px-4 text-right font-medium ${isGainer ? 'text-green-600' : 'text-red-600'}`}>{formatPercent(holding.unrealizedPnLPercent)}</td>
+                        <td className={`py-4 px-4 text-right font-medium ${isGainer ? 'text-green-600' : 'text-red-600'}`}>
+                          <div className={`font-medium ${isGainer ? 'text-green-600' : 'text-red-600'} font-share-tech-mono text-digital-shadow`}>₹{holding.unrealizedPnL.toFixed(2)}</div>
+                        </td>
+                        <td className={`py-4 px-4 text-right font-medium ${isGainer ? 'text-green-600' : 'text-red-600'}`}>
+                          <div className={`font-medium ${isGainer ? 'text-green-600' : 'text-red-600'} font-share-tech-mono text-digital-shadow`}>{formatPercent(holding.unrealizedPnLPercent)}</div>
+                        </td>
                       </motion.tr>
                     );
                   })}
@@ -291,7 +293,7 @@ export const TradingDesk: React.FC = () => {
                       cx="50%"
                       cy="50%"
                       outerRadius={90}
-                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
+                      label={({ name, percent = 0 }) => `${name} (${(percent * 100).toFixed(1)}%)`}
                     >
                       {holdingsDistribution.map((entry, idx) => (
                         <Cell key={`cell-${idx}`} fill={pieColors[idx % pieColors.length]} />
@@ -362,7 +364,7 @@ export const TradingDesk: React.FC = () => {
                 />
               </div>
               <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span>Current Price: <span className="font-medium text-gray-900 dark:text-white">₹{currentPrice.toFixed(2)}</span></span>
+                <span>Current Price: <span className="font-medium text-gray-900 dark:text-white font-share-tech-mono text-digital-shadow">₹{currentPrice.toFixed(2)}</span></span>
                 <span>Brokerage: <span className="font-medium">₹{brokerage.toFixed(2)}</span></span>
               </div>
               <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
