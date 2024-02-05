@@ -7,18 +7,18 @@ const Container = styled.div`
   align-items: center;
   width: 400px;
   height: 50px;
-  border: 2px solid #ffc000;
+  border: 2.5px solid #00cfff;
   border-radius: 30px;
   position: relative;
-  background: #fff;
+  background: linear-gradient(135deg, #181f2b 60%, #232b3a 100%);
   box-sizing: border-box;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(255, 192, 0, 0.2);
+  box-shadow: 0 0 24px 4px #00cfff99, 0 0 60px 8px #00cfff33;
   transition: box-shadow 0.3s ease, border-color 0.3s ease;
   
   &:hover {
-    box-shadow: 0 6px 25px rgba(255, 192, 0, 0.3);
-    border-color: #ffb000;
+    box-shadow: 0 0 40px 8px #00cfffcc, 0 0 80px 16px #00cfff44;
+    border-color: #00eaff;
   }
   
   @media (max-width: 500px) {
@@ -56,11 +56,13 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         className="absolute top-0 left-0 w-1/2 h-full z-10"
         animate={{
           x: isSell ? '100%' : '0%',
-          backgroundColor: isSell ? '#e53935' : '#ffc000',
+          background: isSell
+            ? 'linear-gradient(135deg, #2b1a1a 60%, #ff3c6a 100%)'
+            : 'linear-gradient(135deg, #0e2a3a 60%, #00cfff 100%)',
           boxShadow: isSell
-            ? '0 4px 24px 0 rgba(229,57,53,0.25), 0 2px 10px rgba(229,57,53,0.3)'
-            : '0 4px 24px 0 rgba(255,192,0,0.18), 0 2px 10px rgba(255,192,0,0.3)',
-          borderRadius: isSell ? '30px' : '30px',
+            ? '0 0 32px 8px #ff3c6a99, 0 0 80px 16px #ff3c6a44'
+            : '0 0 32px 8px #00cfff99, 0 0 80px 16px #00cfff44',
+          borderRadius: '30px',
         }}
         transition={{
           type: 'spring',
@@ -81,10 +83,12 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         htmlFor="buy"
         className="flex-1 text-center z-20 cursor-pointer user-select-none relative"
         animate={{
-          color: value === 'buy' ? '#212121' : '#7d7d7d',
+          color: value === 'buy' ? '#00cfff' : '#4e5a6e',
           fontWeight: value === 'buy' ? 'bold' : 'normal',
-          scale: value === 'buy' ? 1.05 : 1,
-          textShadow: value === 'buy' ? '0 2px 8px #ffc00099, 0 1px 2px rgba(0,0,0,0.08)' : 'none',
+          scale: value === 'buy' ? 1.08 : 1,
+          textShadow: value === 'buy'
+            ? '0 0 8px #00eaff, 0 0 16px #00cfff, 0 1px 2px #00cfff99'
+            : '0 0 2px #222',
           y: value === 'buy' ? -3 : 0,
         }}
         transition={{
@@ -114,7 +118,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
             damping: 30,
           }}
         >
-          {option1Label}
+          {option1Label.toUpperCase()}
         </motion.span>
         {/* Subtle glow effect when selected */}
         {value === 'buy' && (
@@ -141,10 +145,12 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         htmlFor="sell"
         className="flex-1 text-center z-20 cursor-pointer user-select-none relative"
         animate={{
-          color: value === 'sell' ? '#fff' : '#7d7d7d',
+          color: value === 'sell' ? '#ff3c6a' : '#4e5a6e',
           fontWeight: value === 'sell' ? 'bold' : 'normal',
-          scale: value === 'sell' ? 1.05 : 1,
-          textShadow: value === 'sell' ? '0 2px 8px #e5393599, 0 1px 2px rgba(0,0,0,0.12)' : 'none',
+          scale: value === 'sell' ? 1.08 : 1,
+          textShadow: value === 'sell'
+            ? '0 0 8px #ff3c6a, 0 0 16px #ff3c6a, 0 1px 2px #ff3c6a99'
+            : '0 0 2px #222',
           y: value === 'sell' ? -3 : 0,
         }}
         transition={{
@@ -174,7 +180,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
             damping: 30,
           }}
         >
-          {option2Label}
+          {option2Label.toUpperCase()}
         </motion.span>
         {/* Subtle glow effect when selected */}
         {value === 'sell' && (
@@ -194,10 +200,10 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
       <motion.div
         className="absolute inset-0 rounded-full pointer-events-none"
         animate={{
-          borderColor: isSell ? '#e53935' : '#ffc000',
+          borderColor: isSell ? '#ff3c6a' : '#00cfff',
           boxShadow: isSell
-            ? '0 0 0 4px #e5393533, 0 0 12px 2px #e5393533'
-            : '0 0 0 4px #ffc00033, 0 0 12px 2px #ffc00033',
+            ? '0 0 0 4px #ff3c6a66, 0 0 24px 4px #ff3c6a99'
+            : '0 0 0 4px #00cfff66, 0 0 24px 4px #00cfff99',
         }}
         transition={{
           duration: 0.35,
@@ -215,7 +221,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         initial={{ 
           scale: 1,
           opacity: 0.6,
-          background: isSell ? 'rgba(229, 57, 53, 0.2)' : 'rgba(255, 192, 0, 0.2)',
+          background: isSell ? 'rgba(255, 60, 106, 0.18)' : 'rgba(0, 207, 255, 0.18)',
         }}
         animate={{ 
           scale: [1, 1.08, 1],
@@ -225,6 +231,25 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           duration: 0.7,
           ease: 'easeOut',
         }}
+      />
+      {/* Scanline/pulse effect */}
+      <motion.div
+        key={value + '-scanline'}
+        className="absolute inset-0 rounded-full pointer-events-none"
+        initial={{ opacity: 0 }}
+        animate={{
+          opacity: [0.12, 0.22, 0.12],
+          background:
+            value === 'buy'
+              ? 'repeating-linear-gradient(90deg, #00eaff33 0 2px, transparent 2px 8px)'
+              : 'repeating-linear-gradient(90deg, #ff3c6a33 0 2px, transparent 2px 8px)',
+        }}
+        transition={{
+          duration: 1.2,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+        style={{ zIndex: 30 }}
       />
     </Container>
   );
