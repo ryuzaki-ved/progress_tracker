@@ -25,6 +25,15 @@ export const Tasks: React.FC = () => {
   const [upcomingTasksReverseOrder, setUpcomingTasksReverseOrder] = useState(false);
   const [showPastTasks, setShowPastTasks] = useState(true);
   const [showUpcomingTasks, setShowUpcomingTasks] = useState(true);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<string[]>([]);
+
+  const toggleDescription = (taskId: string) => {
+    setExpandedDescriptions((prev) =>
+      prev.includes(taskId)
+        ? prev.filter((id) => id !== taskId)
+        : [...prev, taskId]
+    );
+  };
 
   if (tasksLoading || stocksLoading) {
     return (
@@ -262,7 +271,13 @@ export const Tasks: React.FC = () => {
                           <span className="text-xs text-gray-500">{getStockName(task.stockId)}</span>
                         </div>
                         {task.description && (
-                          <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                          <div
+                            className={`text-sm text-gray-600 mb-2 cursor-pointer ${!expandedDescriptions.includes(task.id) ? 'line-clamp-2' : ''}`}
+                            onClick={() => toggleDescription(task.id)}
+                            title={expandedDescriptions.includes(task.id) ? 'Click to collapse' : 'Click to expand'}
+                          >
+                            {task.description}
+                          </div>
                         )}
                       </div>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
@@ -392,7 +407,13 @@ export const Tasks: React.FC = () => {
                           <span className="text-xs text-gray-500">{getStockName(task.stockId)}</span>
                         </div>
                         {task.description && (
-                          <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                          <div
+                            className={`text-sm text-gray-600 mb-2 cursor-pointer ${!expandedDescriptions.includes(task.id) ? 'line-clamp-2' : ''}`}
+                            onClick={() => toggleDescription(task.id)}
+                            title={expandedDescriptions.includes(task.id) ? 'Click to collapse' : 'Click to expand'}
+                          >
+                            {task.description}
+                          </div>
                         )}
                       </div>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
@@ -525,7 +546,13 @@ export const Tasks: React.FC = () => {
                           <span className="text-xs text-gray-500">{getStockName(task.stockId)}</span>
                         </div>
                         {task.description && (
-                          <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                          <div
+                            className={`text-sm text-gray-600 mb-2 cursor-pointer ${!expandedDescriptions.includes(task.id) ? 'line-clamp-2' : ''}`}
+                            onClick={() => toggleDescription(task.id)}
+                            title={expandedDescriptions.includes(task.id) ? 'Click to collapse' : 'Click to expand'}
+                          >
+                            {task.description}
+                          </div>
                         )}
                       </div>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
@@ -632,7 +659,13 @@ export const Tasks: React.FC = () => {
                           <span className="text-xs text-gray-500">{getStockName(task.stockId)}</span>
                         </div>
                         {task.description && (
-                          <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                          <div
+                            className={`text-sm text-gray-600 mb-2 cursor-pointer ${!expandedDescriptions.includes(task.id) ? 'line-clamp-2' : ''}`}
+                            onClick={() => toggleDescription(task.id)}
+                            title={expandedDescriptions.includes(task.id) ? 'Click to collapse' : 'Click to expand'}
+                          >
+                            {task.description}
+                          </div>
                         )}
                       </div>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
@@ -753,7 +786,13 @@ export const Tasks: React.FC = () => {
                               <span className="text-xs text-gray-500">{getStockName(task.stockId)}</span>
                             </div>
                             {task.description && (
-                              <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                              <div
+                                className={`text-sm text-gray-600 mb-2 cursor-pointer ${!expandedDescriptions.includes(task.id) ? 'line-clamp-2' : ''}`}
+                                onClick={() => toggleDescription(task.id)}
+                                title={expandedDescriptions.includes(task.id) ? 'Click to collapse' : 'Click to expand'}
+                              >
+                                {task.description}
+                              </div>
                             )}
                           </div>
                           <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>

@@ -59,9 +59,9 @@ export const Sidebar: React.FC = () => {
         mass: 1.2
       }}
     >
-      <div className="flex-1 flex flex-col p-6">
-        <div className={`flex items-center mb-8 ${isCollapsed ? 'justify-center' : 'space-x-3'}`}> 
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+      <div className="flex-1 flex flex-col p-4">
+        <div className={`flex items-center mb-8 w-full ${isCollapsed ? 'justify-center' : 'justify-center'}`}> 
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center mx-auto">
             <PieChart className="w-6 h-6 text-white" />
           </div>
           <motion.div
@@ -70,8 +70,8 @@ export const Sidebar: React.FC = () => {
             transition={{ type: 'spring', stiffness: 300, damping: 30, duration: 0.35 }}
             style={{ display: isCollapsed ? 'none' : 'block' }}
           >
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">LifeStock</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Track your potential</p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white text-center">LifeStock</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 text-center">Track your potential</p>
           </motion.div>
         </div>
         
@@ -83,7 +83,7 @@ export const Sidebar: React.FC = () => {
               <Link key={item.path} to={item.path}>
                 <Tooltip content={item.label} show={isCollapsed} placement="right">
                   <motion.div
-                    className={`flex items-center px-3 py-2 rounded-lg transition-colors duration-200 ${
+                    className={`flex items-center px-1 py-2 rounded-lg transition-colors duration-200 ${
                       isActive 
                         ? 'bg-primary/10 text-primary dark:bg-primary/20' 
                         : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
