@@ -87,8 +87,8 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           fontWeight: value === 'buy' ? 'bold' : 'normal',
           scale: value === 'buy' ? 1.08 : 1,
           textShadow: value === 'buy'
-            ? '0 0 8px #00eaff, 0 0 16px #00cfff, 0 1px 2px #00cfff99'
-            : '0 0 2px #222',
+            ? '0 0 5px #00eaff, 0 0 10px #00cfff, 0 1px 2px #00cfff88'
+            : '0 0 1.5px #222',
           y: value === 'buy' ? -3 : 0,
         }}
         transition={{
@@ -120,15 +120,16 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         >
           {option1Label.toUpperCase()}
         </motion.span>
-        {/* Subtle glow effect when selected */}
+        {/* Interactive background for BUY */}
         {value === 'buy' && (
           <motion.div
             className="absolute inset-0 rounded-full"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.1 }}
+            animate={{ opacity: 0.18 }}
             exit={{ opacity: 0 }}
             style={{
-              background: 'radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%)',
+              background: 'linear-gradient(90deg, #00eaff33 0%, #00cfff44 100%)',
+              zIndex: -1,
             }}
           />
         )}
@@ -149,8 +150,8 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           fontWeight: value === 'sell' ? 'bold' : 'normal',
           scale: value === 'sell' ? 1.08 : 1,
           textShadow: value === 'sell'
-            ? '0 0 8px #ff3c6a, 0 0 16px #ff3c6a, 0 1px 2px #ff3c6a99'
-            : '0 0 2px #222',
+            ? '0 0 5px #ff3c6a, 0 0 10px #ff3c6a, 0 1px 2px #ff3c6a88'
+            : '0 0 1.5px #222',
           y: value === 'sell' ? -3 : 0,
         }}
         transition={{
@@ -182,15 +183,16 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         >
           {option2Label.toUpperCase()}
         </motion.span>
-        {/* Subtle glow effect when selected */}
+        {/* Interactive background for SELL */}
         {value === 'sell' && (
           <motion.div
             className="absolute inset-0 rounded-full"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.1 }}
+            animate={{ opacity: 0.18 }}
             exit={{ opacity: 0 }}
             style={{
-              background: 'radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%)',
+              background: 'linear-gradient(90deg, #ff3c6a33 0%, #ff3c6a55 100%)',
+              zIndex: -1,
             }}
           />
         )}
