@@ -9,6 +9,7 @@ import { useStocks } from '../hooks/useStocks';
 import { useTrading } from '../hooks/useTrading';
 import { AddFundsModal } from '../components/modals/AddFundsModal';
 import CountUp from 'react-countup';
+import SlidingNumber from '../components/ui/SlidingNumber';
 
 export const TradingDesk: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
@@ -198,7 +199,7 @@ export const TradingDesk: React.FC = () => {
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
           <div className="p-4 text-center">
             <div className="text-2xl font-bold text-blue-600">
-              {holdingsWithStock.length}
+              <SlidingNumber value={holdingsWithStock.length} color="#2563eb" />
             </div>
             <div className="text-sm text-blue-700">Holdings</div>
           </div>
@@ -206,23 +207,27 @@ export const TradingDesk: React.FC = () => {
         <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
           <div className="p-4 text-center">
             <div className="text-2xl font-bold text-blue-600 font-share-tech-mono text-digital-shadow">
-              {formatCurrency(totalInvestment)}
+              <SlidingNumber value={totalInvestment} prefix="₹" decimals={2} color="#059669" />
             </div>
             <div className="text-sm text-green-700">Invested</div>
           </div>
         </Card>
         <Card className={`bg-gradient-to-r ${totalPnL >= 0 ? 'from-green-50 to-emerald-50 border-green-200' : 'from-red-50 to-pink-50 border-red-200'} transition-transform duration-200 hover:scale-105 hover:shadow-lg`}>
           <div className="p-4 text-center">
-            <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'} font-share-tech-mono text-digital-shadow`}>              {showPnL ? formatPercent(totalPnLPercent) : '••••'}
+            <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'} font-share-tech-mono text-digital-shadow`}>
+              {showPnL ? (
+                <SlidingNumber value={totalPnLPercent} suffix="%" decimals={2} color={totalPnL >= 0 ? "#059669" : "#dc2626"} />
+              ) : (
+                '\u2022\u2022\u2022\u2022'
+              )}
             </div>
-            <div className={`text-sm ${totalPnL >= 0 ? 'text-green-700' : 'text-red-700'}`}>              Total Return
-            </div>
+            <div className={`text-sm ${totalPnL >= 0 ? 'text-green-700' : 'text-red-700'}`}>Total Return</div>
           </div>
         </Card>
         <Card className="bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
           <div className="p-4 text-center">
             <div className="text-2xl font-bold text-purple-600 font-share-tech-mono text-digital-shadow">
-              {holdingsWithStock.filter(h => h.unrealizedPnL > 0).length}
+              <SlidingNumber value={holdingsWithStock.filter(h => h.unrealizedPnL > 0).length} color="#7c3aed" />
             </div>
             <div className="text-sm text-purple-700">Gainers</div>
           </div>

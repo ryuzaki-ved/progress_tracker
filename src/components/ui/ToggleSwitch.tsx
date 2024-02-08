@@ -88,7 +88,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           scale: value === 'buy' ? 1.08 : 1,
           textShadow: value === 'buy'
             ? '0 0 2px #00eaff, 0 0 7px #00cfff, 0 1px 2px #00cfff88'
-            : '0 0 1.5px #222',
+            : '0 0 1.3px #222',
           y: value === 'buy' ? -3 : 0,
         }}
         transition={{
@@ -151,7 +151,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           scale: value === 'sell' ? 1.08 : 1,
           textShadow: value === 'sell'
             ? '0 0 5px #ff3c6a, 0 0 10px #ff3c6a, 0 1px 2px #ff3c6a88'
-            : '0 0 1.5px #222',
+            : '0 0 1.3px #222',
           y: value === 'sell' ? -3 : 0,
         }}
         transition={{
