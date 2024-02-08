@@ -138,12 +138,14 @@ export const TradingDesk: React.FC = () => {
             <div className="text-sm text-gray-500 dark:text-gray-400">Portfolio Value</div>
             <div className="text-2xl font-bold text-gray-900 dark:text-white font-share-tech-mono text-digital-shadow">
               <CountUp
+                key={currentValue}
                 end={currentValue}
                 duration={1.5}
                 separator="," 
                 decimals={2}
                 formattingFn={formatCurrency}
                 preserveValue
+                redraw={false}
               />
             </div>
           </div>
@@ -153,12 +155,14 @@ export const TradingDesk: React.FC = () => {
             <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'} font-share-tech-mono text-digital-shadow`}>
               {showPnL ? (
                 <CountUp
+                  key={totalPnL}
                   end={totalPnL}
                   duration={1.5}
                   separator="," 
                   decimals={2}
                   formattingFn={formatCurrency}
                   preserveValue
+                  redraw={false}
                 />
               ) : (
                 '\u2022\u2022\u2022\u2022\u2022\u2022'
@@ -171,12 +175,14 @@ export const TradingDesk: React.FC = () => {
               <div className="text-sm text-gray-500 dark:text-gray-400">Cash Balance</div>
               <div className="text-2xl font-bold text-green-600 font-share-tech-mono text-digital-shadow">
                 <CountUp
+                  key={cashBalance}
                   end={cashBalance}
                   duration={1.5}
                   separator="," 
                   decimals={2}
                   formattingFn={formatCurrency}
                   preserveValue
+                  redraw={false}
                 />
               </div>
             </div>
