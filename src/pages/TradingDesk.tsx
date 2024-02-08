@@ -8,6 +8,7 @@ import { ToggleSwitch } from '../components/ui/ToggleSwitch';
 import { useStocks } from '../hooks/useStocks';
 import { useTrading } from '../hooks/useTrading';
 import { AddFundsModal } from '../components/modals/AddFundsModal';
+import CountUp from 'react-countup';
 
 export const TradingDesk: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
@@ -136,18 +137,47 @@ export const TradingDesk: React.FC = () => {
           <div className="text-right">
             <div className="text-sm text-gray-500 dark:text-gray-400">Portfolio Value</div>
             <div className="text-2xl font-bold text-gray-900 dark:text-white font-share-tech-mono text-digital-shadow">
-              {formatCurrency(currentValue)}
+              <CountUp
+                end={currentValue}
+                duration={1.5}
+                separator="," 
+                decimals={2}
+                formattingFn={formatCurrency}
+                preserveValue
+              />
             </div>
           </div>
+          <div className="h-8 w-px bg-gray-300 dark:bg-gray-700 mx-2" />
           <div className="text-right">
             <div className="text-sm text-gray-500 dark:text-gray-400">Total P&L</div>
-            <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'} font-share-tech-mono text-digital-shadow`}>{showPnL ? formatCurrency(totalPnL) : '\u2022\u2022\u2022\u2022\u2022\u2022'}</div>
+            <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'} font-share-tech-mono text-digital-shadow`}>
+              {showPnL ? (
+                <CountUp
+                  end={totalPnL}
+                  duration={1.5}
+                  separator="," 
+                  decimals={2}
+                  formattingFn={formatCurrency}
+                  preserveValue
+                />
+              ) : (
+                '\u2022\u2022\u2022\u2022\u2022\u2022'
+              )}
+            </div>
           </div>
+          <div className="h-8 w-px bg-gray-300 dark:bg-gray-700 mx-2" />
           <div className="text-right flex items-center space-x-2">
             <div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Cash Balance</div>
               <div className="text-2xl font-bold text-green-600 font-share-tech-mono text-digital-shadow">
-                {formatCurrency(cashBalance)}
+                <CountUp
+                  end={cashBalance}
+                  duration={1.5}
+                  separator="," 
+                  decimals={2}
+                  formattingFn={formatCurrency}
+                  preserveValue
+                />
               </div>
             </div>
             <Button variant="outline" size="sm" onClick={() => setShowAddFundsModal(true)}>
