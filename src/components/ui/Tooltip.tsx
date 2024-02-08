@@ -7,6 +7,7 @@ interface TooltipProps {
   show?: boolean; // Only show tooltip if true (e.g., sidebar is collapsed)
   placement?: 'right' | 'top' | 'bottom' | 'left';
   className?: string;
+  hideTrigger?: any; // When this changes, tooltip will hide
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({
@@ -15,8 +16,13 @@ export const Tooltip: React.FC<TooltipProps> = ({
   show = true,
   placement = 'right',
   className = '',
+  hideTrigger,
 }) => {
   const [visible, setVisible] = useState(false);
+
+  React.useEffect(() => {
+    setVisible(false);
+  }, [hideTrigger]);
 
   // Only render tooltip logic if show is true
   return (

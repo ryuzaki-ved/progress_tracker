@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { Tooltip } from '../ui/Tooltip';
+import { useState } from 'react';
 
 const menuItems = [
   { path: '/', icon: Home, label: 'Dashboard' },
@@ -41,6 +42,7 @@ const menuItems = [
 export const Sidebar: React.FC = () => {
   const location = useLocation();
   const { isCollapsed, toggleSidebar } = useSidebar();
+  const [tooltipHideKey, setTooltipHideKey] = useState(0);
 
   return (
     <motion.div
@@ -80,10 +82,10 @@ export const Sidebar: React.FC = () => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
-              <Link key={item.path} to={item.path}>
-                <Tooltip content={item.label} show={isCollapsed} placement="right">
+              <Link key={item.path} to={item.path} onClick={() => setTooltipHideKey(k => k + 1)} className="w-full block">
+                <Tooltip content={item.label} show={isCollapsed} placement="right" hideTrigger={tooltipHideKey}>
                   <motion.div
-                    className={`flex items-center px-1 py-2 rounded-lg transition-colors duration-200 ${
+                    className={`w-full flex items-center px-1 py-2 rounded-lg transition-colors duration-200 ${
                       isActive 
                         ? 'bg-primary/10 text-primary dark:bg-primary/20' 
                         : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
