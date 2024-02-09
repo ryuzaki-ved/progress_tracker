@@ -120,6 +120,36 @@ CREATE TABLE IF NOT EXISTS notes (
   updated_at TEXT DEFAULT (datetime('now')),
   FOREIGN KEY(user_id) REFERENCES users(id)
 );
+CREATE TABLE IF NOT EXISTS options_contracts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  strike_price REAL NOT NULL,
+  expiry_date TEXT NOT NULL,
+  option_type TEXT NOT NULL, -- 'CE' or 'PE'
+  underlying_index_value_at_creation REAL NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS option_transactions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  contract_id INTEGER NOT NULL,
+  type TEXT NOT NULL, -- 'buy' or 'write'
+  quantity INTEGER NOT NULL,
+  premium_per_unit REAL NOT NULL,
+  total_premium REAL NOT NULL,
+  timestamp TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  FOREIGN KEY(contract_id) REFERENCES options_contracts(id)
+);
+CREATE TABLE IF NOT EXISTS user_options_holdings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  contract_id INTEGER NOT NULL,
+  quantity INTEGER NOT NULL,
+  type TEXT NOT NULL, -- 'long_ce', 'short_ce', 'long_pe', 'short_pe'
+  weighted_avg_premium REAL NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  FOREIGN KEY(contract_id) REFERENCES options_contracts(id)
+);
 `;
 
 // Migration: add created_at to stocks and tasks if missing
@@ -322,6 +352,54 @@ function migrateNotesTable(db: Database) {
     );`);
   }
 }
+// Migration: options_contracts
+function migrateOptionsContractsTable(db: Database) {
+  const res = db.exec("PRAGMA table_info(options_contracts);");
+  if (!res[0]) {
+    db.run(`CREATE TABLE IF NOT EXISTS options_contracts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      strike_price REAL NOT NULL,
+      expiry_date TEXT NOT NULL,
+      option_type TEXT NOT NULL,
+      underlying_index_value_at_creation REAL NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );`);
+  }
+}
+// Migration: option_transactions
+function migrateOptionTransactionsTable(db: Database) {
+  const res = db.exec("PRAGMA table_info(option_transactions);");
+  if (!res[0]) {
+    db.run(`CREATE TABLE IF NOT EXISTS option_transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      contract_id INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      quantity INTEGER NOT NULL,
+      premium_per_unit REAL NOT NULL,
+      total_premium REAL NOT NULL,
+      timestamp TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      FOREIGN KEY(contract_id) REFERENCES options_contracts(id)
+    );`);
+  }
+}
+// Migration: user_options_holdings
+function migrateUserOptionsHoldingsTable(db: Database) {
+  const res = db.exec("PRAGMA table_info(user_options_holdings);");
+  if (!res[0]) {
+    db.run(`CREATE TABLE IF NOT EXISTS user_options_holdings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      contract_id INTEGER NOT NULL,
+      quantity INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      weighted_avg_premium REAL NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      FOREIGN KEY(contract_id) REFERENCES options_contracts(id)
+    );`);
+  }
+}
 
 // Load database from IndexedDB
 async function loadDatabase(): Promise<Database> {
@@ -337,6 +415,9 @@ async function loadDatabase(): Promise<Database> {
   migrateUserHoldingsTable(db);
   migrateTransactionsTable(db);
   migrateNotesTable(db);
+  migrateOptionsContractsTable(db);
+  migrateOptionTransactionsTable(db);
+  migrateUserOptionsHoldingsTable(db);
   // Log initial cash balance after migrations
   const initialSettings = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = 1');
   console.log('SQLite: Initial cash_balance after load/migrations:', initialSettings[0]?.values?.[0]?.[0]);

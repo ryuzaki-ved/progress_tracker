@@ -260,3 +260,32 @@ export interface Note {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface OptionContract {
+  id: number;
+  strikePrice: number;
+  expiryDate: string; // ISO string
+  optionType: 'CE' | 'PE';
+  underlyingIndexValueAtCreation: number;
+  createdAt: string;
+}
+
+export interface OptionTransaction {
+  id: number;
+  userId: number;
+  contractId: number;
+  type: 'buy' | 'write';
+  quantity: number;
+  premiumPerUnit: number;
+  totalPremium: number;
+  timestamp: string;
+}
+
+export interface UserOptionHolding {
+  id: number;
+  userId: number;
+  contractId: number;
+  quantity: number;
+  type: 'long_ce' | 'short_ce' | 'long_pe' | 'short_pe';
+  weightedAvgPremium: number;
+}

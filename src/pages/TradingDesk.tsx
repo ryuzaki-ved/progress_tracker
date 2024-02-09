@@ -10,10 +10,36 @@ import { useTrading } from '../hooks/useTrading';
 import { AddFundsModal } from '../components/modals/AddFundsModal';
 import CountUp from 'react-countup';
 import SlidingNumber from '../components/ui/SlidingNumber';
+import { OptionContract, UserOptionHolding, OptionTransaction } from '../types';
+
+const OptionToggleSwitch: React.FC<{
+  value: 'buy' | 'write';
+  onChange: (value: 'buy' | 'write') => void;
+  option1Label?: string;
+  option2Label?: string;
+  className?: string;
+}> = ({ value, onChange, option1Label = 'Buy', option2Label = 'Write', className }) => (
+  <div className={`flex rounded-full border-2 border-blue-400 overflow-hidden ${className || ''}`} style={{ width: 180, height: 40 }}>
+    <button
+      type="button"
+      className={`flex-1 text-center py-1 font-semibold transition-colors ${value === 'buy' ? 'bg-blue-400 text-white' : 'bg-white text-blue-400'}`}
+      onClick={() => onChange('buy')}
+    >
+      {option1Label}
+    </button>
+    <button
+      type="button"
+      className={`flex-1 text-center py-1 font-semibold transition-colors ${value === 'write' ? 'bg-blue-400 text-white' : 'bg-white text-blue-400'}`}
+      onClick={() => onChange('write')}
+    >
+      {option2Label}
+    </button>
+  </div>
+);
 
 export const TradingDesk: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
-  const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error, addFunds } = useTrading();
+  const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error, addFunds, optionContracts, userOptionHoldings, optionTransactions, buyOption, writeOption, fetchOptionsData } = useTrading();
   const [showPnL, setShowPnL] = useState(true);
   const [selectedStockId, setSelectedStockId] = useState('');
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
@@ -24,6 +50,17 @@ export const TradingDesk: React.FC = () => {
   // Trading form state
   const [priceType, setPriceType] = useState('market');
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
+
+  // Options trading form state
+  const [selectedOptionId, setSelectedOptionId] = useState('');
+  const [optionOrderType, setOptionOrderType] = useState<'buy' | 'write'>('buy');
+  const [optionQuantity, setOptionQuantity] = useState('');
+  const [optionOrderError, setOptionOrderError] = useState<string | null>(null);
+
+  // Fetch options data on mount
+  useEffect(() => {
+    fetchOptionsData();
+  }, [fetchOptionsData]);
 
   if (stocksLoading || tradingLoading) {
     return (
@@ -92,6 +129,17 @@ export const TradingDesk: React.FC = () => {
   const selectedHolding = holdingsWithStock.find(h => h.stockId.toString() === selectedStockId);
   const currentPrice = selectedStock ? selectedStock.currentScore * 0.1 : 0;
 
+  // Get selected option contract
+  const selectedOption = optionContracts.find(o => o.id.toString() === selectedOptionId);
+
+  // Calculate premium for selected option
+  let optionPremium = 0;
+  if (selectedOption) {
+    optionPremium = (window as any).calculateOptionPrice
+      ? (window as any).calculateOptionPrice(selectedOption.underlyingIndexValueAtCreation, selectedOption.strikePrice, selectedOption.expiryDate, selectedOption.optionType, selectedOption.createdAt)
+      : 0;
+  }
+
   // Calculate order costs
   const numericQuantity = quantity === '' ? 0 : Number(quantity);
   const estimatedCost = numericQuantity * currentPrice;
@@ -113,6 +161,26 @@ export const TradingDesk: React.FC = () => {
       setQuantity('');
     } catch (err: any) {
       setOrderError(err.message || 'Order failed');
+    }
+  };
+
+  // Handle option order submit
+  const handleOptionOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOptionOrderError(null);
+    try {
+      if (!selectedOptionId) throw new Error('Select an option contract');
+      const qty = Number(optionQuantity);
+      if (qty <= 0) throw new Error('Enter a valid quantity');
+      if (optionOrderType === 'buy') {
+        await buyOption(Number(selectedOptionId), qty);
+      } else {
+        await writeOption(Number(selectedOptionId), qty);
+      }
+      setOptionQuantity('');
+      fetchOptionsData();
+    } catch (err: any) {
+      setOptionOrderError(err.message || 'Order failed');
     }
   };
 
@@ -419,6 +487,157 @@ export const TradingDesk: React.FC = () => {
               </PlaceOrderButton>
             </form>
           </Card>
+        </div>
+      </div>
+      {/* Options Trading Section */}
+      <div className="mt-12">
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Options Trading</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Available Contracts */}
+          <div className="lg:col-span-2">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
+              <h3 className="text-lg font-semibold mb-2">Available Option Contracts (This Week)</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 dark:bg-gray-700">
+                      <th className="py-2 px-4">Strike</th>
+                      <th className="py-2 px-4">Type</th>
+                      <th className="py-2 px-4">Expiry</th>
+                      <th className="py-2 px-4">Premium</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {optionContracts.map(opt => (
+                      <tr key={opt.id} className="hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer" onClick={() => setSelectedOptionId(opt.id.toString())}>
+                        <td className="py-2 px-4">{opt.strikePrice}</td>
+                        <td className="py-2 px-4">{opt.optionType}</td>
+                        <td className="py-2 px-4">{new Date(opt.expiryDate).toLocaleDateString()}</td>
+                        <td className="py-2 px-4">{optionPremium && selectedOptionId === opt.id.toString() ? optionPremium.toFixed(2) : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            {/* User Option Holdings */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
+              <h3 className="text-lg font-semibold mb-2">My Option Holdings</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 dark:bg-gray-700">
+                      <th className="py-2 px-4">Contract</th>
+                      <th className="py-2 px-4">Type</th>
+                      <th className="py-2 px-4">Qty</th>
+                      <th className="py-2 px-4">Avg Premium</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userOptionHoldings.map(h => {
+                      const contract = optionContracts.find(c => c.id === h.contractId);
+                      return (
+                        <tr key={h.id}>
+                          <td className="py-2 px-4">{contract ? `${contract.strikePrice} ${contract.optionType}` : h.contractId}</td>
+                          <td className="py-2 px-4">{h.type}</td>
+                          <td className="py-2 px-4">{h.quantity}</td>
+                          <td className="py-2 px-4">{h.weightedAvgPremium.toFixed(2)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            {/* Option Transactions */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+              <h3 className="text-lg font-semibold mb-2">Option Transaction History</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 dark:bg-gray-700">
+                      <th className="py-2 px-4">Type</th>
+                      <th className="py-2 px-4">Contract</th>
+                      <th className="py-2 px-4">Qty</th>
+                      <th className="py-2 px-4">Premium</th>
+                      <th className="py-2 px-4">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {optionTransactions.map(tx => {
+                      const contract = optionContracts.find(c => c.id === tx.contractId);
+                      return (
+                        <tr key={tx.id}>
+                          <td className="py-2 px-4">{tx.type}</td>
+                          <td className="py-2 px-4">{contract ? `${contract.strikePrice} ${contract.optionType}` : tx.contractId}</td>
+                          <td className="py-2 px-4">{tx.quantity}</td>
+                          <td className="py-2 px-4">{tx.premiumPerUnit.toFixed(2)}</td>
+                          <td className="py-2 px-4">{new Date(tx.timestamp).toLocaleString()}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          {/* Place Option Order */}
+          <div className="lg:col-span-1">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+              <h3 className="text-lg font-semibold mb-4">Place Option Order</h3>
+              <form className="space-y-4" onSubmit={handleOptionOrder}>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Option Contract</label>
+                  <select
+                    value={selectedOptionId}
+                    onChange={e => setSelectedOptionId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-shadow duration-150 hover:border-blue-400 dark:hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-gray-800"
+                  >
+                    <option value="">Choose an option...</option>
+                    {optionContracts.map(opt => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.strikePrice} {opt.optionType} (Exp: {new Date(opt.expiryDate).toLocaleDateString()})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Order Type</label>
+                  <div className="flex justify-center">
+                    <OptionToggleSwitch
+                      value={optionOrderType}
+                      onChange={setOptionOrderType}
+                      option1Label="Buy"
+                      option2Label="Write"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quantity</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={optionQuantity}
+                    placeholder="0"
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setOptionQuantity('');
+                      } else if (/^\d+$/.test(val)) {
+                        setOptionQuantity(val);
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-shadow duration-150"
+                  />
+                </div>
+                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                  <span>Premium: <span className="font-medium text-gray-900 dark:text-white">{optionPremium && selectedOption ? optionPremium.toFixed(2) : '-'}</span></span>
+                </div>
+                {optionOrderError && <div className="text-red-600 text-sm">{optionOrderError}</div>}
+                <Button type="submit" variant="primary" className="w-full">Place Option Order</Button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
       {/* Transactions Modal */}
