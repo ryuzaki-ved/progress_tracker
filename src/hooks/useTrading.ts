@@ -305,6 +305,46 @@ export const useTrading = () => {
     await fetchOptionsData();
   }, [currentUserId]);
 
+  // Exit option position
+  const exitOptionPosition = async (holdingId: number, quantity: number) => {
+    if (!currentUserId) throw new Error('No user');
+    if (quantity <= 0) throw new Error('Quantity must be positive');
+    const db = await getDb();
+    // Get holding
+    const holdingRes = db.exec('SELECT * FROM user_options_holdings WHERE id = ?', [holdingId]);
+    if (!holdingRes[0] || !holdingRes[0].values.length) throw new Error('Holding not found');
+    const obj: any = {};
+    holdingRes[0].columns.forEach((col: any, i: number) => (obj[col] = holdingRes[0].values[0][i]));
+    if (quantity > obj.quantity) throw new Error('Not enough quantity to exit');
+    // Get contract
+    const contractRes = db.exec('SELECT * FROM options_contracts WHERE id = ?', [obj.contract_id]);
+    if (!contractRes[0] || !contractRes[0].values.length) throw new Error('Contract not found');
+    const contract: OptionContract = {
+      id: contractRes[0].values[0][0],
+      strikePrice: contractRes[0].values[0][1],
+      expiryDate: contractRes[0].values[0][2],
+      optionType: contractRes[0].values[0][3],
+      underlyingIndexValueAtCreation: contractRes[0].values[0][4],
+      createdAt: contractRes[0].values[0][5],
+    };
+    // For short positions, return collateral
+    if (obj.type === 'short_ce' || obj.type === 'short_pe') {
+      const collateral = contract.strikePrice * quantity;
+      db.run('UPDATE user_settings SET cash_balance = cash_balance + ? WHERE user_id = ?', [collateral, currentUserId]);
+    }
+    // Reduce or remove holding
+    if (obj.quantity > quantity) {
+      db.run('UPDATE user_options_holdings SET quantity = ? WHERE id = ?', [obj.quantity - quantity, holdingId]);
+    } else {
+      db.run('DELETE FROM user_options_holdings WHERE id = ?', [holdingId]);
+    }
+    // Record exit transaction
+    db.run('INSERT INTO option_transactions (user_id, contract_id, type, quantity, premium_per_unit, total_premium) VALUES (?, ?, ?, ?, ?, ?)', [currentUserId, contract.id, 'exit', quantity, obj.weighted_avg_premium, obj.weighted_avg_premium * quantity]);
+    await persistDb();
+    await fetchCashBalance();
+    await fetchOptionsData();
+  };
+
   // Initial load
   useEffect(() => {
     setLoading(true);
@@ -477,5 +517,6 @@ export const useTrading = () => {
     buyOption,
     writeOption,
     settleExpiredOptions,
+    exitOptionPosition,
   };
 }; 

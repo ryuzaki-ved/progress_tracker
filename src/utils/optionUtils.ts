@@ -39,9 +39,9 @@ export function generateWeeklyOptionsContracts(
   sunday.setDate(monday.getDate() + 6);
   sunday.setHours(23, 59, 59, 999);
 
-  // Strike prices: nearest 100, and +/- 200, 100, 0, +100, +200
+  // Strike prices: ATM, ATM-100, ATM+100
   const base = Math.round(currentIndexValue / 100) * 100;
-  const strikes = [base - 200, base - 100, base, base + 100, base + 200];
+  const strikes = [base - 100, base, base + 100];
   const contracts: OptionContract[] = [];
   for (const strike of strikes) {
     contracts.push({

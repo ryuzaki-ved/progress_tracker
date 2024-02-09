@@ -11,6 +11,7 @@ import { AddFundsModal } from '../components/modals/AddFundsModal';
 import CountUp from 'react-countup';
 import SlidingNumber from '../components/ui/SlidingNumber';
 import { OptionContract, UserOptionHolding, OptionTransaction } from '../types';
+import { calculateOptionPrice } from '../utils/optionUtils';
 
 const OptionToggleSwitch: React.FC<{
   value: 'buy' | 'write';
@@ -39,7 +40,7 @@ const OptionToggleSwitch: React.FC<{
 
 export const TradingDesk: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
-  const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error, addFunds, optionContracts, userOptionHoldings, optionTransactions, buyOption, writeOption, fetchOptionsData } = useTrading();
+  const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error, addFunds, optionContracts, userOptionHoldings, optionTransactions, buyOption, writeOption, fetchOptionsData, exitOptionPosition } = useTrading();
   const [showPnL, setShowPnL] = useState(true);
   const [selectedStockId, setSelectedStockId] = useState('');
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
@@ -508,14 +509,23 @@ export const TradingDesk: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {optionContracts.map(opt => (
-                      <tr key={opt.id} className="hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer" onClick={() => setSelectedOptionId(opt.id.toString())}>
-                        <td className="py-2 px-4">{opt.strikePrice}</td>
-                        <td className="py-2 px-4">{opt.optionType}</td>
-                        <td className="py-2 px-4">{new Date(opt.expiryDate).toLocaleDateString()}</td>
-                        <td className="py-2 px-4">{optionPremium && selectedOptionId === opt.id.toString() ? optionPremium.toFixed(2) : '-'}</td>
-                      </tr>
-                    ))}
+                    {optionContracts.map(opt => {
+                      const premium = calculateOptionPrice(
+                        opt.underlyingIndexValueAtCreation,
+                        opt.strikePrice,
+                        opt.expiryDate,
+                        opt.optionType,
+                        opt.createdAt
+                      );
+                      return (
+                        <tr key={opt.id} className="hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer" onClick={() => setSelectedOptionId(opt.id.toString())}>
+                          <td className="py-2 px-4 text-gray-900 dark:text-white">{opt.strikePrice}</td>
+                          <td className="py-2 px-4 text-gray-900 dark:text-white">{opt.optionType}</td>
+                          <td className="py-2 px-4 text-gray-900 dark:text-white">{new Date(opt.expiryDate).toLocaleDateString()}</td>
+                          <td className="py-2 px-4 text-gray-900 dark:text-white">{premium.toFixed(2)}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -538,10 +548,27 @@ export const TradingDesk: React.FC = () => {
                       const contract = optionContracts.find(c => c.id === h.contractId);
                       return (
                         <tr key={h.id}>
-                          <td className="py-2 px-4">{contract ? `${contract.strikePrice} ${contract.optionType}` : h.contractId}</td>
-                          <td className="py-2 px-4">{h.type}</td>
-                          <td className="py-2 px-4">{h.quantity}</td>
-                          <td className="py-2 px-4">{h.weightedAvgPremium.toFixed(2)}</td>
+                          <td className="py-2 px-4 text-gray-900 dark:text-white">{contract ? `${contract.strikePrice} ${contract.optionType}` : h.contractId}</td>
+                          <td className="py-2 px-4 text-gray-900 dark:text-white">{h.type}</td>
+                          <td className="py-2 px-4 text-gray-900 dark:text-white">{h.quantity}</td>
+                          <td className="py-2 px-4 text-gray-900 dark:text-white">{h.weightedAvgPremium.toFixed(2)}</td>
+                          <td className="py-2 px-4">
+                            <button
+                              className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                              onClick={async () => {
+                                const exitQty = 1; // or prompt user for quantity
+                                try {
+                                  await exitOptionPosition(h.id, exitQty);
+                                  fetchOptionsData();
+                                } catch (err) {
+                                  alert('Failed to exit position: ' + (err as any).message);
+                                }
+                              }}
+                              disabled={h.quantity <= 0}
+                            >
+                              Exit
+                            </button>
+                          </td>
                         </tr>
                       );
                     })}
@@ -568,11 +595,11 @@ export const TradingDesk: React.FC = () => {
                       const contract = optionContracts.find(c => c.id === tx.contractId);
                       return (
                         <tr key={tx.id}>
-                          <td className="py-2 px-4">{tx.type}</td>
-                          <td className="py-2 px-4">{contract ? `${contract.strikePrice} ${contract.optionType}` : tx.contractId}</td>
-                          <td className="py-2 px-4">{tx.quantity}</td>
-                          <td className="py-2 px-4">{tx.premiumPerUnit.toFixed(2)}</td>
-                          <td className="py-2 px-4">{new Date(tx.timestamp).toLocaleString()}</td>
+                          <td className="py-2 px-4 text-gray-900 dark:text-white">{tx.type}</td>
+                          <td className="py-2 px-4 text-gray-900 dark:text-white">{contract ? `${contract.strikePrice} ${contract.optionType}` : tx.contractId}</td>
+                          <td className="py-2 px-4 text-gray-900 dark:text-white">{tx.quantity}</td>
+                          <td className="py-2 px-4 text-gray-900 dark:text-white">{tx.premiumPerUnit.toFixed(2)}</td>
+                          <td className="py-2 px-4 text-gray-900 dark:text-white">{new Date(tx.timestamp).toLocaleString()}</td>
                         </tr>
                       );
                     })}
