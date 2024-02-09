@@ -120,7 +120,16 @@ export const Stocks: React.FC = () => {
 
                 <div className="h-16">
                   <Sparkline 
-                    data={stock.history} 
+                    data={(() => {
+                      const values = stock.history.map(h => h.value);
+                      const min = Math.min(...values);
+                      const max = Math.max(...values);
+                      // Avoid division by zero if all values are the same
+                      return stock.history.map(h => ({
+                        date: h.date,
+                        value: max !== min ? (h.value - min) / (max - min) : 0.5
+                      }));
+                    })()} 
                     color={stock.change >= 0 ? '#10B981' : '#EF4444'}
                     height={64}
                   />
