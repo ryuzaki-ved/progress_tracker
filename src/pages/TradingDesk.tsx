@@ -563,22 +563,39 @@ export const TradingDesk: React.FC = () => {
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 dark:bg-gray-700">
-                      <th className="py-2 px-4">Contract</th>
-                      <th className="py-2 px-4">Type</th>
-                      <th className="py-2 px-4">Qty</th>
-                      <th className="py-2 px-4">Avg Premium</th>
+                      <th className="py-2 px-4 text-center">Contract</th>
+                      <th className="py-2 px-4 text-center">Type</th>
+                      <th className="py-2 px-4 text-center">Qty</th>
+                      <th className="py-2 px-4 text-center">Avg Premium</th>
+                      <th className="py-2 px-4 text-center">Unrealized P&L</th>
+                      <th className="py-2 px-4 text-center">Return (%)</th>
+                      <th className="py-2 px-4 text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {userOptionHoldings.map(h => {
                       const contract = optionContracts.find(c => c.id === h.contractId);
+                      let currentPremium = 0;
+                      if (contract) {
+                        currentPremium = calculateOptionPrice(
+                          contract.underlyingIndexValueAtCreation,
+                          contract.strikePrice,
+                          contract.expiryDate,
+                          contract.optionType,
+                          contract.createdAt
+                        );
+                      }
+                      const unrealizedPnL = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
+                      const returnPercent = h.weightedAvgPremium > 0 ? ((currentPremium - h.weightedAvgPremium) / h.weightedAvgPremium) * 100 * (h.type.startsWith('long') ? 1 : -1) : 0;
                       return (
                         <tr key={h.id}>
-                          <td className="py-2 px-4 text-gray-900 dark:text-white">{contract ? `${contract.strikePrice} ${contract.optionType}` : h.contractId}</td>
-                          <td className="py-2 px-4 text-gray-900 dark:text-white">{h.type}</td>
-                          <td className="py-2 px-4 text-gray-900 dark:text-white">{h.quantity}</td>
-                          <td className="py-2 px-4 text-gray-900 dark:text-white">{h.weightedAvgPremium.toFixed(2)}</td>
-                          <td className="py-2 px-4">
+                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{contract ? `${contract.strikePrice} ${contract.optionType}` : h.contractId}</td>
+                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.type}</td>
+                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.quantity}</td>
+                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.weightedAvgPremium.toFixed(2)}</td>
+                          <td className={`py-2 px-4 text-center ${unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>{unrealizedPnL.toFixed(2)}</td>
+                          <td className={`py-2 px-4 text-center ${returnPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>{returnPercent.toFixed(2)}%</td>
+                          <td className="py-2 px-4 text-center">
                             <button
                               className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                               onClick={async () => {
@@ -609,11 +626,11 @@ export const TradingDesk: React.FC = () => {
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 dark:bg-gray-700">
-                      <th className="py-2 px-4">Type</th>
-                      <th className="py-2 px-4">Contract</th>
-                      <th className="py-2 px-4">Qty</th>
-                      <th className="py-2 px-4">Premium</th>
-                      <th className="py-2 px-4">Time</th>
+                      <th className="py-2 px-4 text-center">Type</th>
+                      <th className="py-2 px-4 text-center">Contract</th>
+                      <th className="py-2 px-4 text-center">Qty</th>
+                      <th className="py-2 px-4 text-center">Premium</th>
+                      <th className="py-2 px-4 text-center">Time</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -621,11 +638,11 @@ export const TradingDesk: React.FC = () => {
                       const contract = optionContracts.find(c => c.id === tx.contractId);
                       return (
                         <tr key={tx.id}>
-                          <td className="py-2 px-4 text-gray-900 dark:text-white">{tx.type}</td>
-                          <td className="py-2 px-4 text-gray-900 dark:text-white">{contract ? `${contract.strikePrice} ${contract.optionType}` : tx.contractId}</td>
-                          <td className="py-2 px-4 text-gray-900 dark:text-white">{tx.quantity}</td>
-                          <td className="py-2 px-4 text-gray-900 dark:text-white">{tx.premiumPerUnit.toFixed(2)}</td>
-                          <td className="py-2 px-4 text-gray-900 dark:text-white">{new Date(tx.timestamp).toLocaleString()}</td>
+                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{tx.type}</td>
+                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{contract ? `${contract.strikePrice} ${contract.optionType}` : tx.contractId}</td>
+                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{tx.quantity}</td>
+                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{tx.premiumPerUnit.toFixed(2)}</td>
+                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{new Date(tx.timestamp).toLocaleString()}</td>
                         </tr>
                       );
                     })}
