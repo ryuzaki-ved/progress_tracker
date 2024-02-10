@@ -498,34 +498,60 @@ export const TradingDesk: React.FC = () => {
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
               <h3 className="text-lg font-semibold mb-2">Available Option Contracts (This Week)</h3>
+              {optionContracts.length > 0 && (
+                <div className="mb-2 text-sm text-gray-700 dark:text-gray-300">
+                  Expiry: {new Date(optionContracts[0].expiryDate).toLocaleDateString()}
+                </div>
+              )}
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 dark:bg-gray-700">
-                      <th className="py-2 px-4">Strike</th>
-                      <th className="py-2 px-4">Type</th>
-                      <th className="py-2 px-4">Expiry</th>
-                      <th className="py-2 px-4">Premium</th>
+                      <th className="py-2 px-4 text-center">CE</th>
+                      <th className="py-2 px-4 text-center">Strike</th>
+                      <th className="py-2 px-4 text-center">PE</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {optionContracts.map(opt => {
-                      const premium = calculateOptionPrice(
-                        opt.underlyingIndexValueAtCreation,
-                        opt.strikePrice,
-                        opt.expiryDate,
-                        opt.optionType,
-                        opt.createdAt
-                      );
-                      return (
-                        <tr key={opt.id} className="hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer" onClick={() => setSelectedOptionId(opt.id.toString())}>
-                          <td className="py-2 px-4 text-gray-900 dark:text-white">{opt.strikePrice}</td>
-                          <td className="py-2 px-4 text-gray-900 dark:text-white">{opt.optionType}</td>
-                          <td className="py-2 px-4 text-gray-900 dark:text-white">{new Date(opt.expiryDate).toLocaleDateString()}</td>
-                          <td className="py-2 px-4 text-gray-900 dark:text-white">{premium.toFixed(2)}</td>
-                        </tr>
-                      );
-                    })}
+                    {/* Group contracts by strike */}
+                    {(() => {
+                      // Map: strike -> { CE, PE }
+                      const strikeMap: Record<number, { ce?: OptionContract; pe?: OptionContract }> = {};
+                      optionContracts.forEach(opt => {
+                        if (!strikeMap[opt.strikePrice]) strikeMap[opt.strikePrice] = {};
+                        if (opt.optionType === 'CE') strikeMap[opt.strikePrice].ce = opt;
+                        if (opt.optionType === 'PE') strikeMap[opt.strikePrice].pe = opt;
+                      });
+                      return Object.keys(strikeMap).sort((a, b) => Number(a) - Number(b)).map(strike => {
+                        const ce = strikeMap[Number(strike)].ce;
+                        const pe = strikeMap[Number(strike)].pe;
+                        const cePremium = ce ? calculateOptionPrice(
+                          ce.underlyingIndexValueAtCreation,
+                          ce.strikePrice,
+                          ce.expiryDate,
+                          ce.optionType,
+                          ce.createdAt
+                        ) : null;
+                        const pePremium = pe ? calculateOptionPrice(
+                          pe.underlyingIndexValueAtCreation,
+                          pe.strikePrice,
+                          pe.expiryDate,
+                          pe.optionType,
+                          pe.createdAt
+                        ) : null;
+                        return (
+                          <tr key={strike} className="hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer">
+                            <td className="py-2 px-4 text-center text-gray-900 dark:text-white" onClick={() => ce && setSelectedOptionId(ce.id.toString())}>
+                              {cePremium !== null ? cePremium.toFixed(2) : '-'}
+                            </td>
+                            <td className="py-2 px-4 text-center text-gray-900 dark:text-white font-semibold">{strike}</td>
+                            <td className="py-2 px-4 text-center text-gray-900 dark:text-white" onClick={() => pe && setSelectedOptionId(pe.id.toString())}>
+                              {pePremium !== null ? pePremium.toFixed(2) : '-'}
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
                   </tbody>
                 </table>
               </div>
