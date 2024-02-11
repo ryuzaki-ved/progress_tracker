@@ -58,6 +58,10 @@ export const TradingDesk: React.FC = () => {
   const [optionQuantity, setOptionQuantity] = useState('');
   const [optionOrderError, setOptionOrderError] = useState<string | null>(null);
 
+  // Add state for showing the options transaction modal and quantity input
+  const [showOptionTxHistory, setShowOptionTxHistory] = useState(false);
+  const [exitQtyPrompt, setExitQtyPrompt] = useState<{ holdingId: number; max: number } | null>(null);
+
   // Fetch options data on mount
   useEffect(() => {
     fetchOptionsData();
@@ -558,7 +562,12 @@ export const TradingDesk: React.FC = () => {
             </div>
             {/* User Option Holdings */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
-              <h3 className="text-lg font-semibold mb-2">My Option Holdings</h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-semibold mb-2">My Option Holdings</h3>
+                <Button onClick={() => setShowOptionTxHistory(true)} variant="outline" size="sm">
+                  View Transactions
+                </Button>
+              </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
@@ -597,11 +606,17 @@ export const TradingDesk: React.FC = () => {
                           <td className={`py-2 px-4 text-center ${returnPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>{returnPercent.toFixed(2)}%</td>
                           <td className="py-2 px-4 text-center">
                             <button
+                              className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 mr-2"
+                              onClick={() => setExitQtyPrompt({ holdingId: h.id, max: h.quantity })}
+                              disabled={h.quantity <= 0}
+                            >
+                              Exit Partial
+                            </button>
+                            <button
                               className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                               onClick={async () => {
-                                const exitQty = 1; // or prompt user for quantity
                                 try {
-                                  await exitOptionPosition(h.id, exitQty);
+                                  await exitOptionPosition(h.id, h.quantity);
                                   fetchOptionsData();
                                 } catch (err) {
                                   alert('Failed to exit position: ' + (err as any).message);
@@ -609,7 +624,7 @@ export const TradingDesk: React.FC = () => {
                               }}
                               disabled={h.quantity <= 0}
                             >
-                              Exit
+                              Exit All
                             </button>
                           </td>
                         </tr>
@@ -771,6 +786,101 @@ export const TradingDesk: React.FC = () => {
         </motion.div>
       )}
       </AnimatePresence>
+      {/* Modal for Option Transaction History */}
+      {showOptionTxHistory && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-2xl w-full p-6 relative"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          >
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" onClick={() => setShowOptionTxHistory(false)}>
+              ×
+            </button>
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Option Transaction History</h2>
+            <div className="overflow-x-auto max-h-96">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 dark:bg-gray-700">
+                    <th className="py-2 px-4 text-center">Type</th>
+                    <th className="py-2 px-4 text-center">Contract</th>
+                    <th className="py-2 px-4 text-center">Qty</th>
+                    <th className="py-2 px-4 text-center">Premium</th>
+                    <th className="py-2 px-4 text-center">Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {optionTransactions.map(tx => {
+                    const contract = optionContracts.find(c => c.id === tx.contractId);
+                    return (
+                      <tr key={tx.id}>
+                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{tx.type}</td>
+                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{contract ? `${contract.strikePrice} ${contract.optionType}` : tx.contractId}</td>
+                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{tx.quantity}</td>
+                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{tx.premiumPerUnit.toFixed(2)}</td>
+                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{new Date(tx.timestamp).toLocaleString()}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+      {/* Modal for Exit Partial prompt */}
+      {exitQtyPrompt && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-sm w-full p-6 relative"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          >
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" onClick={() => setExitQtyPrompt(null)}>
+              ×
+            </button>
+            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Exit Partial Position</h2>
+            <form onSubmit={async e => {
+              e.preventDefault();
+              const qty = Number((e.target as any).elements.qty.value);
+              if (!qty || qty < 1 || qty > exitQtyPrompt.max) {
+                alert('Enter a valid quantity');
+                return;
+              }
+              try {
+                await exitOptionPosition(exitQtyPrompt.holdingId, qty);
+                setExitQtyPrompt(null);
+                fetchOptionsData();
+              } catch (err) {
+                alert('Failed to exit position: ' + (err as any).message);
+              }
+            }}>
+              <label className="block mb-2 text-gray-700 dark:text-gray-300">Quantity to exit (max {exitQtyPrompt.max}):</label>
+              <input name="qty" type="number" min={1} max={exitQtyPrompt.max} defaultValue={1} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white mb-4" />
+              <div className="flex justify-end space-x-2">
+                <button type="button" className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded" onClick={() => setExitQtyPrompt(null)}>
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Exit</button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
       <AddFundsModal
         isOpen={showAddFundsModal}
         onClose={() => setShowAddFundsModal(false)}
