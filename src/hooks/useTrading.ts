@@ -340,6 +340,21 @@ export const useTrading = () => {
       const collateral = contract.strikePrice * quantity;
       db.run('UPDATE user_settings SET cash_balance = cash_balance + ? WHERE user_id = ?', [collateral, currentUserId]);
     }
+    // For long positions, add current premium × quantity to cash balance
+    if (obj.type === 'long_ce' || obj.type === 'long_pe') {
+      // Use latest index value for premium
+      const indexRes = db.exec('SELECT index_value FROM index_history WHERE user_id = ? ORDER BY date DESC LIMIT 1', [currentUserId]);
+      const currentIndexValue = indexRes[0]?.values?.[0]?.[0] ?? contract.underlyingIndexValueAtCreation;
+      const currentPremium = calculateOptionPrice(
+        currentIndexValue,
+        contract.strikePrice,
+        contract.expiryDate,
+        contract.optionType,
+        contract.createdAt
+      );
+      const proceeds = currentPremium * quantity;
+      db.run('UPDATE user_settings SET cash_balance = cash_balance + ? WHERE user_id = ?', [proceeds, currentUserId]);
+    }
     // Reduce or remove holding
     if (obj.quantity > quantity) {
       db.run('UPDATE user_options_holdings SET quantity = ? WHERE id = ?', [obj.quantity - quantity, holdingId]);
