@@ -19,6 +19,9 @@ export const useTrading = () => {
   const [userOptionHoldings, setUserOptionHoldings] = useState<UserOptionHolding[]>([]);
   const [optionTransactions, setOptionTransactions] = useState<OptionTransaction[]>([]);
 
+  // Add state for current index value
+  const [currentIndexValue, setCurrentIndexValue] = useState<number>(10000);
+
   // Fetch cash balance
   const fetchCashBalance = useCallback(async () => {
     if (!currentUserId) return;
@@ -88,14 +91,20 @@ export const useTrading = () => {
     setTransactions(txList);
   }, [currentUserId]);
 
-  // Fetch options data
+  // Fetch current index value
+  const fetchCurrentIndexValue = useCallback(async () => {
+    if (!currentUserId) return;
+    const db = await getDb();
+    const indexRes = db.exec('SELECT index_value FROM index_history WHERE user_id = ? ORDER BY date DESC LIMIT 1', [currentUserId]);
+    const value = indexRes[0]?.values?.[0]?.[0] ?? 10000;
+    setCurrentIndexValue(Number(value));
+  }, [currentUserId]);
+
+  // Fetch options data (now takes currentIndexValue)
   const fetchOptionsData = useCallback(async () => {
     if (!currentUserId) return;
     const db = await getDb();
-    // Get current index value (use latest from index_history)
-    const indexRes = db.exec('SELECT index_value FROM index_history WHERE user_id = ? ORDER BY date DESC LIMIT 1', [currentUserId]);
-    const currentIndexValue = indexRes[0]?.values?.[0]?.[0] ?? 10000;
-    // Generate contracts for this week
+    // Use currentIndexValue from state
     const contracts = generateWeeklyOptionsContracts(currentIndexValue);
     // Insert contracts if not already present
     for (const contract of contracts) {
@@ -151,7 +160,16 @@ export const useTrading = () => {
       } as OptionTransaction;
     });
     setOptionTransactions(txs);
-  }, [currentUserId]);
+  }, [currentUserId, currentIndexValue]);
+
+  // Refetch index and options data when index changes
+  useEffect(() => {
+    fetchCurrentIndexValue();
+  }, [fetchCurrentIndexValue]);
+
+  useEffect(() => {
+    fetchOptionsData();
+  }, [fetchOptionsData]);
 
   // Buy option
   const buyOption = async (contractId: number, quantity: number) => {
