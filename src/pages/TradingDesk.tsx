@@ -634,35 +634,37 @@ export const TradingDesk: React.FC = () => {
                 </table>
               </div>
             </div>
-            {/* Option Transactions */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-              <h3 className="text-lg font-semibold mb-2">Option Transaction History</h3>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 dark:bg-gray-700">
-                      <th className="py-2 px-4 text-center">Type</th>
-                      <th className="py-2 px-4 text-center">Contract</th>
-                      <th className="py-2 px-4 text-center">Qty</th>
-                      <th className="py-2 px-4 text-center">Premium</th>
-                      <th className="py-2 px-4 text-center">Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {optionTransactions.map(tx => {
-                      const contract = optionContracts.find(c => c.id === tx.contractId);
-                      return (
-                        <tr key={tx.id}>
-                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{tx.type}</td>
-                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{contract ? `${contract.strikePrice} ${contract.optionType}` : tx.contractId}</td>
-                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{tx.quantity}</td>
-                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{tx.premiumPerUnit.toFixed(2)}</td>
-                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{new Date(tx.timestamp).toLocaleString()}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+            {/* Option Holdings Distribution Pie Chart */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
+                <PieChart className="w-5 h-5 mr-2 text-indigo-500" />
+                Option Holdings Distribution
+              </h3>
+              <div style={{ width: '100%', height: 260 }}>
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={userOptionHoldings.map(h => {
+                        const contract = optionContracts.find(c => c.id === h.contractId);
+                        return {
+                          name: contract ? `${contract.strikePrice} ${contract.optionType}` : h.contractId,
+                          value: contract ? Math.abs(contract.strikePrice * h.quantity) : 0,
+                        };
+                      })}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={90}
+                      label={({ name, percent = 0 }) => `${name} (${(percent * 100).toFixed(1)}%)`}
+                    >
+                      {userOptionHoldings.map((h, idx) => (
+                        <Cell key={`cell-${idx}`} fill={pieColors[idx % pieColors.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => `₹${value.toFixed(2)}`} />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
