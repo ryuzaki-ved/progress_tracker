@@ -215,6 +215,12 @@ export const TradingDesk: React.FC = () => {
     fetchOptionsData();
   };
 
+  // In the option order form, calculate margin/collateral
+  let optionMargin = 0;
+  if (selectedOption && optionOrderType === 'write') {
+    optionMargin = selectedOption.strikePrice * (Number(optionQuantity) || 0);
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -750,6 +756,11 @@ export const TradingDesk: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                   <span>Premium: <span className="font-medium text-gray-900 dark:text-white">{optionPremium && selectedOption ? optionPremium.toFixed(2) : '-'}</span></span>
+                  {optionOrderType === 'write' ? (
+                    <span>Margin/Collateral: <span className="font-medium text-gray-900 dark:text-white">₹{optionMargin.toLocaleString()}</span></span>
+                  ) : (
+                    <span>Total Cost: <span className="font-medium text-gray-900 dark:text-white">{selectedOption && optionPremium && optionQuantity ? `₹${(optionPremium * Number(optionQuantity)).toLocaleString()}` : '-'}</span></span>
+                  )}
                 </div>
                 {optionOrderError && <div className="text-red-600 text-sm">{optionOrderError}</div>}
                 <Button type="submit" variant="primary" className="w-full">Place Option Order</Button>
