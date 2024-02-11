@@ -12,7 +12,7 @@ import CountUp from 'react-countup';
 import SlidingNumber from '../components/ui/SlidingNumber';
 import { OptionContract, UserOptionHolding, OptionTransaction } from '../types';
 import { calculateOptionPrice } from '../utils/optionUtils';
-import { getDb } from '../lib/sqlite';
+import { getDb, persistDb } from '../lib/sqlite';
 
 const OptionToggleSwitch: React.FC<{
   value: 'buy' | 'write';
@@ -211,6 +211,7 @@ export const TradingDesk: React.FC = () => {
   const handleDeleteStrike = async (strike: number) => {
     const db = await getDb();
     db.run('DELETE FROM options_contracts WHERE strike_price = ?', [strike]);
+    await persistDb();
     fetchOptionsData();
   };
 
