@@ -12,6 +12,7 @@ import CountUp from 'react-countup';
 import SlidingNumber from '../components/ui/SlidingNumber';
 import { OptionContract, UserOptionHolding, OptionTransaction } from '../types';
 import { calculateOptionPrice } from '../utils/optionUtils';
+import { getDb } from '../lib/sqlite';
 
 const OptionToggleSwitch: React.FC<{
   value: 'buy' | 'write';
@@ -40,7 +41,7 @@ const OptionToggleSwitch: React.FC<{
 
 export const TradingDesk: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
-  const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error, addFunds, optionContracts, userOptionHoldings, optionTransactions, buyOption, writeOption, fetchOptionsData, exitOptionPosition } = useTrading();
+  const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error, addFunds, optionContracts, userOptionHoldings, optionTransactions, buyOption, writeOption, fetchOptionsData, exitOptionPosition, currentIndexValue } = useTrading();
   const [showPnL, setShowPnL] = useState(true);
   const [selectedStockId, setSelectedStockId] = useState('');
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
@@ -140,9 +141,13 @@ export const TradingDesk: React.FC = () => {
   // Calculate premium for selected option
   let optionPremium = 0;
   if (selectedOption) {
-    optionPremium = (window as any).calculateOptionPrice
-      ? (window as any).calculateOptionPrice(selectedOption.underlyingIndexValueAtCreation, selectedOption.strikePrice, selectedOption.expiryDate, selectedOption.optionType, selectedOption.createdAt)
-      : 0;
+    optionPremium = calculateOptionPrice(
+      currentIndexValue,
+      selectedOption.strikePrice,
+      selectedOption.expiryDate,
+      selectedOption.optionType,
+      selectedOption.createdAt
+    );
   }
 
   // Calculate order costs
@@ -177,10 +182,18 @@ export const TradingDesk: React.FC = () => {
       if (!selectedOptionId) throw new Error('Select an option contract');
       const qty = Number(optionQuantity);
       if (qty <= 0) throw new Error('Enter a valid quantity');
+      if (!selectedOption) throw new Error('No option selected');
+      const premium = calculateOptionPrice(
+        currentIndexValue,
+        selectedOption.strikePrice,
+        selectedOption.expiryDate,
+        selectedOption.optionType,
+        selectedOption.createdAt
+      );
       if (optionOrderType === 'buy') {
-        await buyOption(Number(selectedOptionId), qty);
+        await buyOption(Number(selectedOptionId), qty, premium);
       } else {
-        await writeOption(Number(selectedOptionId), qty);
+        await writeOption(Number(selectedOptionId), qty, premium);
       }
       setOptionQuantity('');
       fetchOptionsData();
@@ -192,6 +205,13 @@ export const TradingDesk: React.FC = () => {
   // Add Funds handler
   const handleAddFunds = async (amount: number) => {
     await addFunds(amount);
+  };
+
+  // Add handler for deleting a strike
+  const handleDeleteStrike = async (strike: number) => {
+    const db = await getDb();
+    db.run('DELETE FROM options_contracts WHERE strike_price = ?', [strike]);
+    fetchOptionsData();
   };
 
   return (
@@ -530,14 +550,14 @@ export const TradingDesk: React.FC = () => {
                         const ce = strikeMap[Number(strike)].ce;
                         const pe = strikeMap[Number(strike)].pe;
                         const cePremium = ce ? calculateOptionPrice(
-                          ce.underlyingIndexValueAtCreation,
+                          currentIndexValue,
                           ce.strikePrice,
                           ce.expiryDate,
                           ce.optionType,
                           ce.createdAt
                         ) : null;
                         const pePremium = pe ? calculateOptionPrice(
-                          pe.underlyingIndexValueAtCreation,
+                          currentIndexValue,
                           pe.strikePrice,
                           pe.expiryDate,
                           pe.optionType,
@@ -548,7 +568,15 @@ export const TradingDesk: React.FC = () => {
                             <td className="py-2 px-4 text-center text-gray-900 dark:text-white" onClick={() => ce && setSelectedOptionId(ce.id.toString())}>
                               {cePremium !== null ? cePremium.toFixed(2) : '-'}
                             </td>
-                            <td className="py-2 px-4 text-center text-gray-900 dark:text-white font-semibold">{strike}</td>
+                            <td className="py-2 px-4 text-center text-gray-900 dark:text-white font-semibold">
+                              {strike}
+                              <button
+                                className="ml-2 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
+                                onClick={e => { e.stopPropagation(); handleDeleteStrike(Number(strike)); }}
+                              >
+                                Delete Strike
+                              </button>
+                            </td>
                             <td className="py-2 px-4 text-center text-gray-900 dark:text-white" onClick={() => pe && setSelectedOptionId(pe.id.toString())}>
                               {pePremium !== null ? pePremium.toFixed(2) : '-'}
                             </td>
@@ -576,6 +604,7 @@ export const TradingDesk: React.FC = () => {
                       <th className="py-2 px-4 text-center">Type</th>
                       <th className="py-2 px-4 text-center">Qty</th>
                       <th className="py-2 px-4 text-center">Avg Premium</th>
+                      <th className="py-2 px-4 text-center">Current Price</th>
                       <th className="py-2 px-4 text-center">Unrealized P&L</th>
                       <th className="py-2 px-4 text-center">Return (%)</th>
                       <th className="py-2 px-4 text-center">Action</th>
@@ -587,7 +616,7 @@ export const TradingDesk: React.FC = () => {
                       let currentPremium = 0;
                       if (contract) {
                         currentPremium = calculateOptionPrice(
-                          contract.underlyingIndexValueAtCreation,
+                          currentIndexValue,
                           contract.strikePrice,
                           contract.expiryDate,
                           contract.optionType,
@@ -602,6 +631,7 @@ export const TradingDesk: React.FC = () => {
                           <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.type}</td>
                           <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.quantity}</td>
                           <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.weightedAvgPremium.toFixed(2)}</td>
+                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{currentPremium.toFixed(2)}</td>
                           <td className={`py-2 px-4 text-center ${unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>{unrealizedPnL.toFixed(2)}</td>
                           <td className={`py-2 px-4 text-center ${returnPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>{returnPercent.toFixed(2)}%</td>
                           <td className="py-2 px-4 text-center">

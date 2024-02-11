@@ -172,7 +172,7 @@ export const useTrading = () => {
   }, [fetchOptionsData]);
 
   // Buy option
-  const buyOption = async (contractId: number, quantity: number) => {
+  const buyOption = async (contractId: number, quantity: number, premium: number) => {
     if (!currentUserId) throw new Error('No user');
     if (quantity <= 0) throw new Error('Quantity must be positive');
     const db = await getDb();
@@ -189,11 +189,6 @@ export const useTrading = () => {
       underlyingIndexValueAtCreation: obj.underlying_index_value_at_creation,
       createdAt: obj.created_at,
     };
-    // Get current index value
-    const indexRes = db.exec('SELECT index_value FROM index_history WHERE user_id = ? ORDER BY date DESC LIMIT 1', [currentUserId]);
-    const currentIndexValue = indexRes[0]?.values?.[0]?.[0] ?? contract.underlyingIndexValueAtCreation;
-    // Calculate premium
-    const premium = calculateOptionPrice(currentIndexValue, contract.strikePrice, contract.expiryDate, contract.optionType, contract.createdAt);
     const totalPremium = premium * quantity;
     // Check cash balance
     const cashRes = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = ?', [currentUserId]);
@@ -224,7 +219,7 @@ export const useTrading = () => {
   };
 
   // Write option
-  const writeOption = async (contractId: number, quantity: number) => {
+  const writeOption = async (contractId: number, quantity: number, premium: number) => {
     if (!currentUserId) throw new Error('No user');
     if (quantity <= 0) throw new Error('Quantity must be positive');
     const db = await getDb();
@@ -241,11 +236,6 @@ export const useTrading = () => {
       underlyingIndexValueAtCreation: obj.underlying_index_value_at_creation,
       createdAt: obj.created_at,
     };
-    // Get current index value
-    const indexRes = db.exec('SELECT index_value FROM index_history WHERE user_id = ? ORDER BY date DESC LIMIT 1', [currentUserId]);
-    const currentIndexValue = indexRes[0]?.values?.[0]?.[0] ?? contract.underlyingIndexValueAtCreation;
-    // Calculate premium
-    const premium = calculateOptionPrice(currentIndexValue, contract.strikePrice, contract.expiryDate, contract.optionType, contract.createdAt);
     const totalPremium = premium * quantity;
     // Collateral: strike price * quantity (for simplicity)
     const collateral = contract.strikePrice * quantity;
@@ -536,5 +526,6 @@ export const useTrading = () => {
     writeOption,
     settleExpiredOptions,
     exitOptionPosition,
+    currentIndexValue,
   };
 }; 
