@@ -41,7 +41,7 @@ const OptionToggleSwitch: React.FC<{
 
 export const TradingDesk: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
-  const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error, addFunds, optionContracts, userOptionHoldings, optionTransactions, buyOption, writeOption, fetchOptionsData, exitOptionPosition, currentIndexValue, resetOptionsData } = useTrading();
+  const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error, addFunds, optionContracts, userOptionHoldings, optionTransactions, optionPnlHistory, buyOption, writeOption, fetchOptionsData, exitOptionPosition, currentIndexValue, resetOptionsData } = useTrading();
   const [showPnL, setShowPnL] = useState(true);
   const [selectedStockId, setSelectedStockId] = useState('');
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
@@ -914,6 +914,90 @@ export const TradingDesk: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Options PnL History Section */}
+      <div className="mt-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
+            <TrendingUp className="w-5 h-5 mr-2 text-green-500" />
+            Options PnL History
+          </h3>
+          <div className="overflow-x-auto max-h-96">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 dark:bg-gray-700">
+                  <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Contract</th>
+                  <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Position</th>
+                  <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Qty</th>
+                  <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Entry Premium</th>
+                  <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Exit Premium</th>
+                  <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">PnL</th>
+                  <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Return %</th>
+                  <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Exit Type</th>
+                  <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Exit Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {optionPnlHistory.map((pnl, index) => {
+                  const contract = optionContracts.find(c => c.id === pnl.contract_id);
+                  const isProfit = pnl.pnl >= 0;
+                  return (
+                    <motion.tr
+                      key={pnl.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                    >
+                      <td className="py-2 px-4 text-center text-gray-900 dark:text-white">
+                        {contract ? `${contract.strikePrice} ${contract.optionType}` : pnl.contract_id}
+                      </td>
+                      <td className="py-2 px-4 text-center text-gray-900 dark:text-white">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          pnl.position_type.startsWith('long') 
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' 
+                            : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                        }`}>
+                          {pnl.position_type.replace('_', ' ').toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{pnl.quantity}</td>
+                      <td className="py-2 px-4 text-center text-gray-900 dark:text-white">₹{pnl.entry_premium.toFixed(2)}</td>
+                      <td className="py-2 px-4 text-center text-gray-900 dark:text-white">₹{pnl.exit_premium.toFixed(2)}</td>
+                      <td className={`py-2 px-4 text-center font-medium ${isProfit ? 'text-green-600' : 'text-red-600'}`}>
+                        ₹{pnl.pnl.toFixed(2)}
+                      </td>
+                      <td className={`py-2 px-4 text-center font-medium ${isProfit ? 'text-green-600' : 'text-red-600'}`}>
+                        {pnl.pnl_percent >= 0 ? '+' : ''}{pnl.pnl_percent.toFixed(2)}%
+                      </td>
+                      <td className="py-2 px-4 text-center text-gray-900 dark:text-white">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          pnl.exit_type === 'manual' 
+                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' 
+                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                        }`}>
+                          {pnl.exit_type.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="py-2 px-4 text-center text-gray-900 dark:text-white">
+                        {new Date(pnl.exit_date).toLocaleDateString()}
+                      </td>
+                    </motion.tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {optionPnlHistory.length === 0 && (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-2">📊</div>
+                <p className="text-gray-600 dark:text-gray-400">No PnL history yet</p>
+                <p className="text-sm text-gray-500 dark:text-gray-500">Exit some option positions to see your PnL history here</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      
       {/* Transactions Modal */}
       <AnimatePresence>
       {showTxHistory && (

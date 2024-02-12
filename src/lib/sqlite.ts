@@ -150,6 +150,22 @@ CREATE TABLE IF NOT EXISTS user_options_holdings (
   FOREIGN KEY(user_id) REFERENCES users(id),
   FOREIGN KEY(contract_id) REFERENCES options_contracts(id)
 );
+CREATE TABLE IF NOT EXISTS option_pnl_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  contract_id INTEGER NOT NULL,
+  position_type TEXT NOT NULL, -- 'long_ce', 'short_ce', 'long_pe', 'short_pe'
+  quantity INTEGER NOT NULL,
+  entry_premium REAL NOT NULL,
+  exit_premium REAL NOT NULL,
+  pnl REAL NOT NULL,
+  pnl_percent REAL NOT NULL,
+  exit_type TEXT NOT NULL, -- 'manual', 'expiry'
+  exit_date TEXT DEFAULT (datetime('now')),
+  created_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  FOREIGN KEY(contract_id) REFERENCES options_contracts(id)
+);
 `;
 
 // Migration: add created_at to stocks and tasks if missing
@@ -401,6 +417,28 @@ function migrateUserOptionsHoldingsTable(db: Database) {
   }
 }
 
+function migrateOptionPnlHistoryTable(db: Database) {
+  const res = db.exec("PRAGMA table_info(option_pnl_history);");
+  if (!res[0]) {
+    db.run(`CREATE TABLE IF NOT EXISTS option_pnl_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      contract_id INTEGER NOT NULL,
+      position_type TEXT NOT NULL,
+      quantity INTEGER NOT NULL,
+      entry_premium REAL NOT NULL,
+      exit_premium REAL NOT NULL,
+      pnl REAL NOT NULL,
+      pnl_percent REAL NOT NULL,
+      exit_type TEXT NOT NULL,
+      exit_date TEXT DEFAULT (datetime('now')),
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      FOREIGN KEY(contract_id) REFERENCES options_contracts(id)
+    );`);
+  }
+}
+
 // Load database from IndexedDB
 async function loadDatabase(): Promise<Database> {
   if (!SQL) SQL = await initSqlJs({ locateFile: (file: any) => 'public/sql-wasm.wasm' });
@@ -418,6 +456,7 @@ async function loadDatabase(): Promise<Database> {
   migrateOptionsContractsTable(db);
   migrateOptionTransactionsTable(db);
   migrateUserOptionsHoldingsTable(db);
+  migrateOptionPnlHistoryTable(db);
   // Log initial cash balance after migrations
   const initialSettings = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = 1');
   console.log('SQLite: Initial cash_balance after load/migrations:', initialSettings[0]?.values?.[0]?.[0]);

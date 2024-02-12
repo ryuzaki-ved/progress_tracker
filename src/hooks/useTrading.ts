@@ -18,6 +18,7 @@ export const useTrading = () => {
   const [optionContracts, setOptionContracts] = useState<OptionContract[]>([]);
   const [userOptionHoldings, setUserOptionHoldings] = useState<UserOptionHolding[]>([]);
   const [optionTransactions, setOptionTransactions] = useState<OptionTransaction[]>([]);
+  const [optionPnlHistory, setOptionPnlHistory] = useState<any[]>([]);
 
   // Add state for current index value
   const [currentIndexValue, setCurrentIndexValue] = useState<number | null>(null);
@@ -163,6 +164,15 @@ export const useTrading = () => {
       } as OptionTransaction;
     });
     setOptionTransactions(txs);
+    
+    // Fetch option PnL history
+    const pnlRes = db.exec('SELECT * FROM option_pnl_history WHERE user_id = ? ORDER BY exit_date DESC', [currentUserId]);
+    const pnlHistory = (pnlRes[0]?.values || []).map((row: any[], i: number) => {
+      const obj: any = {};
+      pnlRes[0].columns.forEach((col: any, j: number) => (obj[col] = row[j]));
+      return obj;
+    });
+    setOptionPnlHistory(pnlHistory);
   }, [currentUserId, currentIndexValue]);
 
   // Refetch index and options data when index changes
@@ -305,6 +315,19 @@ export const useTrading = () => {
         } else if (holding.type === 'short_pe') {
           pnl = -Math.max(0, contract.strike_price - expiryIndex) * holding.quantity + holding.weighted_avg_premium * holding.quantity + contract.strike_price * holding.quantity; // return collateral
         }
+        // Calculate PnL percentage for history
+        let pnlPercent = 0;
+        if (holding.type === 'long_ce' || holding.type === 'long_pe') {
+          pnlPercent = holding.weighted_avg_premium > 0 ? (pnl / (holding.weighted_avg_premium * holding.quantity)) * 100 : 0;
+        } else {
+          // For short positions, calculate based on premium received
+          pnlPercent = holding.weighted_avg_premium > 0 ? (pnl / (holding.weighted_avg_premium * holding.quantity)) * 100 : 0;
+        }
+        
+        // Record PnL history for expired options
+        db.run('INSERT INTO option_pnl_history (user_id, contract_id, position_type, quantity, entry_premium, exit_premium, pnl, pnl_percent, exit_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+          [holding.user_id, contract.id, holding.type, holding.quantity, holding.weighted_avg_premium, 0, pnl, pnlPercent, 'expiry']);
+        
         // Update user cash balance
         db.run('UPDATE user_settings SET cash_balance = cash_balance + ? WHERE user_id = ?', [pnl, holding.user_id]);
         // Remove holding
@@ -364,6 +387,27 @@ export const useTrading = () => {
     } else {
       db.run('DELETE FROM user_options_holdings WHERE id = ?', [holdingId]);
     }
+    // Calculate PnL for the exited position
+    let exitPremium = 0;
+    let pnl = 0;
+    let pnlPercent = 0;
+    
+    if (obj.type === 'short_ce' || obj.type === 'short_pe') {
+      // For short positions: PnL = premium received - premium paid to close
+      exitPremium = obj.weighted_avg_premium; // Premium received when writing
+      pnl = (exitPremium - currentPremium) * quantity;
+      pnlPercent = exitPremium > 0 ? ((exitPremium - currentPremium) / exitPremium) * 100 : 0;
+    } else {
+      // For long positions: PnL = premium received when selling - premium paid when buying
+      exitPremium = currentPremium;
+      pnl = (exitPremium - obj.weighted_avg_premium) * quantity;
+      pnlPercent = obj.weighted_avg_premium > 0 ? ((exitPremium - obj.weighted_avg_premium) / obj.weighted_avg_premium) * 100 : 0;
+    }
+    
+    // Record PnL history
+    db.run('INSERT INTO option_pnl_history (user_id, contract_id, position_type, quantity, entry_premium, exit_premium, pnl, pnl_percent, exit_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+      [currentUserId, contract.id, obj.type, quantity, obj.weighted_avg_premium, exitPremium, pnl, pnlPercent, 'manual']);
+    
     // Record exit transaction
     db.run('INSERT INTO option_transactions (user_id, contract_id, type, quantity, premium_per_unit, total_premium) VALUES (?, ?, ?, ?, ?, ?)', [currentUserId, contract.id, 'exit', quantity, obj.weighted_avg_premium, obj.weighted_avg_premium * quantity]);
     await persistDb();
@@ -549,6 +593,7 @@ export const useTrading = () => {
     optionContracts,
     userOptionHoldings,
     optionTransactions,
+    optionPnlHistory,
     fetchOptionsData,
     buyOption,
     writeOption,
