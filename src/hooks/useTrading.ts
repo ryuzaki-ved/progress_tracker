@@ -20,7 +20,7 @@ export const useTrading = () => {
   const [optionTransactions, setOptionTransactions] = useState<OptionTransaction[]>([]);
 
   // Add state for current index value
-  const [currentIndexValue, setCurrentIndexValue] = useState<number>(10000);
+  const [currentIndexValue, setCurrentIndexValue] = useState<number | null>(null);
 
   // Fetch cash balance
   const fetchCashBalance = useCallback(async () => {
@@ -96,13 +96,16 @@ export const useTrading = () => {
     if (!currentUserId) return;
     const db = await getDb();
     const indexRes = db.exec('SELECT index_value FROM index_history WHERE user_id = ? ORDER BY date DESC LIMIT 1', [currentUserId]);
-    const value = indexRes[0]?.values?.[0]?.[0] ?? 10000;
-    setCurrentIndexValue(Number(value));
+    if (indexRes[0]?.values?.[0]?.[0] !== undefined) {
+      setCurrentIndexValue(Number(indexRes[0].values[0][0]));
+    } else {
+      setCurrentIndexValue(null);
+    }
   }, [currentUserId]);
 
   // Fetch options data (now takes currentIndexValue)
   const fetchOptionsData = useCallback(async () => {
-    if (!currentUserId) return;
+    if (!currentUserId || currentIndexValue === null) return;
     const db = await getDb();
     // Use currentIndexValue from state
     const contracts = generateWeeklyOptionsContracts(currentIndexValue);
@@ -368,6 +371,16 @@ export const useTrading = () => {
     await fetchOptionsData();
   };
 
+  // Reset all options data (contracts, holdings, transactions)
+  const resetOptionsData = async () => {
+    const db = await getDb();
+    db.run('DELETE FROM options_contracts');
+    db.run('DELETE FROM user_options_holdings');
+    db.run('DELETE FROM option_transactions');
+    await persistDb();
+    await fetchOptionsData();
+  };
+
   // Initial load
   useEffect(() => {
     setLoading(true);
@@ -542,5 +555,6 @@ export const useTrading = () => {
     settleExpiredOptions,
     exitOptionPosition,
     currentIndexValue,
+    resetOptionsData,
   };
 }; 

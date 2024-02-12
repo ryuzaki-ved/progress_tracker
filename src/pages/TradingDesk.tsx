@@ -41,7 +41,7 @@ const OptionToggleSwitch: React.FC<{
 
 export const TradingDesk: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
-  const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error, addFunds, optionContracts, userOptionHoldings, optionTransactions, buyOption, writeOption, fetchOptionsData, exitOptionPosition, currentIndexValue } = useTrading();
+  const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error, addFunds, optionContracts, userOptionHoldings, optionTransactions, buyOption, writeOption, fetchOptionsData, exitOptionPosition, currentIndexValue, resetOptionsData } = useTrading();
   const [showPnL, setShowPnL] = useState(true);
   const [selectedStockId, setSelectedStockId] = useState('');
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
@@ -528,7 +528,12 @@ export const TradingDesk: React.FC = () => {
           {/* Available Contracts */}
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
-              <h3 className="text-lg font-semibold mb-2">Available Option Contracts (This Week)</h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-semibold mb-2">Available Option Contracts (This Week)</h3>
+                <Button onClick={resetOptionsData} variant="outline" size="sm">
+                  Reset Options Data
+                </Button>
+              </div>
               {optionContracts.length > 0 && (
                 <div className="mb-2 text-sm text-gray-700 dark:text-gray-300">
                   Expiry: {new Date(optionContracts[0].expiryDate).toLocaleDateString()}
