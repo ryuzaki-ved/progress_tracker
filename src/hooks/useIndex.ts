@@ -11,6 +11,8 @@ export const useIndex = () => {
   const [indexData, setIndexData] = useState<IndexData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Track the current date string
+  const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   // Calculate the current index value (weighted sum of stocks)
   const getCurrentIndexValue = () => {
@@ -167,6 +169,20 @@ export const useIndex = () => {
     }
     // eslint-disable-next-line
   }, [stocks]);
+
+  // Add timer to check for date change every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const todayString = new Date().toISOString().split('T')[0];
+      if (todayString !== currentDate) {
+        setCurrentDate(todayString);
+        // Date changed, refresh index data
+        fetchIndexData();
+        updateIndexHistory();
+      }
+    }, 10000); // 10 seconds
+    return () => clearInterval(interval);
+  }, [currentDate, stocks]);
 
   return {
     indexData,

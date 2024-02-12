@@ -524,6 +524,146 @@ export const TradingDesk: React.FC = () => {
       {/* Options Trading Section */}
       <div className="mt-12">
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Options Trading</h2>
+        
+        {/* Options Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
+            <div className="p-4 text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                <SlidingNumber value={userOptionHoldings.length} color="#2563eb" />
+              </div>
+              <div className="text-sm text-blue-700">Option Holdings</div>
+            </div>
+          </Card>
+          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
+            <div className="p-4 text-center">
+              <div className="text-2xl font-bold text-blue-600 font-share-tech-mono text-digital-shadow">
+                <SlidingNumber 
+                  value={userOptionHoldings.reduce((sum, h) => {
+                    if (h.type === 'long_ce' || h.type === 'long_pe') {
+                      return sum + (h.weightedAvgPremium * h.quantity);
+                    } else {
+                      // short_ce or short_pe: margin = strikePrice * quantity
+                      const contract = optionContracts.find(c => c.id === h.contractId);
+                      if (contract) {
+                        return sum + (contract.strikePrice * h.quantity);
+                      }
+                      return sum;
+                    }
+                  }, 0)} 
+                  prefix="₹" 
+                  decimals={2} 
+                  color="#059669" 
+                />
+              </div>
+              <div className="text-sm text-green-700">Options Invested</div>
+            </div>
+          </Card>
+          <Card className={`bg-gradient-to-r ${(() => {
+            const totalOptionsPnL = userOptionHoldings.reduce((sum, h) => {
+              const contract = optionContracts.find(c => c.id === h.contractId);
+              let currentPremium = 0;
+              if (contract) {
+                currentPremium = calculateOptionPrice(
+                  currentIndexValue,
+                  contract.strikePrice,
+                  contract.expiryDate,
+                  contract.optionType,
+                  contract.createdAt
+                );
+              }
+              const unrealizedPnL = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
+              return sum + unrealizedPnL;
+            }, 0);
+            return totalOptionsPnL >= 0 ? 'from-green-50 to-emerald-50 border-green-200' : 'from-red-50 to-pink-50 border-red-200';
+          })()} transition-transform duration-200 hover:scale-105 hover:shadow-lg`}>
+            <div className="p-4 text-center">
+              <div className={`text-2xl font-bold ${(() => {
+                const totalOptionsPnL = userOptionHoldings.reduce((sum, h) => {
+                  const contract = optionContracts.find(c => c.id === h.contractId);
+                  let currentPremium = 0;
+                  if (contract) {
+                    currentPremium = calculateOptionPrice(
+                      currentIndexValue,
+                      contract.strikePrice,
+                      contract.expiryDate,
+                      contract.optionType,
+                      contract.createdAt
+                    );
+                  }
+                  const unrealizedPnL = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
+                  return sum + unrealizedPnL;
+                }, 0);
+                return totalOptionsPnL >= 0 ? 'text-green-600' : 'text-red-600';
+              })()} font-share-tech-mono text-digital-shadow`}>
+                {showPnL ? (
+                  <SlidingNumber 
+                    value={(() => {
+                      const totalOptionsInvested = userOptionHoldings.reduce((sum, h) => sum + (h.weightedAvgPremium * h.quantity), 0);
+                      const totalOptionsPnL = userOptionHoldings.reduce((sum, h) => {
+                        const contract = optionContracts.find(c => c.id === h.contractId);
+                        let currentPremium = 0;
+                        if (contract) {
+                          currentPremium = calculateOptionPrice(
+                            currentIndexValue,
+                            contract.strikePrice,
+                            contract.expiryDate,
+                            contract.optionType,
+                            contract.createdAt
+                          );
+                        }
+                        const unrealizedPnL = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
+                        return sum + unrealizedPnL;
+                      }, 0);
+                      return totalOptionsInvested > 0 ? (totalOptionsPnL / totalOptionsInvested) * 100 : 0;
+                    })()} 
+                    suffix="%" 
+                    decimals={2} 
+                    color={(() => {
+                      const totalOptionsPnL = userOptionHoldings.reduce((sum, h) => {
+                        const contract = optionContracts.find(c => c.id === h.contractId);
+                        let currentPremium = 0;
+                        if (contract) {
+                          currentPremium = calculateOptionPrice(
+                            currentIndexValue,
+                            contract.strikePrice,
+                            contract.expiryDate,
+                            contract.optionType,
+                            contract.createdAt
+                          );
+                        }
+                        const unrealizedPnL = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
+                        return sum + unrealizedPnL;
+                      }, 0);
+                      return totalOptionsPnL >= 0 ? "#059669" : "#dc2626";
+                    })()} 
+                  />
+                ) : (
+                  '\u2022\u2022\u2022\u2022'
+                )}
+              </div>
+              <div className={`text-sm ${(() => {
+                const totalOptionsPnL = userOptionHoldings.reduce((sum, h) => {
+                  const contract = optionContracts.find(c => c.id === h.contractId);
+                  let currentPremium = 0;
+                  if (contract) {
+                    currentPremium = calculateOptionPrice(
+                      currentIndexValue,
+                      contract.strikePrice,
+                      contract.expiryDate,
+                      contract.optionType,
+                      contract.createdAt
+                    );
+                  }
+                  const unrealizedPnL = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
+                  return sum + unrealizedPnL;
+                }, 0);
+                return totalOptionsPnL >= 0 ? 'text-green-700' : 'text-red-700';
+              })()}`}>Options Return</div>
+            </div>
+          </Card>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Available Contracts */}
           <div className="lg:col-span-2">
@@ -762,9 +902,9 @@ export const TradingDesk: React.FC = () => {
                 <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                   <span>Premium: <span className="font-medium text-gray-900 dark:text-white">{optionPremium && selectedOption ? optionPremium.toFixed(2) : '-'}</span></span>
                   {optionOrderType === 'write' ? (
-                    <span>Margin/Collateral: <span className="font-medium text-gray-900 dark:text-white">₹{optionMargin.toLocaleString()}</span></span>
+                    <span>Margin: <span className="font-medium text-gray-900 dark:text-white">₹{optionMargin.toLocaleString()}</span></span>
                   ) : (
-                    <span>Total Cost: <span className="font-medium text-gray-900 dark:text-white">{selectedOption && optionPremium && optionQuantity ? `₹${(optionPremium * Number(optionQuantity)).toLocaleString()}` : '-'}</span></span>
+                    <span>Margin: <span className="font-medium text-gray-900 dark:text-white">{selectedOption && optionPremium && optionQuantity ? `₹${(optionPremium * Number(optionQuantity)).toLocaleString()}` : '-'}</span></span>
                   )}
                 </div>
                 {optionOrderError && <div className="text-red-600 text-sm">{optionOrderError}</div>}
