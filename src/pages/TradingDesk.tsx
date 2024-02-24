@@ -266,7 +266,7 @@ export const TradingDesk: React.FC = () => {
                   redraw={false}
                 />
               ) : (
-                '\u2022\u2022\u2022\u2022\u2022\u2022'
+                '\u2022\u2022\u2022\u2022'
               )}
             </div>
           </div>
@@ -933,6 +933,20 @@ export const TradingDesk: React.FC = () => {
             <TrendingUp className="w-5 h-5 mr-2 text-green-500" />
             Options PnL History
           </h3>
+          {/* Total PnL Row */}
+          {(() => {
+            const totalPnl = optionPnlHistory && optionPnlHistory.length > 0
+              ? optionPnlHistory.reduce((sum, rec) => sum + (Number(rec.pnl) || 0), 0)
+              : 0;
+            console.log('Options Total PnL:', totalPnl);
+            return (
+              <div className="flex justify-end mb-2">
+                <div className="text-lg font-bold text-gray-900 dark:text-white bg-yellow-100 dark:bg-yellow-900 px-4 py-1 rounded">
+                  Total PnL: {totalPnl.toFixed(2)}
+                </div>
+              </div>
+            );
+          })()}
           <div className="overflow-x-auto max-h-96">
             <table className="min-w-full text-sm">
               <thead>
