@@ -929,24 +929,27 @@ export const TradingDesk: React.FC = () => {
       {/* Options PnL History Section */}
       <div className="mt-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
-            <TrendingUp className="w-5 h-5 mr-2 text-green-500" />
-            Options PnL History
-          </h3>
-          {/* Total PnL Row */}
-          {(() => {
-            const totalPnl = optionPnlHistory && optionPnlHistory.length > 0
-              ? optionPnlHistory.reduce((sum, rec) => sum + (Number(rec.pnl) || 0), 0)
-              : 0;
-            console.log('Options Total PnL:', totalPnl);
-            return (
-              <div className="flex justify-end mb-2">
-                <div className="text-lg font-bold text-gray-900 dark:text-white bg-yellow-100 dark:bg-yellow-900 px-4 py-1 rounded">
-                  Total PnL: {totalPnl.toFixed(2)}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center" style={{ fontFamily: 'Montserrat, Inter, Arial, sans-serif' }}>
+              <TrendingUp className="w-5 h-5 mr-2 text-green-500" />
+              Options PnL History
+            </h3>
+            {(() => {
+              const totalPnl = optionPnlHistory && optionPnlHistory.length > 0
+                ? optionPnlHistory.reduce((sum, rec) => sum + (Number(rec.pnl) || 0), 0)
+                : 0;
+              // Format to Crore
+              const crore = totalPnl / 10000000;
+              const croreStr = `${crore >= 0 ? '' : '-'}₹${Math.abs(crore).toLocaleString('en-IN', { maximumFractionDigits: 2 })} Cr`;
+              return (
+                <div className={`flex items-center space-x-2 px-4 py-1 rounded font-bold text-lg ${totalPnl >= 0 ? 'bg-green-600' : 'bg-red-600'}`} style={{ fontFamily: 'Share Tech Mono, monospace', minWidth: 180, justifyContent: 'flex-end', color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.18)' }}>
+                  <span className="mr-1">{totalPnl >= 0 ? '▲' : '▼'}</span>
+                  <span>Total PnL:</span>
+                  <span>{croreStr}</span>
                 </div>
-              </div>
-            );
-          })()}
+              );
+            })()}
+          </div>
           <div className="overflow-x-auto max-h-96">
             <table className="min-w-full text-sm">
               <thead>
@@ -989,12 +992,8 @@ export const TradingDesk: React.FC = () => {
                       <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{pnl.quantity}</td>
                       <td className="py-2 px-4 text-center text-gray-900 dark:text-white">₹{pnl.entry_premium.toFixed(2)}</td>
                       <td className="py-2 px-4 text-center text-gray-900 dark:text-white">₹{pnl.exit_premium.toFixed(2)}</td>
-                      <td className={`py-2 px-4 text-center font-medium ${isProfit ? 'text-green-600' : 'text-red-600'}`}>
-                        ₹{pnl.pnl.toFixed(2)}
-                      </td>
-                      <td className={`py-2 px-4 text-center font-medium ${isProfit ? 'text-green-600' : 'text-red-600'}`}>
-                        {pnl.pnl_percent >= 0 ? '+' : ''}{pnl.pnl_percent.toFixed(2)}%
-                      </td>
+                      <td className={`py-2 px-4 text-center font-medium ${isProfit ? 'text-green-600' : 'text-red-600'}`}>₹{pnl.pnl.toFixed(2)}</td>
+                      <td className={`py-2 px-4 text-center font-medium ${isProfit ? 'text-green-600' : 'text-red-600'}`}>{pnl.pnl_percent >= 0 ? '+' : ''}{pnl.pnl_percent.toFixed(2)}%</td>
                       <td className="py-2 px-4 text-center text-gray-900 dark:text-white">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           pnl.exit_type === 'manual' 
@@ -1005,7 +1004,7 @@ export const TradingDesk: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-2 px-4 text-center text-gray-900 dark:text-white">
-                        {new Date(pnl.exit_date).toLocaleDateString()}
+                        {pnl.exit_date ? new Date(pnl.exit_date).toLocaleDateString() : ''}
                       </td>
                     </motion.tr>
                   );
