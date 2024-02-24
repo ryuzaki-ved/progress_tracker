@@ -44,14 +44,23 @@ export const useIndex = () => {
         };
       });
 
+      console.log('DEBUG: Raw history from DB:', rawHistory);
+      console.log('DEBUG: Raw history length:', rawHistory.length);
+
       // Create a continuous history for the last 30 days
       const today = new Date();
-      const todayString = today.toISOString().split('T')[0];
+      const todayString = today.getFullYear() + '-' + 
+        String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(today.getDate()).padStart(2, '0');
+      console.log('DEBUG: Today string:', todayString);
       const continuousHistory: { date: string; value: number }[] = [];
       let lastKnownValue = 500; // Default starting value
       for (let i = 29; i >= 0; i--) {
         const currentDate = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-        const dateString = currentDate.toISOString().split('T')[0];
+        const dateString = currentDate.getFullYear() + '-' + 
+          String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
+          String(currentDate.getDate()).padStart(2, '0');
+        console.log(`DEBUG: Loop i=${i}, dateString=${dateString}, isToday=${dateString === todayString}`);
         // Check if we have a recorded value for this date
         const recordedEntry = rawHistory.find(h => h.date === dateString);
         if (recordedEntry) {
@@ -67,24 +76,39 @@ export const useIndex = () => {
           });
         }
       }
+      console.log('DEBUG: Continuous history after loop:', continuousHistory);
+      console.log('DEBUG: Continuous history length after loop:', continuousHistory.length);
+
       // For today specifically, always use the live calculated value
       const liveIndexValue = getCurrentIndexValue();
-      const todayIndex = continuousHistory.findIndex(h => h.date === todayString);
-      if (todayIndex !== -1) {
-        continuousHistory[todayIndex].value = liveIndexValue;
-      } else {
-        continuousHistory.push({
-          date: todayString,
-          value: liveIndexValue
-        });
+      console.log('DEBUG: Live index value:', liveIndexValue);
+      // Today should always be the last entry (index 29) since we loop from 29 to 0
+      if (continuousHistory.length > 0) {
+        console.log('DEBUG: Updating last entry (today) with live value');
+        console.log('DEBUG: Last entry before update:', continuousHistory[continuousHistory.length - 1]);
+        continuousHistory[continuousHistory.length - 1].value = liveIndexValue;
+        console.log('DEBUG: Last entry after update:', continuousHistory[continuousHistory.length - 1]);
       }
+      // Ensure history is sorted by date ascending (oldest to newest)
+      continuousHistory.sort((a, b) => a.date.localeCompare(b.date));
+      console.log('DEBUG: Continuous history after sort:', continuousHistory);
+      console.log('DEBUG: Continuous history length after sort:', continuousHistory.length);
       // Calculate today's change compared to yesterday
-      const yesterdayString = new Date(today.getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const yesterdayDate = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+      const yesterdayString = yesterdayDate.getFullYear() + '-' + 
+        String(yesterdayDate.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(yesterdayDate.getDate()).padStart(2, '0');
       const yesterdayEntry = rawHistory.find(h => h.date === yesterdayString);
       const yesterdayValue = yesterdayEntry ? yesterdayEntry.value : lastKnownValue;
       const todayValue = liveIndexValue;
       const change = todayValue - yesterdayValue;
       const changePercent = yesterdayValue > 0 ? (change / yesterdayValue) * 100 : 0;
+      console.log('DEBUG: Final indexData being set:', {
+        value: todayValue,
+        change,
+        changePercent,
+        historyLength: continuousHistory.length
+      });
       setIndexData({
         value: todayValue,
         change,
@@ -102,7 +126,10 @@ export const useIndex = () => {
   const updateIndexHistory = async () => {
     try {
       const db = await getDb();
-      const today = new Date().toISOString().split('T')[0];
+      const todayDate = new Date();
+      const today = todayDate.getFullYear() + '-' + 
+        String(todayDate.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(todayDate.getDate()).padStart(2, '0');
       
       // Get the most recent recorded index value (not necessarily yesterday)
       const lastRecordRes = db.exec(
@@ -162,6 +189,13 @@ export const useIndex = () => {
     }
   };
 
+  // Robust refetch: always update today's index history before fetching
+  const refreshIndexData = async () => {
+    await updateIndexHistory();
+    // fetchIndexData is already called at the end of updateIndexHistory, but call again to ensure latest state
+    await fetchIndexData();
+  };
+
   useEffect(() => {
     if (stocks && stocks.length > 0) {
       fetchIndexData();
@@ -173,7 +207,10 @@ export const useIndex = () => {
   // Add timer to check for date change every 10 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      const todayString = new Date().toISOString().split('T')[0];
+      const todayDate = new Date();
+      const todayString = todayDate.getFullYear() + '-' + 
+        String(todayDate.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(todayDate.getDate()).padStart(2, '0');
       if (todayString !== currentDate) {
         setCurrentDate(todayString);
         // Date changed, refresh index data
@@ -190,6 +227,6 @@ export const useIndex = () => {
     error,
     updateIndexHistory,
     updateMultipleIndexValues,
-    refetch: fetchIndexData,
+    refetch: refreshIndexData,
   };
 };

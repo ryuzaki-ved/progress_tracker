@@ -38,6 +38,19 @@ export const Dashboard: React.FC = () => {
     }
   }, [newlyUnlocked]);
 
+  // Listen for day change and refetch index data
+  useEffect(() => {
+    let lastDate = new Date().toISOString().split('T')[0];
+    const interval = setInterval(() => {
+      const todayString = new Date().toISOString().split('T')[0];
+      if (todayString !== lastDate) {
+        lastDate = todayString;
+        refetch();
+      }
+    }, 10000); // check every 10 seconds
+    return () => clearInterval(interval);
+  }, [refetch]);
+
   const handleClearAllAlerts = async () => {
     for (const alert of alerts) {
       await dismissAlert(alert.id);
@@ -64,6 +77,9 @@ export const Dashboard: React.FC = () => {
       </div>
     );
   }
+
+  // Debug: Log indexData.history and chart data
+  console.log('Dashboard indexData.history:', indexData.history);
 
   const topPerformers = stocks
     .sort((a, b) => b.changePercent - a.changePercent)
@@ -92,6 +108,9 @@ export const Dashboard: React.FC = () => {
   const minY = Math.min(...indexHistoryValues);
   const maxY = Math.max(...indexHistoryValues);
   const yMargin = Math.max(10, Math.round((maxY - minY) * 0.1));
+
+  // Debug: Log chart data prop
+  console.log('Dashboard chart data prop:', indexData.history);
 
   return (
     <div className="p-6 space-y-6">

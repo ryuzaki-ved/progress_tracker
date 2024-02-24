@@ -21,6 +21,20 @@ export const IndexEditor: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
+  // --- ADDED: Listen for day change and refetch index data ---
+  useEffect(() => {
+    let lastDate = new Date().toISOString().split('T')[0];
+    const interval = setInterval(() => {
+      const todayString = new Date().toISOString().split('T')[0];
+      if (todayString !== lastDate) {
+        lastDate = todayString;
+        refetch();
+      }
+    }, 10000); // check every 10 seconds
+    return () => clearInterval(interval);
+  }, [refetch]);
+  // --- END ADDED ---
+
   // Generate date range data
   const generateDateRangeData = () => {
     if (!indexData?.history) return [];
