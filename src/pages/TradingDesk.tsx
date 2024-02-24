@@ -683,24 +683,20 @@ export const TradingDesk: React.FC = () => {
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 dark:bg-gray-700">
+                      <th className="py-2 px-4 text-center">OI</th>
                       <th className="py-2 px-4 text-center">CE</th>
                       <th className="py-2 px-4 text-center">Strike</th>
                       <th className="py-2 px-4 text-center">PE</th>
+                      <th className="py-2 px-4 text-center">OI</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {/* Group contracts by strike */}
                     {(() => {
-                      // Map: strike -> { CE, PE }
-                      const strikeMap: Record<number, { ce?: OptionContract; pe?: OptionContract }> = {};
-                      optionContracts.forEach(opt => {
-                        if (!strikeMap[opt.strikePrice]) strikeMap[opt.strikePrice] = {};
-                        if (opt.optionType === 'CE') strikeMap[opt.strikePrice].ce = opt;
-                        if (opt.optionType === 'PE') strikeMap[opt.strikePrice].pe = opt;
-                      });
-                      return Object.keys(strikeMap).sort((a, b) => Number(a) - Number(b)).map(strike => {
-                        const ce = strikeMap[Number(strike)].ce;
-                        const pe = strikeMap[Number(strike)].pe;
+                      // Get unique strike prices
+                      const uniqueStrikes = Array.from(new Set(optionContracts.map(opt => opt.strikePrice)));
+                      return uniqueStrikes.map(strike => {
+                        const ce = optionContracts.find(opt => opt.strikePrice === strike && opt.optionType === 'CE');
+                        const pe = optionContracts.find(opt => opt.strikePrice === strike && opt.optionType === 'PE');
                         const cePremium = ce ? calculateOptionPrice(
                           currentIndexValue,
                           ce.strikePrice,
@@ -715,8 +711,22 @@ export const TradingDesk: React.FC = () => {
                           pe.optionType,
                           pe.createdAt
                         ) : null;
+                        // Calculate OI for CE and PE
+                        const ceOI = userOptionHoldings
+                          .filter(h => {
+                            const contract = optionContracts.find(c => c.id === h.contractId);
+                            return contract && contract.strikePrice === strike && contract.optionType === 'CE';
+                          })
+                          .reduce((sum, h) => sum + h.quantity, 0);
+                        const peOI = userOptionHoldings
+                          .filter(h => {
+                            const contract = optionContracts.find(c => c.id === h.contractId);
+                            return contract && contract.strikePrice === strike && contract.optionType === 'PE';
+                          })
+                          .reduce((sum, h) => sum + h.quantity, 0);
                         return (
                           <tr key={strike} className="hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer">
+                            <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{ceOI}</td>
                             <td className="py-2 px-4 text-center text-gray-900 dark:text-white" onClick={() => ce && setSelectedOptionId(ce.id.toString())}>
                               {cePremium !== null ? cePremium.toFixed(2) : '-'}
                             </td>
@@ -732,6 +742,7 @@ export const TradingDesk: React.FC = () => {
                             <td className="py-2 px-4 text-center text-gray-900 dark:text-white" onClick={() => pe && setSelectedOptionId(pe.id.toString())}>
                               {pePremium !== null ? pePremium.toFixed(2) : '-'}
                             </td>
+                            <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{peOI}</td>
                           </tr>
                         );
                       });

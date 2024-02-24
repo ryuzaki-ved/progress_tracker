@@ -344,6 +344,13 @@ export const useTrading = () => {
     if (!currentUserId) throw new Error('No user');
     if (quantity <= 0) throw new Error('Quantity must be positive');
     const db = await getDb();
+    // Debug: log holdingId and all current holdings
+    const allHoldingsRes = db.exec('SELECT id, contract_id, quantity, type FROM user_options_holdings WHERE user_id = ?', [currentUserId]);
+    const allHoldings = (allHoldingsRes[0]?.values || []).map(row => ({
+      id: row[0], contract_id: row[1], quantity: row[2], type: row[3]
+    }));
+    console.log('exitOptionPosition: holdingId passed:', holdingId);
+    console.log('exitOptionPosition: current holdings in DB:', allHoldings);
     // Get holding
     const holdingRes = db.exec('SELECT * FROM user_options_holdings WHERE id = ?', [holdingId]);
     if (!holdingRes[0] || !holdingRes[0].values.length) throw new Error('Holding not found');
@@ -361,6 +368,17 @@ export const useTrading = () => {
       underlyingIndexValueAtCreation: contractRes[0].values[0][4],
       createdAt: contractRes[0].values[0][5],
     };
+    // Calculate currentPremium for both long and short
+    let currentPremium = 0;
+    const indexRes = db.exec('SELECT index_value FROM index_history WHERE user_id = ? ORDER BY date DESC LIMIT 1', [currentUserId]);
+    const currentIndexValue = indexRes[0]?.values?.[0]?.[0] ?? contract.underlyingIndexValueAtCreation;
+    currentPremium = calculateOptionPrice(
+      currentIndexValue,
+      contract.strikePrice,
+      contract.expiryDate,
+      contract.optionType,
+      contract.createdAt
+    );
     // For short positions, return collateral
     if (obj.type === 'short_ce' || obj.type === 'short_pe') {
       const collateral = contract.strikePrice * quantity;
@@ -368,16 +386,6 @@ export const useTrading = () => {
     }
     // For long positions, add current premium × quantity to cash balance
     if (obj.type === 'long_ce' || obj.type === 'long_pe') {
-      // Use latest index value for premium
-      const indexRes = db.exec('SELECT index_value FROM index_history WHERE user_id = ? ORDER BY date DESC LIMIT 1', [currentUserId]);
-      const currentIndexValue = indexRes[0]?.values?.[0]?.[0] ?? contract.underlyingIndexValueAtCreation;
-      const currentPremium = calculateOptionPrice(
-        currentIndexValue,
-        contract.strikePrice,
-        contract.expiryDate,
-        contract.optionType,
-        contract.createdAt
-      );
       const proceeds = currentPremium * quantity;
       db.run('UPDATE user_settings SET cash_balance = cash_balance + ? WHERE user_id = ?', [proceeds, currentUserId]);
     }
@@ -391,7 +399,6 @@ export const useTrading = () => {
     let exitPremium = 0;
     let pnl = 0;
     let pnlPercent = 0;
-    
     if (obj.type === 'short_ce' || obj.type === 'short_pe') {
       // For short positions: PnL = premium received - premium paid to close
       exitPremium = obj.weighted_avg_premium; // Premium received when writing
@@ -403,11 +410,9 @@ export const useTrading = () => {
       pnl = (exitPremium - obj.weighted_avg_premium) * quantity;
       pnlPercent = obj.weighted_avg_premium > 0 ? ((exitPremium - obj.weighted_avg_premium) / obj.weighted_avg_premium) * 100 : 0;
     }
-    
     // Record PnL history
     db.run('INSERT INTO option_pnl_history (user_id, contract_id, position_type, quantity, entry_premium, exit_premium, pnl, pnl_percent, exit_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
       [currentUserId, contract.id, obj.type, quantity, obj.weighted_avg_premium, exitPremium, pnl, pnlPercent, 'manual']);
-    
     // Record exit transaction
     db.run('INSERT INTO option_transactions (user_id, contract_id, type, quantity, premium_per_unit, total_premium) VALUES (?, ?, ?, ?, ?, ?)', [currentUserId, contract.id, 'exit', quantity, obj.weighted_avg_premium, obj.weighted_avg_premium * quantity]);
     await persistDb();
