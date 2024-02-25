@@ -10,6 +10,8 @@ import { useTrading } from '../hooks/useTrading';
 import { AddFundsModal } from '../components/modals/AddFundsModal';
 import CountUp from 'react-countup';
 import SlidingNumber from '../components/ui/SlidingNumber';
+import { TradingNotificationContainer } from '../components/ui/TradingNotification';
+import { useTradingNotifications } from '../hooks/useTradingNotifications';
 import { OptionContract, UserOptionHolding, OptionTransaction } from '../types';
 import { calculateOptionPrice } from '../utils/optionUtils';
 import { getDb, persistDb } from '../lib/sqlite';
@@ -42,6 +44,7 @@ const OptionToggleSwitch: React.FC<{
 export const TradingDesk: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
   const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error, addFunds, optionContracts, userOptionHoldings, optionTransactions, optionPnlHistory, buyOption, writeOption, fetchOptionsData, exitOptionPosition, currentIndexValue, resetOptionsData } = useTrading();
+  const { notifications, dismissNotification, notifyStockBuy, notifyStockSell, notifyOptionBuy, notifyOptionWrite, notifyOptionExit, notifyOptionPnL } = useTradingNotifications();
   const [showPnL, setShowPnL] = useState(true);
   const [selectedStockId, setSelectedStockId] = useState('');
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
@@ -163,10 +166,16 @@ export const TradingDesk: React.FC = () => {
     try {
       if (!selectedStockId) throw new Error('Select a stock');
       if (numericQuantity <= 0) throw new Error('Enter a valid quantity');
+      
+      const selectedStock = stocks.find(s => s.id.toString() === selectedStockId);
+      if (!selectedStock) throw new Error('Stock not found');
+      
       if (orderType === 'buy') {
         await buyStock(Number(selectedStockId), numericQuantity, currentPrice);
+        notifyStockBuy(selectedStock.name, numericQuantity, currentPrice, totalCost);
       } else {
         await sellStock(Number(selectedStockId), numericQuantity, currentPrice);
+        notifyStockSell(selectedStock.name, numericQuantity, currentPrice, totalCost);
       }
       setQuantity('');
     } catch (err: any) {
@@ -190,10 +199,16 @@ export const TradingDesk: React.FC = () => {
         selectedOption.optionType,
         selectedOption.createdAt
       );
+      
+      const optionDetails = `${selectedOption.strikePrice} ${selectedOption.optionType}`;
+      const totalCost = premium * qty;
+      
       if (optionOrderType === 'buy') {
         await buyOption(Number(selectedOptionId), qty, premium);
+        notifyOptionBuy(optionDetails, qty, premium, totalCost);
       } else {
         await writeOption(Number(selectedOptionId), qty, premium);
+        notifyOptionWrite(optionDetails, qty, premium, totalCost);
       }
       setOptionQuantity('');
       fetchOptionsData();
@@ -224,16 +239,16 @@ export const TradingDesk: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold font-sans tracking-wide text-gray-900 dark:text-white flex items-center drop-shadow-sm">
-            <TrendingUp className="w-8 h-8 mr-3 text-green-600" />
-            Trading Desk
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Live portfolio view and trading interface
-          </p>
-        </div>
+              <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-semibold font-sans tracking-wide text-gray-900 dark:text-white flex items-center drop-shadow-sm">
+              <TrendingUp className="w-8 h-8 mr-3 text-green-600" />
+              Trading Desk
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Live portfolio view and trading interface
+            </p>
+          </div>
         <div className="flex items-center space-x-4">
           <div className="text-right">
             <div className="text-sm text-gray-500 dark:text-gray-400">Portfolio Value</div>
@@ -819,6 +834,15 @@ export const TradingDesk: React.FC = () => {
                               onClick={async () => {
                                 try {
                                   await exitOptionPosition(h.id, h.quantity);
+                                  const optionDetails = contract ? `${contract.strikePrice} ${contract.optionType}` : `Contract ${h.contractId}`;
+                                  const exitValue = currentPremium * h.quantity;
+                                  notifyOptionExit(optionDetails, h.quantity, currentPremium, exitValue);
+                                  
+                                  // Calculate and notify PnL
+                                  const pnl = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
+                                  const isProfit = pnl > 0;
+                                  notifyOptionPnL(optionDetails, pnl, isProfit);
+                                  
                                   fetchOptionsData();
                                 } catch (err) {
                                   alert('Failed to exit position: ' + (err as any).message);
@@ -1169,6 +1193,28 @@ export const TradingDesk: React.FC = () => {
               }
               try {
                 await exitOptionPosition(exitQtyPrompt.holdingId, qty);
+                
+                // Find the holding to get option details
+                const holding = userOptionHoldings.find(h => h.id === exitQtyPrompt.holdingId);
+                if (holding) {
+                  const contract = optionContracts.find(c => c.id === holding.contractId);
+                  const optionDetails = contract ? `${contract.strikePrice} ${contract.optionType}` : `Contract ${holding.contractId}`;
+                  const currentPremium = contract ? calculateOptionPrice(
+                    currentIndexValue,
+                    contract.strikePrice,
+                    contract.expiryDate,
+                    contract.optionType,
+                    contract.createdAt
+                  ) : 0;
+                  const exitValue = currentPremium * qty;
+                  notifyOptionExit(optionDetails, qty, currentPremium, exitValue);
+                  
+                  // Calculate and notify PnL
+                  const pnl = (currentPremium - holding.weightedAvgPremium) * qty * (holding.type.startsWith('long') ? 1 : -1);
+                  const isProfit = pnl > 0;
+                  notifyOptionPnL(optionDetails, pnl, isProfit);
+                }
+                
                 setExitQtyPrompt(null);
                 fetchOptionsData();
               } catch (err) {
@@ -1191,6 +1237,12 @@ export const TradingDesk: React.FC = () => {
         isOpen={showAddFundsModal}
         onClose={() => setShowAddFundsModal(false)}
         onSubmit={handleAddFunds}
+      />
+      
+      {/* Trading Notifications */}
+      <TradingNotificationContainer
+        notifications={notifications}
+        onDismiss={dismissNotification}
       />
     </div>
   );
