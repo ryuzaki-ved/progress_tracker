@@ -689,11 +689,11 @@ export const TradingDesk: React.FC = () => {
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 dark:bg-gray-700">
-                      <th className="py-2 px-4 text-center">OI</th>
-                      <th className="py-2 px-4 text-center">CE</th>
-                      <th className="py-2 px-4 text-center">Strike</th>
-                      <th className="py-2 px-4 text-center">PE</th>
-                      <th className="py-2 px-4 text-center">OI</th>
+                      <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">OI</th>
+                      <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">CE</th>
+                      <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Strike</th>
+                      <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">PE</th>
+                      <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">OI</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -772,14 +772,14 @@ export const TradingDesk: React.FC = () => {
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 dark:bg-gray-700">
-                      <th className="py-2 px-4 text-center">Contract</th>
-                      <th className="py-2 px-4 text-center">Type</th>
-                      <th className="py-2 px-4 text-center">Qty</th>
-                      <th className="py-2 px-4 text-center">Avg Premium</th>
-                      <th className="py-2 px-4 text-center">Current Price</th>
-                      <th className="py-2 px-4 text-center">Unrealized P&L</th>
-                      <th className="py-2 px-4 text-center">Return (%)</th>
-                      <th className="py-2 px-4 text-center">Action</th>
+                      <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Contract</th>
+                      <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Type</th>
+                      <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Qty</th>
+                      <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Avg Premium</th>
+                      <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Current Price</th>
+                      <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Unrealized P&L</th>
+                      <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Return (%)</th>
+                      <th className="py-2 px-4 text-center text-gray-700 dark:text-gray-200">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -873,7 +873,7 @@ export const TradingDesk: React.FC = () => {
           {/* Place Option Order */}
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-              <h3 className="text-lg font-semibold mb-4">Place Option Order</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Place Option Order</h3>
               <form className="space-y-4" onSubmit={handleOptionOrder}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Option Contract</label>
