@@ -16,9 +16,7 @@ export const useIndex = () => {
 
   // Calculate the current index value (weighted sum of stocks)
   const getCurrentIndexValue = () => {
-    console.log('Stocks for index calculation:', stocks);
     const value = calculateIndexValue(stocks);
-    console.log('Calculated index value:', value);
     return value;
   };
 
@@ -44,15 +42,11 @@ export const useIndex = () => {
         };
       });
 
-      console.log('DEBUG: Raw history from DB:', rawHistory);
-      console.log('DEBUG: Raw history length:', rawHistory.length);
-
       // Create a continuous history for the last 30 days
       const today = new Date();
       const todayString = today.getFullYear() + '-' + 
         String(today.getMonth() + 1).padStart(2, '0') + '-' + 
         String(today.getDate()).padStart(2, '0');
-      console.log('DEBUG: Today string:', todayString);
       const continuousHistory: { date: string; value: number }[] = [];
       let lastKnownValue = 500; // Default starting value
       for (let i = 29; i >= 0; i--) {
@@ -60,7 +54,6 @@ export const useIndex = () => {
         const dateString = currentDate.getFullYear() + '-' + 
           String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
           String(currentDate.getDate()).padStart(2, '0');
-        console.log(`DEBUG: Loop i=${i}, dateString=${dateString}, isToday=${dateString === todayString}`);
         // Check if we have a recorded value for this date
         const recordedEntry = rawHistory.find(h => h.date === dateString);
         if (recordedEntry) {
@@ -76,23 +69,14 @@ export const useIndex = () => {
           });
         }
       }
-      console.log('DEBUG: Continuous history after loop:', continuousHistory);
-      console.log('DEBUG: Continuous history length after loop:', continuousHistory.length);
-
       // For today specifically, always use the live calculated value
       const liveIndexValue = getCurrentIndexValue();
-      console.log('DEBUG: Live index value:', liveIndexValue);
       // Today should always be the last entry (index 29) since we loop from 29 to 0
       if (continuousHistory.length > 0) {
-        console.log('DEBUG: Updating last entry (today) with live value');
-        console.log('DEBUG: Last entry before update:', continuousHistory[continuousHistory.length - 1]);
         continuousHistory[continuousHistory.length - 1].value = liveIndexValue;
-        console.log('DEBUG: Last entry after update:', continuousHistory[continuousHistory.length - 1]);
       }
       // Ensure history is sorted by date ascending (oldest to newest)
       continuousHistory.sort((a, b) => a.date.localeCompare(b.date));
-      console.log('DEBUG: Continuous history after sort:', continuousHistory);
-      console.log('DEBUG: Continuous history length after sort:', continuousHistory.length);
       // Calculate today's change compared to yesterday
       const yesterdayDate = new Date(today.getTime() - 24 * 60 * 60 * 1000);
       const yesterdayString = yesterdayDate.getFullYear() + '-' + 
@@ -103,12 +87,6 @@ export const useIndex = () => {
       const todayValue = liveIndexValue;
       const change = todayValue - yesterdayValue;
       const changePercent = yesterdayValue > 0 ? (change / yesterdayValue) * 100 : 0;
-      console.log('DEBUG: Final indexData being set:', {
-        value: todayValue,
-        change,
-        changePercent,
-        historyLength: continuousHistory.length
-      });
       setIndexData({
         value: todayValue,
         change,

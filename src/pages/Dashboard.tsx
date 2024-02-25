@@ -78,9 +78,6 @@ export const Dashboard: React.FC = () => {
     );
   }
 
-  // Debug: Log indexData.history and chart data
-  console.log('Dashboard indexData.history:', indexData.history);
-
   const topPerformers = stocks
     .sort((a, b) => b.changePercent - a.changePercent)
     .slice(0, 3);
@@ -108,9 +105,6 @@ export const Dashboard: React.FC = () => {
   const minY = Math.min(...indexHistoryValues);
   const maxY = Math.max(...indexHistoryValues);
   const yMargin = Math.max(10, Math.round((maxY - minY) * 0.1));
-
-  // Debug: Log chart data prop
-  console.log('Dashboard chart data prop:', indexData.history);
 
   return (
     <div className="p-6 space-y-6">
