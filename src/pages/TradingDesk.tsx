@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, Activity, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, Activity, RefreshCw, Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card } from '../components/ui/Card';
 import { Button, PlaceOrderButton } from '../components/ui/Button';
@@ -287,7 +287,13 @@ export const TradingDesk: React.FC = () => {
                 />
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setShowAddFundsModal(true)}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowAddFundsModal(true)}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white border-green-500 hover:border-green-600 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            >
+              <Plus className="w-4 h-4 mr-2" />
               Add Funds
             </Button>
           </div>
@@ -731,13 +737,16 @@ export const TradingDesk: React.FC = () => {
                               {cePremium !== null ? cePremium.toFixed(2) : '-'}
                             </td>
                             <td className="py-2 px-4 text-center text-gray-900 dark:text-white font-semibold">
-                              {strike}
-                              <button
-                                className="ml-2 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
-                                onClick={e => { e.stopPropagation(); handleDeleteStrike(Number(strike)); }}
-                              >
-                                Delete Strike
-                              </button>
+                              <div className="flex items-center justify-center space-x-2">
+                                <span>{strike}</span>
+                                <button
+                                  className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 hover:scale-110 transition-all duration-200 shadow-md hover:shadow-lg"
+                                  onClick={e => { e.stopPropagation(); handleDeleteStrike(Number(strike)); }}
+                                  title="Delete Strike"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
                             </td>
                             <td className="py-2 px-4 text-center text-gray-900 dark:text-white" onClick={() => pe && setSelectedOptionId(pe.id.toString())}>
                               {pePremium !== null ? pePremium.toFixed(2) : '-'}
