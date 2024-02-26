@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, DollarSign, BarChart3, Activity, RefreshCw, Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -45,6 +45,53 @@ export const TradingDesk: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
   const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error, addFunds, optionContracts, userOptionHoldings, optionTransactions, optionPnlHistory, buyOption, writeOption, fetchOptionsData, exitOptionPosition, currentIndexValue, resetOptionsData } = useTrading();
   const { notifications, dismissNotification, notifyStockBuy, notifyStockSell, notifyOptionBuy, notifyOptionWrite, notifyOptionExit, notifyOptionPnL } = useTradingNotifications();
+  
+  // Memoize calculated values to prevent unnecessary re-renders
+  const {
+    holdingsWithStock,
+    holdingsDistribution,
+    totalInvestment,
+    currentValue,
+    totalPnL,
+    totalPnLPercent
+  } = useMemo(() => {
+    const holdingsWithStock = holdings.map(holding => {
+      const stock = stocks.find(s => s.id.toString() === holding.stockId.toString());
+      const currentPrice = stock ? stock.currentScore * 0.1 : 0;
+      return {
+        ...holding,
+        stockName: stock?.name || '',
+        currentPrice,
+        category: stock?.category || '',
+        color: stock?.color || '',
+        unrealizedPnL: (currentPrice - holding.weightedAvgBuyPrice) * holding.quantity,
+        unrealizedPnLPercent: holding.weightedAvgBuyPrice > 0 ? ((currentPrice - holding.weightedAvgBuyPrice) / holding.weightedAvgBuyPrice) * 100 : 0,
+      };
+    });
+
+    const holdingsDistribution = holdingsWithStock.map(h => ({
+      name: h.stockName,
+      value: h.quantity * h.currentPrice,
+    }));
+
+    const totalInvestment = holdingsWithStock.reduce((sum, h) => sum + (h.weightedAvgBuyPrice * h.quantity), 0);
+    const currentValue = holdingsWithStock.reduce((sum, h) => sum + (h.currentPrice * h.quantity), 0);
+    const totalPnL = currentValue - totalInvestment;
+    const totalPnLPercent = totalInvestment > 0 ? (totalPnL / totalInvestment) * 100 : 0;
+
+    return {
+      holdingsWithStock,
+      holdingsDistribution,
+      totalInvestment,
+      currentValue,
+      totalPnL,
+      totalPnLPercent
+    };
+  }, [holdings, stocks]);
+
+  // Memoize cash balance to prevent unnecessary re-renders
+  const memoizedCashBalance = useMemo(() => cashBalance, [cashBalance]);
+
   const [showPnL, setShowPnL] = useState(true);
   const [selectedStockId, setSelectedStockId] = useState('');
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
@@ -82,27 +129,6 @@ export const TradingDesk: React.FC = () => {
     );
   }
 
-  // Map holdings to include stock info and current price
-  const holdingsWithStock = holdings.map(holding => {
-    const stock = stocks.find(s => s.id.toString() === holding.stockId.toString());
-    const currentPrice = stock ? stock.currentScore * 0.1 : 0;
-    return {
-      ...holding,
-      stockName: stock?.name || '',
-      currentPrice,
-      category: stock?.category || '',
-      color: stock?.color || '',
-      unrealizedPnL: (currentPrice - holding.weightedAvgBuyPrice) * holding.quantity,
-      unrealizedPnLPercent: holding.weightedAvgBuyPrice > 0 ? ((currentPrice - holding.weightedAvgBuyPrice) / holding.weightedAvgBuyPrice) * 100 : 0,
-    };
-  });
-
-  // Pie chart data: distribution of holdings by value
-  const holdingsDistribution = holdingsWithStock.map(h => ({
-    name: h.stockName,
-    value: h.quantity * h.currentPrice,
-  }));
-
   // Pie chart colors
   const pieColors = [
     '#6366F1', // indigo
@@ -116,10 +142,6 @@ export const TradingDesk: React.FC = () => {
     '#22D3EE', // cyan
     '#A3E635', // lime
   ];
-  const totalInvestment = holdingsWithStock.reduce((sum, h) => sum + (h.weightedAvgBuyPrice * h.quantity), 0);
-  const currentValue = holdingsWithStock.reduce((sum, h) => sum + (h.currentPrice * h.quantity), 0);
-  const totalPnL = currentValue - totalInvestment;
-  const totalPnLPercent = totalInvestment > 0 ? (totalPnL / totalInvestment) * 100 : 0;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -254,7 +276,7 @@ export const TradingDesk: React.FC = () => {
             <div className="text-sm text-gray-500 dark:text-gray-400">Portfolio Value</div>
             <div className="text-2xl font-bold text-gray-900 dark:text-white font-share-tech-mono text-digital-shadow">
               <CountUp
-                key={currentValue}
+                key={`portfolio-${currentValue}`}
                 end={currentValue}
                 duration={1.5}
                 separator="," 
@@ -262,6 +284,7 @@ export const TradingDesk: React.FC = () => {
                 formattingFn={formatCurrency}
                 preserveValue
                 redraw={false}
+                start={currentValue}
               />
             </div>
           </div>
@@ -271,7 +294,7 @@ export const TradingDesk: React.FC = () => {
             <div className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'} font-share-tech-mono text-digital-shadow`}>
               {showPnL ? (
                 <CountUp
-                  key={totalPnL}
+                  key={`pnl-${totalPnL}`}
                   end={totalPnL}
                   duration={1.5}
                   separator="," 
@@ -279,6 +302,7 @@ export const TradingDesk: React.FC = () => {
                   formattingFn={formatCurrency}
                   preserveValue
                   redraw={false}
+                  start={totalPnL}
                 />
               ) : (
                 '\u2022\u2022\u2022\u2022'
@@ -291,14 +315,15 @@ export const TradingDesk: React.FC = () => {
               <div className="text-sm text-gray-500 dark:text-gray-400">Cash Balance</div>
               <div className="text-2xl font-bold text-green-600 font-share-tech-mono text-digital-shadow">
                 <CountUp
-                  key={cashBalance}
-                  end={cashBalance}
+                  key={`cash-${memoizedCashBalance}`}
+                  end={memoizedCashBalance}
                   duration={1.5}
                   separator="," 
                   decimals={2}
                   formattingFn={formatCurrency}
                   preserveValue
                   redraw={false}
+                  start={memoizedCashBalance}
                 />
               </div>
             </div>
