@@ -130,7 +130,7 @@ export const WeekView: React.FC<WeekViewProps> = ({ weekStart, onCreateTask, onR
                       whileHover={{ scale: 1.02 }}
                       whileDrag={{ scale: 1.05, rotate: 2 }}
                     >
-                      <div className="font-medium text-gray-900 dark:text-white truncate">
+                      <div className="font-medium truncate text-gray-900 dark:text-white bg-white/80 dark:bg-gray-900/80 px-1 rounded">
                         {task.title}
                       </div>
                       <div className="flex items-center space-x-1 text-gray-600 dark:text-gray-400 mt-1">
