@@ -32,43 +32,43 @@ export class AudioGenerator {
   }
 
   private createSuccessSound(): void {
-    // Two ascending beeps
-    this.createBeep(800, 0.1);
-    setTimeout(() => this.createBeep(1000, 0.1), 100);
-    setTimeout(() => this.createBeep(1200, 0.2), 200);
+    // Gentle ascending chime - very low frequencies
+    this.createBeep(200, 0.15);
+    setTimeout(() => this.createBeep(250, 0.15), 150);
+    setTimeout(() => this.createBeep(300, 0.2), 300);
   }
 
   private createErrorSound(): void {
-    // Two descending beeps
-    this.createBeep(600, 0.1);
-    setTimeout(() => this.createBeep(400, 0.1), 100);
-    setTimeout(() => this.createBeep(200, 0.2), 200);
+    // Soft descending tone - very low frequencies
+    this.createBeep(150, 0.2);
+    setTimeout(() => this.createBeep(120, 0.2), 200);
+    setTimeout(() => this.createBeep(100, 0.3), 400);
   }
 
   private createWarningSound(): void {
-    // Medium pitch beep
-    this.createBeep(500, 0.3);
+    // Gentle bell sound - very low frequency
+    this.createBeep(180, 0.4);
   }
 
   private createInfoSound(): void {
-    // Single short beep
-    this.createBeep(700, 0.15);
+    // Soft notification - very low frequency
+    this.createBeep(220, 0.2);
   }
 
   private createProfitSound(): void {
-    // Ascending arpeggio
-    this.createBeep(523, 0.1); // C
-    setTimeout(() => this.createBeep(659, 0.1), 100); // E
-    setTimeout(() => this.createBeep(784, 0.1), 200); // G
-    setTimeout(() => this.createBeep(1047, 0.2), 300); // C (high)
+    // Gentle ascending melody - very low frequencies
+    this.createBeep(130, 0.15); // Very low C
+    setTimeout(() => this.createBeep(165, 0.15), 150); // Very low E
+    setTimeout(() => this.createBeep(196, 0.15), 300); // Very low G
+    setTimeout(() => this.createBeep(261, 0.25), 450); // Low C
   }
 
   private createLossSound(): void {
-    // Descending arpeggio
-    this.createBeep(1047, 0.1); // C (high)
-    setTimeout(() => this.createBeep(784, 0.1), 100); // G
-    setTimeout(() => this.createBeep(659, 0.1), 200); // E
-    setTimeout(() => this.createBeep(523, 0.2), 300); // C
+    // Gentle descending melody - very low frequencies
+    this.createBeep(261, 0.15); // Low C
+    setTimeout(() => this.createBeep(196, 0.15), 150); // Very low G
+    setTimeout(() => this.createBeep(165, 0.15), 300); // Very low E
+    setTimeout(() => this.createBeep(130, 0.25), 450); // Very low C
   }
 
   playSound(type: 'buy' | 'sell' | 'profit' | 'loss' | 'info' | 'success' | 'error' | 'warning'): void {
