@@ -9,12 +9,14 @@ export const useTradingNotifications = () => {
     const interval = setInterval(() => {
       setNotifications(prev => {
         const now = new Date();
-        return prev.filter(notification => {
+        const filtered = prev.filter(notification => {
           const timeDiff = now.getTime() - notification.timestamp.getTime();
           return timeDiff < 5000; // Keep notifications for 5 seconds
         });
+        // Only update if there's actually a change to prevent unnecessary re-renders
+        return filtered.length !== prev.length ? filtered : prev;
       });
-    }, 1000);
+    }, 2000); // Reduced frequency to 2 seconds to minimize re-renders
 
     return () => clearInterval(interval);
   }, []);

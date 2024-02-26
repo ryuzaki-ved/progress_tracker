@@ -12,6 +12,7 @@ import CountUp from 'react-countup';
 import SlidingNumber from '../components/ui/SlidingNumber';
 import { TradingNotificationContainer } from '../components/ui/TradingNotification';
 import { useTradingNotifications } from '../hooks/useTradingNotifications';
+import { OptionHoldingsChart } from '../components/ui/OptionHoldingsChart';
 import { OptionContract, UserOptionHolding, OptionTransaction } from '../types';
 import { calculateOptionPrice } from '../utils/optionUtils';
 import { getDb, persistDb } from '../lib/sqlite';
@@ -91,6 +92,57 @@ export const TradingDesk: React.FC = () => {
 
   // Memoize cash balance to prevent unnecessary re-renders
   const memoizedCashBalance = useMemo(() => cashBalance, [cashBalance]);
+
+  // Memoize option holdings calculations to prevent continuous updates
+  const {
+    optionHoldingsWithDetails,
+    optionHoldingsDistribution,
+    totalOptionsPnL,
+    totalOptionsReturn
+  } = useMemo(() => {
+    const optionHoldingsWithDetails = userOptionHoldings.map(h => {
+      const contract = optionContracts.find(c => c.id === h.contractId);
+      let currentPremium = 0;
+      if (contract) {
+        currentPremium = calculateOptionPrice(
+          currentIndexValue,
+          contract.strikePrice,
+          contract.expiryDate,
+          contract.optionType,
+          contract.createdAt
+        );
+      }
+      const unrealizedPnL = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
+      const returnPercent = h.weightedAvgPremium > 0 ? ((currentPremium - h.weightedAvgPremium) / h.weightedAvgPremium) * 100 * (h.type.startsWith('long') ? 1 : -1) : 0;
+      
+      return {
+        ...h,
+        contract,
+        currentPremium,
+        unrealizedPnL,
+        returnPercent,
+        contractName: contract ? `${contract.strikePrice} ${contract.optionType}` : `Contract ${h.contractId}`
+      };
+    });
+
+    const optionHoldingsDistribution = optionHoldingsWithDetails.map(h => ({
+      name: h.contractName,
+      value: h.contract ? Math.abs(h.contract.strikePrice * h.quantity) : 0,
+    }));
+
+    const totalOptionsPnL = optionHoldingsWithDetails.reduce((sum, h) => sum + h.unrealizedPnL, 0);
+    const totalOptionsInvested = optionHoldingsWithDetails.reduce((sum, h) => sum + (h.weightedAvgPremium * h.quantity), 0);
+    const totalOptionsReturn = totalOptionsInvested > 0 ? (totalOptionsPnL / totalOptionsInvested) * 100 : 0;
+
+    return {
+      optionHoldingsWithDetails,
+      optionHoldingsDistribution,
+      totalOptionsPnL,
+      totalOptionsReturn
+    };
+  }, [userOptionHoldings, optionContracts, currentIndexValue]);
+
+
 
   const [showPnL, setShowPnL] = useState(true);
   const [selectedStockId, setSelectedStockId] = useState('');
@@ -605,107 +657,21 @@ export const TradingDesk: React.FC = () => {
               <div className="text-sm text-green-700">Options Invested</div>
             </div>
           </Card>
-          <Card className={`bg-gradient-to-r ${(() => {
-            const totalOptionsPnL = userOptionHoldings.reduce((sum, h) => {
-              const contract = optionContracts.find(c => c.id === h.contractId);
-              let currentPremium = 0;
-              if (contract) {
-                currentPremium = calculateOptionPrice(
-                  currentIndexValue,
-                  contract.strikePrice,
-                  contract.expiryDate,
-                  contract.optionType,
-                  contract.createdAt
-                );
-              }
-              const unrealizedPnL = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
-              return sum + unrealizedPnL;
-            }, 0);
-            return totalOptionsPnL >= 0 ? 'from-green-50 to-emerald-50 border-green-200' : 'from-red-50 to-pink-50 border-red-200';
-          })()} transition-transform duration-200 hover:scale-105 hover:shadow-lg`}>
+                    <Card className={`bg-gradient-to-r ${totalOptionsPnL >= 0 ? 'from-green-50 to-emerald-50 border-green-200' : 'from-red-50 to-pink-50 border-red-200'} transition-transform duration-200 hover:scale-105 hover:shadow-lg`}>
             <div className="p-4 text-center">
-              <div className={`text-2xl font-bold ${(() => {
-                const totalOptionsPnL = userOptionHoldings.reduce((sum, h) => {
-                  const contract = optionContracts.find(c => c.id === h.contractId);
-                  let currentPremium = 0;
-                  if (contract) {
-                    currentPremium = calculateOptionPrice(
-                      currentIndexValue,
-                      contract.strikePrice,
-                      contract.expiryDate,
-                      contract.optionType,
-                      contract.createdAt
-                    );
-                  }
-                  const unrealizedPnL = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
-                  return sum + unrealizedPnL;
-                }, 0);
-                return totalOptionsPnL >= 0 ? 'text-green-600' : 'text-red-600';
-              })()} font-share-tech-mono text-digital-shadow`}>
+              <div className={`text-2xl font-bold ${totalOptionsPnL >= 0 ? 'text-green-600' : 'text-red-600'} font-share-tech-mono text-digital-shadow`}>
                 {showPnL ? (
                   <SlidingNumber 
-                    value={(() => {
-                      const totalOptionsInvested = userOptionHoldings.reduce((sum, h) => sum + (h.weightedAvgPremium * h.quantity), 0);
-                      const totalOptionsPnL = userOptionHoldings.reduce((sum, h) => {
-                        const contract = optionContracts.find(c => c.id === h.contractId);
-                        let currentPremium = 0;
-                        if (contract) {
-                          currentPremium = calculateOptionPrice(
-                            currentIndexValue,
-                            contract.strikePrice,
-                            contract.expiryDate,
-                            contract.optionType,
-                            contract.createdAt
-                          );
-                        }
-                        const unrealizedPnL = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
-                        return sum + unrealizedPnL;
-                      }, 0);
-                      return totalOptionsInvested > 0 ? (totalOptionsPnL / totalOptionsInvested) * 100 : 0;
-                    })()} 
+                    value={totalOptionsReturn} 
                     suffix="%" 
-                    decimals={2} 
-                    color={(() => {
-                      const totalOptionsPnL = userOptionHoldings.reduce((sum, h) => {
-                        const contract = optionContracts.find(c => c.id === h.contractId);
-                        let currentPremium = 0;
-                        if (contract) {
-                          currentPremium = calculateOptionPrice(
-                            currentIndexValue,
-                            contract.strikePrice,
-                            contract.expiryDate,
-                            contract.optionType,
-                            contract.createdAt
-                          );
-                        }
-                        const unrealizedPnL = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
-                        return sum + unrealizedPnL;
-                      }, 0);
-                      return totalOptionsPnL >= 0 ? "#059669" : "#dc2626";
-                    })()} 
+                    decimals={2}
+                    color={totalOptionsPnL >= 0 ? "#059669" : "#dc2626"} 
                   />
                 ) : (
                   '\u2022\u2022\u2022\u2022'
                 )}
               </div>
-              <div className={`text-sm ${(() => {
-                const totalOptionsPnL = userOptionHoldings.reduce((sum, h) => {
-                  const contract = optionContracts.find(c => c.id === h.contractId);
-                  let currentPremium = 0;
-                  if (contract) {
-                    currentPremium = calculateOptionPrice(
-                      currentIndexValue,
-                      contract.strikePrice,
-                      contract.expiryDate,
-                      contract.optionType,
-                      contract.createdAt
-                    );
-                  }
-                  const unrealizedPnL = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
-                  return sum + unrealizedPnL;
-                }, 0);
-                return totalOptionsPnL >= 0 ? 'text-green-700' : 'text-red-700';
-              })()}`}>Options Return</div>
+              <div className={`text-sm ${totalOptionsPnL >= 0 ? 'text-green-700' : 'text-red-700'}`}>Options Return</div>
             </div>
           </Card>
         </div>
@@ -823,29 +789,15 @@ export const TradingDesk: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {userOptionHoldings.map(h => {
-                      const contract = optionContracts.find(c => c.id === h.contractId);
-                      let currentPremium = 0;
-                      if (contract) {
-                        currentPremium = calculateOptionPrice(
-                          currentIndexValue,
-                          contract.strikePrice,
-                          contract.expiryDate,
-                          contract.optionType,
-                          contract.createdAt
-                        );
-                      }
-                      const unrealizedPnL = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
-                      const returnPercent = h.weightedAvgPremium > 0 ? ((currentPremium - h.weightedAvgPremium) / h.weightedAvgPremium) * 100 * (h.type.startsWith('long') ? 1 : -1) : 0;
-                      return (
-                        <tr key={h.id}>
-                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{contract ? `${contract.strikePrice} ${contract.optionType}` : h.contractId}</td>
-                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.type}</td>
-                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.quantity}</td>
-                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.weightedAvgPremium.toFixed(2)}</td>
-                          <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{currentPremium.toFixed(2)}</td>
-                          <td className={`py-2 px-4 text-center ${unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>{unrealizedPnL.toFixed(2)}</td>
-                          <td className={`py-2 px-4 text-center ${returnPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>{returnPercent.toFixed(2)}%</td>
+                    {optionHoldingsWithDetails.map(h => (
+                      <tr key={h.id}>
+                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.contractName}</td>
+                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.type}</td>
+                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.quantity}</td>
+                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.weightedAvgPremium.toFixed(2)}</td>
+                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.currentPremium.toFixed(2)}</td>
+                        <td className={`py-2 px-4 text-center ${h.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>{h.unrealizedPnL.toFixed(2)}</td>
+                        <td className={`py-2 px-4 text-center ${h.returnPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>{h.returnPercent.toFixed(2)}%</td>
                           <td className="py-2 px-4 text-center">
                             <button
                               className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 mr-2"
@@ -859,12 +811,12 @@ export const TradingDesk: React.FC = () => {
                               onClick={async () => {
                                 try {
                                   await exitOptionPosition(h.id, h.quantity);
-                                  const optionDetails = contract ? `${contract.strikePrice} ${contract.optionType}` : `Contract ${h.contractId}`;
-                                  const exitValue = currentPremium * h.quantity;
-                                  notifyOptionExit(optionDetails, h.quantity, currentPremium, exitValue);
+                                  const optionDetails = h.contractName;
+                                  const exitValue = h.currentPremium * h.quantity;
+                                  notifyOptionExit(optionDetails, h.quantity, h.currentPremium, exitValue);
                                   
                                   // Calculate and notify PnL
-                                  const pnl = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
+                                  const pnl = h.unrealizedPnL;
                                   const isProfit = pnl > 0;
                                   notifyOptionPnL(optionDetails, pnl, isProfit);
                                   
@@ -879,8 +831,7 @@ export const TradingDesk: React.FC = () => {
                             </button>
                           </td>
                         </tr>
-                      );
-                    })}
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -891,32 +842,11 @@ export const TradingDesk: React.FC = () => {
                 <PieChart className="w-5 h-5 mr-2 text-indigo-500" />
                 Option Holdings Distribution
               </h3>
-              <div style={{ width: '100%', height: 260 }}>
-                <ResponsiveContainer>
-                  <PieChart>
-                    <Pie
-                      data={userOptionHoldings.map(h => {
-                        const contract = optionContracts.find(c => c.id === h.contractId);
-                        return {
-                          name: contract ? `${contract.strikePrice} ${contract.optionType}` : h.contractId,
-                          value: contract ? Math.abs(contract.strikePrice * h.quantity) : 0,
-                        };
-                      })}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={90}
-                      label={({ name, percent = 0 }) => `${name} (${(percent * 100).toFixed(1)}%)`}
-                    >
-                      {userOptionHoldings.map((h, idx) => (
-                        <Cell key={`cell-${idx}`} fill={pieColors[idx % pieColors.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: number) => `₹${value.toFixed(2)}`} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+              <OptionHoldingsChart
+                userOptionHoldings={userOptionHoldings}
+                optionContracts={optionContracts}
+                currentIndexValue={currentIndexValue}
+              />
             </div>
           </div>
           {/* Place Option Order */}
@@ -1220,22 +1150,14 @@ export const TradingDesk: React.FC = () => {
                 await exitOptionPosition(exitQtyPrompt.holdingId, qty);
                 
                 // Find the holding to get option details
-                const holding = userOptionHoldings.find(h => h.id === exitQtyPrompt.holdingId);
+                const holding = optionHoldingsWithDetails.find(h => h.id === exitQtyPrompt.holdingId);
                 if (holding) {
-                  const contract = optionContracts.find(c => c.id === holding.contractId);
-                  const optionDetails = contract ? `${contract.strikePrice} ${contract.optionType}` : `Contract ${holding.contractId}`;
-                  const currentPremium = contract ? calculateOptionPrice(
-                    currentIndexValue,
-                    contract.strikePrice,
-                    contract.expiryDate,
-                    contract.optionType,
-                    contract.createdAt
-                  ) : 0;
-                  const exitValue = currentPremium * qty;
-                  notifyOptionExit(optionDetails, qty, currentPremium, exitValue);
+                  const optionDetails = holding.contractName;
+                  const exitValue = holding.currentPremium * qty;
+                  notifyOptionExit(optionDetails, qty, holding.currentPremium, exitValue);
                   
                   // Calculate and notify PnL
-                  const pnl = (currentPremium - holding.weightedAvgPremium) * qty * (holding.type.startsWith('long') ? 1 : -1);
+                  const pnl = (holding.currentPremium - holding.weightedAvgPremium) * qty * (holding.type.startsWith('long') ? 1 : -1);
                   const isProfit = pnl > 0;
                   notifyOptionPnL(optionDetails, pnl, isProfit);
                 }
