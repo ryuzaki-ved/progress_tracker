@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Filter, Calendar, Flag, ChevronDown, ChevronRight, ArrowUpDown } from 'lucide-react';
+import { Plus, Filter, Calendar, Flag, ChevronDown, ChevronRight, ArrowUpDown, Clock } from 'lucide-react';
 import { isSameDay } from 'date-fns';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -10,6 +10,14 @@ import { useTasks } from '../hooks/useTasks';
 import { useStocks } from '../hooks/useStocks';
 import { useAchievements } from '../hooks/useAchievements';
 import { getStatusColor, getPriorityColor } from '../utils/stockUtils';
+
+const format12Hour = (time?: string) => {
+  if (!time) return '';
+  const [hour, minute] = time.split(':').map(Number);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
+};
 
 export const Tasks: React.FC = () => {
   const { tasks, loading: tasksLoading, completeTask, createTask, deleteTask, markAsNotCompleted, failTask } = useTasks();
@@ -279,6 +287,15 @@ export const Tasks: React.FC = () => {
                             {task.description}
                           </div>
                         )}
+                        <div className="flex items-center space-x-2 text-xs text-gray-500">
+                          {task.scheduledTime && (
+                            <>
+                              <span className="flex items-center"><Calendar className="w-3 h-3 mr-0.5" />{format12Hour(task.scheduledTime)}</span>
+                              <span>•</span>
+                            </>
+                          )}
+                          <span className="flex items-center"><Clock className="w-3 h-3 mr-0.5" />{task.estimatedDuration || 30}m</span>
+                        </div>
                       </div>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
                         {task.status === 'failed' ? 'Failed' : task.status}
@@ -415,6 +432,15 @@ export const Tasks: React.FC = () => {
                             {task.description}
                           </div>
                         )}
+                        <div className="flex items-center space-x-2 text-xs text-gray-500">
+                          {task.scheduledTime && (
+                            <>
+                              <span className="flex items-center"><Calendar className="w-3 h-3 mr-0.5" />{format12Hour(task.scheduledTime)}</span>
+                              <span>•</span>
+                            </>
+                          )}
+                          <span className="flex items-center"><Clock className="w-3 h-3 mr-0.5" />{task.estimatedDuration || 30}m</span>
+                        </div>
                       </div>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
                         {task.status === 'failed' ? 'Failed' : task.status}
@@ -554,6 +580,15 @@ export const Tasks: React.FC = () => {
                             {task.description}
                           </div>
                         )}
+                        <div className="flex items-center space-x-2 text-xs text-gray-500">
+                          {task.scheduledTime && (
+                            <>
+                              <span className="flex items-center"><Calendar className="w-3 h-3 mr-0.5" />{format12Hour(task.scheduledTime)}</span>
+                              <span>•</span>
+                            </>
+                          )}
+                          <span className="flex items-center"><Clock className="w-3 h-3 mr-0.5" />{task.estimatedDuration || 30}m</span>
+                        </div>
                       </div>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
                         {task.status === 'failed' ? 'Failed' : task.status}
@@ -667,6 +702,15 @@ export const Tasks: React.FC = () => {
                             {task.description}
                           </div>
                         )}
+                        <div className="flex items-center space-x-2 text-xs text-gray-500">
+                          {task.scheduledTime && (
+                            <>
+                              <span className="flex items-center"><Calendar className="w-3 h-3 mr-0.5" />{format12Hour(task.scheduledTime)}</span>
+                              <span>•</span>
+                            </>
+                          )}
+                          <span className="flex items-center"><Clock className="w-3 h-3 mr-0.5" />{task.estimatedDuration || 30}m</span>
+                        </div>
                       </div>
                       <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
                         {task.status === 'failed' ? 'Failed' : task.status}
@@ -794,6 +838,15 @@ export const Tasks: React.FC = () => {
                                 {task.description}
                               </div>
                             )}
+                            <div className="flex items-center space-x-2 text-xs text-gray-500">
+                              {task.scheduledTime && (
+                                <>
+                                  <span className="flex items-center"><Calendar className="w-3 h-3 mr-0.5" />{format12Hour(task.scheduledTime)}</span>
+                                  <span>•</span>
+                                </>
+                              )}
+                              <span className="flex items-center"><Clock className="w-3 h-3 mr-0.5" />{task.estimatedDuration || 30}m</span>
+                            </div>
                           </div>
                           <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
                             {task.status === 'failed' ? 'Failed' : task.status}
