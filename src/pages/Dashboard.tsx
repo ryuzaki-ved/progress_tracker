@@ -33,6 +33,39 @@ export const Dashboard: React.FC = () => {
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [defaultStartDate, setDefaultStartDate] = useState<Date | null>(null);
+  const [useDefaultStartDate, setUseDefaultStartDate] = useState(false);
+
+  // Load default start date preference from localStorage
+  useEffect(() => {
+    const savedDefaultStart = localStorage.getItem('dashboardDefaultStartDate');
+    const savedUseDefault = localStorage.getItem('dashboardUseDefaultStartDate');
+    
+    if (savedDefaultStart) {
+      setDefaultStartDate(new Date(savedDefaultStart));
+    }
+    if (savedUseDefault === 'true') {
+      setUseDefaultStartDate(true);
+    }
+  }, []);
+
+  // Apply default start date when data loads and no custom range is set
+  useEffect(() => {
+    if (useDefaultStartDate && defaultStartDate && !dateRange && indexData?.history) {
+      const end = new Date();
+      setDateRange({ start: defaultStartDate, end });
+    }
+  }, [useDefaultStartDate, defaultStartDate, dateRange, indexData]);
+
+  // Save preferences to localStorage
+  const saveDefaultStartDate = (date: Date | null, useDefault: boolean) => {
+    if (date) {
+      localStorage.setItem('dashboardDefaultStartDate', date.toISOString());
+    } else {
+      localStorage.removeItem('dashboardDefaultStartDate');
+    }
+    localStorage.setItem('dashboardUseDefaultStartDate', useDefault.toString());
+  };
 
   useEffect(() => {
     if (newlyUnlocked.length > 0) {
@@ -214,6 +247,35 @@ export const Dashboard: React.FC = () => {
     return `${dateRange.start.toLocaleDateString()} - ${dateRange.end.toLocaleDateString()}`;
   };
 
+  const handleSetDefaultStartDate = (date: Date) => {
+    setDefaultStartDate(date);
+    setUseDefaultStartDate(true);
+    saveDefaultStartDate(date, true);
+    
+    // Apply the new default immediately
+    const end = new Date();
+    setDateRange({ start: date, end });
+  };
+
+  const handleToggleDefaultStartDate = (useDefault: boolean) => {
+    setUseDefaultStartDate(useDefault);
+    saveDefaultStartDate(defaultStartDate, useDefault);
+    
+    if (useDefault && defaultStartDate) {
+      const end = new Date();
+      setDateRange({ start: defaultStartDate, end });
+    } else if (!useDefault) {
+      setDateRange(null);
+    }
+  };
+
+  const handleClearDefaultStartDate = () => {
+    setDefaultStartDate(null);
+    setUseDefaultStartDate(false);
+    saveDefaultStartDate(null, false);
+    setDateRange(null);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -273,87 +335,137 @@ export const Dashboard: React.FC = () => {
                   <div className="space-y-4">
                     <h4 className="font-semibold text-gray-900 dark:text-white">Select Date Range</h4>
                     
+                    {/* Default Start Date Section */}
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">Default Start Date</h5>
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={useDefaultStartDate}
+                            onChange={(e) => handleToggleDefaultStartDate(e.target.checked)}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                          />
+                          <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Use as default</span>
+                        </label>
+                      </div>
+                      
+                      {useDefaultStartDate && (
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="date"
+                              value={defaultStartDate ? defaultStartDate.toISOString().split('T')[0] : ''}
+                              onChange={(e) => {
+                                const date = new Date(e.target.value);
+                                handleSetDefaultStartDate(date);
+                              }}
+                              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                            />
+                            <button
+                              onClick={handleClearDefaultStartDate}
+                              className="px-2 py-2 text-sm bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800"
+                              title="Clear default start date"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                          {defaultStartDate && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              Chart will always start from {defaultStartDate.toLocaleDateString()} when you open the dashboard
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
                     {/* Quick Range Buttons */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => {
-                          const end = new Date();
-                          const start = new Date();
-                          start.setDate(start.getDate() - 7);
-                          handleDateRangeSelect(start, end);
-                        }}
-                        className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
-                      >
-                        Last 7 Days
-                      </button>
-                      <button
-                        onClick={() => {
-                          const end = new Date();
-                          const start = new Date();
-                          start.setDate(start.getDate() - 30);
-                          handleDateRangeSelect(start, end);
-                        }}
-                        className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
-                      >
-                        Last 30 Days
-                      </button>
-                      <button
-                        onClick={() => {
-                          const end = new Date();
-                          const start = new Date();
-                          start.setMonth(start.getMonth() - 3);
-                          handleDateRangeSelect(start, end);
-                        }}
-                        className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
-                      >
-                        Last 3 Months
-                      </button>
-                      <button
-                        onClick={() => {
-                          const end = new Date();
-                          const start = new Date();
-                          start.setFullYear(start.getFullYear() - 1);
-                          handleDateRangeSelect(start, end);
-                        }}
-                        className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
-                      >
-                        Last Year
-                      </button>
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+                      <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Quick Ranges</h5>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setDate(start.getDate() - 7);
+                            handleDateRangeSelect(start, end);
+                          }}
+                          className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
+                        >
+                          Last 7 Days
+                        </button>
+                        <button
+                          onClick={() => {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setDate(start.getDate() - 30);
+                            handleDateRangeSelect(start, end);
+                          }}
+                          className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
+                        >
+                          Last 30 Days
+                        </button>
+                        <button
+                          onClick={() => {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setMonth(start.getMonth() - 3);
+                            handleDateRangeSelect(start, end);
+                          }}
+                          className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
+                        >
+                          Last 3 Months
+                        </button>
+                        <button
+                          onClick={() => {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setFullYear(start.getFullYear() - 1);
+                            handleDateRangeSelect(start, end);
+                          }}
+                          className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
+                        >
+                          Last Year
+                        </button>
+                      </div>
                     </div>
                     
                     {/* Custom Date Inputs */}
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Start Date
-                        </label>
-                        <input
-                          type="date"
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                          onChange={(e) => {
-                            const start = new Date(e.target.value);
-                            const end = dateRange?.end || new Date();
-                            if (start <= end) {
-                              handleDateRangeSelect(start, end);
-                            }
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          End Date
-                        </label>
-                        <input
-                          type="date"
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                          onChange={(e) => {
-                            const end = new Date(e.target.value);
-                            const start = dateRange?.start || new Date();
-                            if (start <= end) {
-                              handleDateRangeSelect(start, end);
-                            }
-                          }}
-                        />
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+                      <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Custom Range</h5>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Start Date
+                          </label>
+                          <input
+                            type="date"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            onChange={(e) => {
+                              const start = new Date(e.target.value);
+                              const end = dateRange?.end || new Date();
+                              if (start <= end) {
+                                handleDateRangeSelect(start, end);
+                              }
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            End Date
+                          </label>
+                          <input
+                            type="date"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            onChange={(e) => {
+                              const end = new Date(e.target.value);
+                              const start = dateRange?.start || new Date();
+                              if (start <= end) {
+                                handleDateRangeSelect(start, end);
+                              }
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
                     
