@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Activity, Target, ChevronDown, ChevronRight, Award, BookOpen, Plus, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Target, ChevronDown, ChevronRight, Award, BookOpen, Plus, BarChart3, Calendar, X } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Sparkline } from '../components/ui/Sparkline';
 import { StreakCounter } from '../components/ui/StreakCounter';
@@ -31,6 +31,8 @@ export const Dashboard: React.FC = () => {
   const { isDark } = useTheme();
   const { entries: journalEntries, getEntryByDate } = useJournal();
   const [showAchievementModal, setShowAchievementModal] = useState(false);
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     if (newlyUnlocked.length > 0) {
@@ -176,11 +178,41 @@ export const Dashboard: React.FC = () => {
   const todayEntry = getEntryByDate(new Date(), 'daily');
   const hasJournaledToday = !!todayEntry;
 
-  // Calculate min/max for dynamic Y-axis
-  const indexHistoryValues = indexData.history.map(h => h.value);
+  // Filter chart data based on date range
+  const getFilteredChartData = () => {
+    if (!indexData?.history) return [];
+    
+    if (!dateRange) {
+      return indexData.history;
+    }
+    
+    return indexData.history.filter(item => {
+      const itemDate = new Date(item.date);
+      return itemDate >= dateRange.start && itemDate <= dateRange.end;
+    });
+  };
+
+  const filteredChartData = getFilteredChartData();
+
+  // Calculate min/max for dynamic Y-axis based on filtered data
+  const indexHistoryValues = filteredChartData.map(h => h.value);
   const minY = Math.min(...indexHistoryValues);
   const maxY = Math.max(...indexHistoryValues);
   const yMargin = Math.max(10, Math.round((maxY - minY) * 0.1));
+
+  const handleDateRangeSelect = (start: Date, end: Date) => {
+    setDateRange({ start, end });
+    setShowDatePicker(false);
+  };
+
+  const clearDateRange = () => {
+    setDateRange(null);
+  };
+
+  const getDateRangeDisplay = () => {
+    if (!dateRange) return 'All Time';
+    return `${dateRange.start.toLocaleDateString()} - ${dateRange.end.toLocaleDateString()}`;
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -209,18 +241,157 @@ export const Dashboard: React.FC = () => {
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Life Performance Index</h2>
             <p className="text-gray-600 dark:text-gray-300">Your overall productivity score</p>
           </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold text-gray-900 dark:text-white">{indexData.value.toFixed(1)}</div>
-            <div className={`flex items-center ${indexData.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {indexData.change >= 0 ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
-              <span className="font-semibold">{indexData.change >= 0 ? '+' : ''}{indexData.change.toFixed(1)}</span>
-              <span className="ml-1">({indexData.changePercent >= 0 ? '+' : ''}{indexData.changePercent.toFixed(2)}%)</span>
+          <div className="flex items-center space-x-4">
+            {/* Date Range Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowDatePicker(!showDatePicker)}
+                className="flex items-center space-x-2 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                <Calendar className="w-4 h-4" />
+                <span>{getDateRangeDisplay()}</span>
+                {dateRange && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clearDateRange();
+                    }}
+                    className="ml-2 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </button>
+              
+              {showDatePicker && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-10 p-4 min-w-80"
+                >
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900 dark:text-white">Select Date Range</h4>
+                    
+                    {/* Quick Range Buttons */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => {
+                          const end = new Date();
+                          const start = new Date();
+                          start.setDate(start.getDate() - 7);
+                          handleDateRangeSelect(start, end);
+                        }}
+                        className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
+                      >
+                        Last 7 Days
+                      </button>
+                      <button
+                        onClick={() => {
+                          const end = new Date();
+                          const start = new Date();
+                          start.setDate(start.getDate() - 30);
+                          handleDateRangeSelect(start, end);
+                        }}
+                        className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
+                      >
+                        Last 30 Days
+                      </button>
+                      <button
+                        onClick={() => {
+                          const end = new Date();
+                          const start = new Date();
+                          start.setMonth(start.getMonth() - 3);
+                          handleDateRangeSelect(start, end);
+                        }}
+                        className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
+                      >
+                        Last 3 Months
+                      </button>
+                      <button
+                        onClick={() => {
+                          const end = new Date();
+                          const start = new Date();
+                          start.setFullYear(start.getFullYear() - 1);
+                          handleDateRangeSelect(start, end);
+                        }}
+                        className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
+                      >
+                        Last Year
+                      </button>
+                    </div>
+                    
+                    {/* Custom Date Inputs */}
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Start Date
+                        </label>
+                        <input
+                          type="date"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          onChange={(e) => {
+                            const start = new Date(e.target.value);
+                            const end = dateRange?.end || new Date();
+                            if (start <= end) {
+                              handleDateRangeSelect(start, end);
+                            }
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          End Date
+                        </label>
+                        <input
+                          type="date"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          onChange={(e) => {
+                            const end = new Date(e.target.value);
+                            const start = dateRange?.start || new Date();
+                            if (start <= end) {
+                              handleDateRangeSelect(start, end);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex space-x-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                      <button
+                        onClick={() => setShowDatePicker(false)}
+                        className="flex-1 px-3 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          clearDateRange();
+                          setShowDatePicker(false);
+                        }}
+                        className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        Clear Range
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+            
+            <div className="text-right">
+              <div className="text-3xl font-bold text-gray-900 dark:text-white">{indexData.value.toFixed(1)}</div>
+              <div className={`flex items-center ${indexData.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {indexData.change >= 0 ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
+                <span className="font-semibold">{indexData.change >= 0 ? '+' : ''}{indexData.change.toFixed(1)}</span>
+                <span className="ml-1">({indexData.changePercent >= 0 ? '+' : ''}{indexData.changePercent.toFixed(2)}%)</span>
+              </div>
             </div>
           </div>
         </div>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={indexData.history}>
+            <LineChart data={filteredChartData}>
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#CBD5E1'} />
               <XAxis dataKey="date" tickFormatter={(value) => new Date(value).toLocaleDateString()} stroke={isDark ? '#CBD5E1' : '#334155'} />
               <YAxis stroke={isDark ? '#CBD5E1' : '#334155'} domain={[minY - yMargin, maxY + yMargin]} />
