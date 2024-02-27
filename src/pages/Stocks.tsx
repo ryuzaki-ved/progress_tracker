@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Activity, ChevronDown, ChevronRight } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Sparkline } from '../components/ui/Sparkline';
@@ -25,6 +25,7 @@ export const Stocks: React.FC = () => {
   const [performanceHistory, setPerformanceHistory] = useState<Record<string, any[]>>({});
   const [showEditModal, setShowEditModal] = useState(false);
   const [editStock, setEditStock] = useState<Stock | null>(null);
+  const [expandedStocks, setExpandedStocks] = useState<Set<string>>(new Set());
 
   React.useEffect(() => {
     async function fetchHistory() {
@@ -60,6 +61,16 @@ export const Stocks: React.FC = () => {
   }
 
   const totalWeight = stocks.reduce((sum, s) => sum + (typeof s.weight === 'number' ? s.weight * 100 : 0), 0);
+
+  const toggleStockExpansion = (stockId: string) => {
+    const newExpanded = new Set(expandedStocks);
+    if (newExpanded.has(stockId)) {
+      newExpanded.delete(stockId);
+    } else {
+      newExpanded.add(stockId);
+    }
+    setExpandedStocks(newExpanded);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -258,34 +269,92 @@ export const Stocks: React.FC = () => {
 
       {/* Stock Performance History UI */}
       <Card className="mt-8">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stock Performance History (Debug)</h3>
-        {stocks.map(stock => (
-          <div key={stock.id} className="mb-6">
-            <div className="font-bold mb-2 text-gray-900 dark:text-white">{stock.name}</div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-xs border">
-                <thead>
-                  <tr>
-                    <th className="border px-2 py-1 text-gray-900 dark:text-white">Date</th>
-                    <th className="border px-2 py-1 text-gray-900 dark:text-white">Score</th>
-                    <th className="border px-2 py-1 text-gray-900 dark:text-white">Delta</th>
-                    <th className="border px-2 py-1 text-gray-900 dark:text-white">% Change</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(performanceHistory[stock.id] || []).map((h, i) => (
-                    <tr key={i}>
-                      <td className="border px-2 py-1 text-gray-900 dark:text-white">{h.date}</td>
-                      <td className="border px-2 py-1 text-gray-900 dark:text-white">{h.daily_score}</td>
-                      <td className="border px-2 py-1 text-gray-900 dark:text-white">{h.score_delta}</td>
-                      <td className="border px-2 py-1 text-gray-900 dark:text-white">{h.delta_percent?.toFixed(2)}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ))}
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stock Performance History</h3>
+        <div className="space-y-4">
+          {stocks.map(stock => {
+            const isExpanded = expandedStocks.has(stock.id);
+            const history = performanceHistory[stock.id] || [];
+            
+            return (
+              <div key={stock.id} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => toggleStockExpansion(stock.id)}
+                  className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-8 h-8 ${stock.color} rounded-lg flex items-center justify-center text-white text-sm font-semibold`}>
+                      {stock.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="text-left">
+                      <div className="font-semibold text-gray-900 dark:text-white">{stock.name}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">{stock.category}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {history.length} entries
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        Last: {history[0]?.date || 'N/A'}
+                      </div>
+                    </div>
+                    {isExpanded ? (
+                      <ChevronDown className="w-5 h-5 text-gray-500" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5 text-gray-500" />
+                    )}
+                  </div>
+                </button>
+                
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-4 bg-white dark:bg-gray-900">
+                      {history.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-gray-200 dark:border-gray-700">
+                                <th className="text-left py-2 px-3 text-gray-900 dark:text-white font-medium">Date</th>
+                                <th className="text-left py-2 px-3 text-gray-900 dark:text-white font-medium">Score</th>
+                                <th className="text-left py-2 px-3 text-gray-900 dark:text-white font-medium">Delta</th>
+                                <th className="text-left py-2 px-3 text-gray-900 dark:text-white font-medium">% Change</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {history.map((h, i) => (
+                                <tr key={i} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                  <td className="py-2 px-3 text-gray-900 dark:text-white">{h.date}</td>
+                                  <td className="py-2 px-3 text-gray-900 dark:text-white font-medium">{h.daily_score}</td>
+                                  <td className={`py-2 px-3 font-medium ${h.score_delta >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {h.score_delta >= 0 ? '+' : ''}{h.score_delta}
+                                  </td>
+                                  <td className={`py-2 px-3 font-medium ${h.delta_percent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {h.delta_percent >= 0 ? '+' : ''}{h.delta_percent?.toFixed(2)}%
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                          No performance history available for this stock.
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </Card>
     </div>
   );

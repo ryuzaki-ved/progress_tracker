@@ -681,7 +681,7 @@ export const TradingDesk: React.FC = () => {
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Available Option Contracts (This Week)</h3>
+                <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">OPTIONS CHAIN - Available Option Contracts (This Week)</h3>
                 <Button onClick={resetOptionsData} variant="outline" size="sm">
                   Reset Options Data
                 </Button>

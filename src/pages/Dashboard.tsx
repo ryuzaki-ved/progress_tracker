@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Activity, Target, ChevronDown, ChevronRight, Award, BookOpen } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Target, ChevronDown, ChevronRight, Award, BookOpen, Plus, BarChart3 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Sparkline } from '../components/ui/Sparkline';
 import { StreakCounter } from '../components/ui/StreakCounter';
@@ -57,12 +57,88 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  if (stocksLoading || tasksLoading || indexLoading || streaksLoading) {
+  // Check if user has no stocks (first-time user) - show this even if other data is loading
+  if (stocks.length === 0 && !stocksLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-96">
+        <div className="text-center max-w-md mx-auto">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6"
+          >
+            <BarChart3 className="w-10 h-10 text-white" />
+          </motion.div>
+          
+          <motion.h1
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-2xl font-bold text-gray-900 dark:text-white mb-4"
+          >
+            Welcome to Your Life Portfolio!
+          </motion.h1>
+          
+          <motion.p
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed"
+          >
+            To get started, you'll need to add some "stocks" - these represent different areas of your life that you want to track and improve. Think of them as categories like Health, Career, Relationships, etc.
+          </motion.p>
+          
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="space-y-4"
+          >
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">What you'll be able to do:</h3>
+              <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                <li>• Track performance across different life areas</li>
+                <li>• View trends and insights with charts</li>
+                <li>• Set goals and monitor progress</li>
+                <li>• Get personalized recommendations</li>
+              </ul>
+            </div>
+            
+            <motion.a
+              href="/stocks"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Add Your First Stock
+            </motion.a>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading only when stocks are still loading
+  if (stocksLoading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading for other data only if we have stocks but other data is still loading
+  if (tasksLoading || indexLoading || streaksLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading additional data...</p>
         </div>
       </div>
     );
