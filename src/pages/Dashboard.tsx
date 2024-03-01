@@ -545,17 +545,17 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="h-80 bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20 shadow-inner">
+          <div className="h-96 bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20 shadow-inner">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={filteredChartData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                 <defs>
                   <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="rgba(59, 130, 246, 0.8)" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="rgba(147, 51, 234, 0.6)" stopOpacity={0.6}/>
+                    <stop offset="5%" stopColor="rgba(255, 255, 255, 1)" stopOpacity={1}/>
+                    <stop offset="95%" stopColor="rgba(255, 255, 255, 0.9)" stopOpacity={0.9}/>
                   </linearGradient>
                   <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="rgba(59, 130, 246, 0.3)" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="rgba(147, 51, 234, 0.1)" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor="rgba(255, 255, 255, 0.2)" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="rgba(255, 255, 255, 0.05)" stopOpacity={0.05}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid 
@@ -593,31 +593,32 @@ export const Dashboard: React.FC = () => {
                   }}
                   labelStyle={{ color: '#9ca3af', fontSize: '12px' }}
                   itemStyle={{ color: '#ffffff', fontSize: '14px', fontWeight: '600' }}
+                  separator=": "
                 />
                 <Area 
                   type="monotone" 
                   dataKey="value" 
                   stroke="url(#chartGradient)" 
                   fill="url(#areaGradient)"
-                  strokeWidth={3}
+                  strokeWidth={0}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="value" 
                   stroke="url(#chartGradient)" 
-                  strokeWidth={3}
+                  strokeWidth={4}
                   dot={{ 
-                    fill: 'rgba(255,255,255,0.9)', 
-                    stroke: 'rgba(59, 130, 246, 0.8)', 
+                    fill: 'rgba(255,255,255,1)', 
+                    stroke: 'rgba(255,255,255,0.8)', 
                     strokeWidth: 2, 
-                    r: 4,
-                    opacity: 0.8
+                    r: 5,
+                    opacity: 1
                   }}
                   activeDot={{ 
-                    r: 6, 
-                    stroke: 'rgba(255,255,255,0.9)', 
+                    r: 7, 
+                    stroke: 'rgba(255,255,255,1)', 
                     strokeWidth: 3,
-                    fill: 'rgba(59, 130, 246, 1)',
+                    fill: 'rgba(255,255,255,1)',
                     opacity: 1
                   }}
                 />
