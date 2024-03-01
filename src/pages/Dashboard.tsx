@@ -410,8 +410,8 @@ export const Dashboard: React.FC = () => {
                     exit={{ opacity: 0, scale: 0.95, y: -20 }}
                     className="fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-2xl z-50 p-6 min-w-96"
                     style={{ 
-                      top: '50%',
-                      left: '50%',
+                      top: '35%',
+                      left: '60%',
                       transform: 'translate(-50%, -50%)',
                       maxHeight: '90vh',
                       maxWidth: '90vw',
