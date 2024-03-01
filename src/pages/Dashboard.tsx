@@ -346,7 +346,32 @@ export const Dashboard: React.FC = () => {
                 </h2>
                 <p className="text-gray-200 text-sm">Your overall productivity score</p>
               </div>
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-4">
+              {/* Quick Range Buttons */}
+              <div className="flex items-center space-x-1">
+                {[
+                  { label: '7D', days: 7 },
+                  { label: '30D', days: 30 },
+                  { label: '3M', months: 3 },
+                  { label: 'Last Year', years: 1 }
+                ].map((range, index) => (
+                  <button
+                    key={range.label}
+                    onClick={() => {
+                      const end = new Date();
+                      const start = new Date();
+                      if (range.days) start.setDate(start.getDate() - range.days);
+                      if (range.months) start.setMonth(start.getMonth() - range.months);
+                      if (range.years) start.setFullYear(start.getFullYear() - range.years);
+                      handleDateRangeSelect(start, end);
+                    }}
+                    className="px-3 py-2 text-sm bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all duration-200 font-medium"
+                  >
+                    {range.label}
+                  </button>
+                ))}
+              </div>
+              
               {/* Date Range Selector with Enhanced Design */}
               <div className="relative">
                 <button
@@ -369,16 +394,40 @@ export const Dashboard: React.FC = () => {
                 </button>
               
               {showDatePicker && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 p-4 min-w-80"
-                >
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-900 dark:text-white">Select Date Range</h4>
-                    
-                    {/* Default Start Date Section */}
+                <>
+                  {/* Backdrop */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+                    onClick={() => setShowDatePicker(false)}
+                  />
+                  {/* Modal */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -20 }}
+                    className="fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-2xl z-50 p-6 min-w-96"
+                    style={{ 
+                      top: '20px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      maxHeight: 'calc(100vh - 40px)',
+                      overflowY: 'auto'
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Select Date Range</h4>
+                      <button
+                        onClick={() => setShowDatePicker(false)}
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      >
+                        <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                      </button>
+                    </div>
+                                        <div className="space-y-4">
+                      {/* Default Start Date Section */}
                     <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
                       <div className="flex items-center justify-between mb-3">
                         <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">Default Start Date</h5>
@@ -422,56 +471,7 @@ export const Dashboard: React.FC = () => {
                       )}
                     </div>
                     
-                    {/* Quick Range Buttons */}
-                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
-                      <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Quick Ranges</h5>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => {
-                            const end = new Date();
-                            const start = new Date();
-                            start.setDate(start.getDate() - 7);
-                            handleDateRangeSelect(start, end);
-                          }}
-                          className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
-                        >
-                          Last 7 Days
-                        </button>
-                        <button
-                          onClick={() => {
-                            const end = new Date();
-                            const start = new Date();
-                            start.setDate(start.getDate() - 30);
-                            handleDateRangeSelect(start, end);
-                          }}
-                          className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
-                        >
-                          Last 30 Days
-                        </button>
-                        <button
-                          onClick={() => {
-                            const end = new Date();
-                            const start = new Date();
-                            start.setMonth(start.getMonth() - 3);
-                            handleDateRangeSelect(start, end);
-                          }}
-                          className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
-                        >
-                          Last 3 Months
-                        </button>
-                        <button
-                          onClick={() => {
-                            const end = new Date();
-                            const start = new Date();
-                            start.setFullYear(start.getFullYear() - 1);
-                            handleDateRangeSelect(start, end);
-                          }}
-                          className="px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
-                        >
-                          Last Year
-                        </button>
-                      </div>
-                    </div>
+                    
                     
                     {/* Custom Date Inputs */}
                     <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
@@ -531,6 +531,7 @@ export const Dashboard: React.FC = () => {
                     </div>
                   </div>
                 </motion.div>
+                </>
               )}
             </div>
             
