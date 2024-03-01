@@ -277,53 +277,96 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Track your life performance like a stock portfolio</p>
-        </div>
-        <div className="text-right">
-          <div className="text-sm text-gray-500">Today's Date</div>
-          <div className="text-lg font-semibold text-gray-900 dark:text-white">
-            {new Date().toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 p-6 space-y-8">
+      {/* Header Section with Enhanced Design */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-sm border border-white/20 dark:border-gray-700/50 p-8 shadow-xl"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-400/20 dark:to-purple-400/20"></div>
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="space-y-2">
+            <motion.h1 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 dark:from-white dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent"
+            >
+              Dashboard
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+              className="text-gray-600 dark:text-gray-300 text-lg"
+            >
+              Track your life performance like a stock portfolio
+            </motion.p>
           </div>
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="text-right bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-white/30 dark:border-gray-700/30"
+          >
+            <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">Today's Date</div>
+            <div className="text-xl font-bold text-gray-900 dark:text-white">
+              {new Date().toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Index Overview */}
-      <Card hover className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Life Performance Index</h2>
-            <p className="text-gray-600 dark:text-gray-300">Your overall productivity score</p>
-          </div>
-          <div className="flex items-center space-x-4">
-            {/* Date Range Selector */}
-            <div className="relative">
-              <button
-                onClick={() => setShowDatePicker(!showDatePicker)}
-                className="flex items-center space-x-2 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                <Calendar className="w-4 h-4" />
-                <span>{getDateRangeDisplay()}</span>
-                {dateRange && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      clearDateRange();
-                    }}
-                    className="ml-2 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
-              </button>
+      {/* Index Overview with Enhanced Design */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.6 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-8 shadow-2xl"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+        
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-6">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-white flex items-center">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mr-3">
+                  📈
+                </div>
+                Life Performance Index
+              </h2>
+              <p className="text-blue-100">Your overall productivity score</p>
+            </div>
+            <div className="flex items-center space-x-6">
+              {/* Date Range Selector with Enhanced Design */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowDatePicker(!showDatePicker)}
+                  className="flex items-center space-x-2 px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-sm text-white hover:bg-white/30 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span className="font-medium">{getDateRangeDisplay()}</span>
+                  {dateRange && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearDateRange();
+                      }}
+                      className="ml-2 p-1 hover:bg-white/20 rounded-lg transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </button>
               
               {showDatePicker && (
                 <motion.div
@@ -491,38 +534,56 @@ export const Dashboard: React.FC = () => {
               )}
             </div>
             
-            <div className="text-right">
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">{indexData.value.toFixed(1)}</div>
-              <div className={`flex items-center ${indexData.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {indexData.change >= 0 ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
-                <span className="font-semibold">{indexData.change >= 0 ? '+' : ''}{indexData.change.toFixed(1)}</span>
-                <span className="ml-1">({indexData.changePercent >= 0 ? '+' : ''}{indexData.changePercent.toFixed(2)}%)</span>
+              <div className="text-right bg-white/20 backdrop-blur-sm rounded-xl p-4 border border-white/30">
+                <div className="text-3xl font-bold text-white">{indexData.value.toFixed(1)}</div>
+                <div className={`flex items-center ${indexData.change >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                  {indexData.change >= 0 ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
+                  <span className="font-semibold">{indexData.change >= 0 ? '+' : ''}{indexData.change.toFixed(1)}</span>
+                  <span className="ml-1">({indexData.changePercent >= 0 ? '+' : ''}{indexData.changePercent.toFixed(2)}%)</span>
+                </div>
               </div>
             </div>
           </div>
+          
+          <div className="h-80 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={filteredChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={(value) => new Date(value).toLocaleDateString()} 
+                  stroke="rgba(255,255,255,0.8)" 
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke="rgba(255,255,255,0.8)" 
+                  domain={[minY - yMargin, maxY + yMargin]} 
+                  fontSize={12}
+                />
+                <Tooltip 
+                  labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                  formatter={(value) => [`${value}`, 'Index Value']}
+                  contentStyle={{ 
+                    background: 'rgba(255,255,255,0.95)', 
+                    color: '#1f2937',
+                    border: 'none',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="rgba(255,255,255,0.9)" 
+                  strokeWidth={4}
+                  dot={{ fill: 'rgba(255,255,255,0.9)', strokeWidth: 3, r: 6 }}
+                  activeDot={{ r: 8, stroke: 'rgba(255,255,255,0.9)', strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={filteredChartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#CBD5E1'} />
-              <XAxis dataKey="date" tickFormatter={(value) => new Date(value).toLocaleDateString()} stroke={isDark ? '#CBD5E1' : '#334155'} />
-              <YAxis stroke={isDark ? '#CBD5E1' : '#334155'} domain={[minY - yMargin, maxY + yMargin]} />
-              <Tooltip 
-                labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                formatter={(value) => [`${value}`, 'Index Value']}
-                contentStyle={{ background: isDark ? '#1e293b' : '#fff', color: isDark ? '#fff' : '#334155' }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#3B82F6" 
-                strokeWidth={3}
-                dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
+      </motion.div>
 
       {/* Alerts Section */}
       {alerts.length > 0 && (
@@ -577,56 +638,81 @@ export const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card hover className="bg-green-50 border-green-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
-          <div className="flex items-center justify-between">
+      {/* Quick Stats with Enhanced Design */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7, duration: 0.6 }}
+        className="grid grid-cols-1 md:grid-cols-4 gap-6"
+      >
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 p-6 shadow-xl"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"></div>
+          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-8 translate-x-8"></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-sm text-green-600 font-medium">Completed Today</p>
-              <p className="text-2xl font-bold text-green-900">{completedToday}</p>
+              <p className="text-sm text-green-100 font-medium">Completed Today</p>
+              <p className="text-3xl font-bold text-white">{completedToday}</p>
             </div>
-            <div className="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center">
-              <Target className="w-6 h-6 text-green-600" />
+            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <Target className="w-7 h-7 text-white" />
             </div>
           </div>
-        </Card>
+        </motion.div>
         
-        <Card hover className="bg-blue-50 border-blue-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
-          <div className="flex items-center justify-between">
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-600 p-6 shadow-xl"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"></div>
+          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-8 translate-x-8"></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-600 font-medium">Pending Tasks</p>
-              <p className="text-2xl font-bold text-blue-900">{pendingTasks}</p>
+              <p className="text-sm text-blue-100 font-medium">Pending Tasks</p>
+              <p className="text-3xl font-bold text-white">{pendingTasks}</p>
             </div>
-            <div className="w-12 h-12 bg-blue-200 rounded-lg flex items-center justify-center">
-              <Activity className="w-6 h-6 text-blue-600" />
+            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <Activity className="w-7 h-7 text-white" />
             </div>
           </div>
-        </Card>
+        </motion.div>
         
-        <Card hover className="bg-purple-50 border-purple-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
-          <div className="flex items-center justify-between">
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-violet-600 p-6 shadow-xl"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"></div>
+          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-8 translate-x-8"></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-sm text-purple-600 font-medium">Achievements</p>
-              <p className="text-2xl font-bold text-purple-900">{unlockedAchievements.length}</p>
+              <p className="text-sm text-purple-100 font-medium">Achievements</p>
+              <p className="text-3xl font-bold text-white">{unlockedAchievements.length}</p>
             </div>
-            <div className="w-12 h-12 bg-purple-200 rounded-lg flex items-center justify-center">
-              <Award className="w-6 h-6 text-purple-600" />
+            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <Award className="w-7 h-7 text-white" />
             </div>
           </div>
-        </Card>
+        </motion.div>
         
-        <Card hover className="bg-orange-50 border-orange-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
-          <div className="flex items-center justify-between">
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 p-6 shadow-xl"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"></div>
+          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-8 translate-x-8"></div>
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-sm text-orange-600 font-medium">Active Streaks</p>
-              <p className="text-2xl font-bold text-orange-900">{activeStreaks.length}</p>
+              <p className="text-sm text-orange-100 font-medium">Active Streaks</p>
+              <p className="text-3xl font-bold text-white">{activeStreaks.length}</p>
             </div>
-            <div className="w-12 h-12 bg-orange-200 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-orange-600" />
+            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <TrendingUp className="w-7 h-7 text-white" />
             </div>
           </div>
-        </Card>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Streaks & Achievements */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -683,84 +769,104 @@ export const Dashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Top & Bottom Performers */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Performers</h3>
-          <div className="space-y-3">
-            {topPerformers.map((stock, index) => (
-              <motion.div
-                key={stock.id}
-                className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900 rounded-lg cursor-pointer"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -4, boxShadow: '0 8px 24px 0 rgba(16,185,129,0.10)' }}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className={`w-8 h-8 ${stock.color} rounded-lg flex items-center justify-center text-white text-sm font-bold`}>
-                    {index + 1}
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900 dark:text-white">{stock.name}</div>
-                    <div className="text-sm font-semibold text-green-900 dark:text-green-200">{stock.currentScore} pts</div>
-                  </div>
-                  {/* Add streak indicator for top performers */}
-                  <div className="flex items-center space-x-2">
+      {/* Top & Bottom Performers with Enhanced Design */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.9, duration: 0.6 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+      >
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 p-6 shadow-xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -translate-y-12 translate-x-12"></div>
+          <div className="relative z-10">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center">
+              <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center mr-3">
+                🏆
+              </div>
+              Top Performers
+            </h3>
+            <div className="space-y-4">
+              {topPerformers.map((stock, index) => (
+                <motion.div
+                  key={stock.id}
+                  className="flex items-center justify-between p-4 bg-white/10 backdrop-blur-sm rounded-xl cursor-pointer border border-white/20"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -4, scale: 1.02, boxShadow: '0 8px 32px 0 rgba(255,255,255,0.15)' }}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-10 h-10 ${stock.color} rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-lg`}>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-white text-lg">{stock.name}</div>
+                      <div className="text-sm text-green-100">{stock.currentScore} pts</div>
+                    </div>
                     {streaks.filter(s => s.isActive).length > 0 && (
                       <motion.span
                         animate={{ scale: [1, 1.2, 1] }}
                         transition={{ duration: 1, repeat: Infinity }}
-                        className="text-orange-500"
+                        className="text-yellow-300 text-xl"
                       >
                         🔥
                       </motion.span>
                     )}
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-green-600 font-semibold">+{stock.changePercent.toFixed(2)}%</div>
-                  <div className="w-16 h-8">
-                    <Sparkline data={stock.history} color="#10B981" height={32} />
+                  <div className="text-right">
+                    <div className="text-green-200 font-bold text-lg">+{stock.changePercent.toFixed(2)}%</div>
+                    <div className="w-20 h-10 mt-2">
+                      <Sparkline data={stock.history} color="rgba(255,255,255,0.8)" height={40} />
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </Card>
+        </div>
 
-        <Card>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Needs Attention</h3>
-          <div className="space-y-3">
-            {worstPerformers.map((stock, index) => (
-              <motion.div
-                key={stock.id}
-                className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900 rounded-lg cursor-pointer"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -4, boxShadow: '0 8px 24px 0 rgba(239,68,68,0.10)' }}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className={`w-8 h-8 ${stock.color} rounded-lg flex items-center justify-center text-white text-sm font-bold`}>
-                    {index + 1}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-500 to-pink-600 p-6 shadow-xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -translate-y-12 translate-x-12"></div>
+          <div className="relative z-10">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center">
+              <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center mr-3">
+                ⚠️
+              </div>
+              Needs Attention
+            </h3>
+            <div className="space-y-4">
+              {worstPerformers.map((stock, index) => (
+                <motion.div
+                  key={stock.id}
+                  className="flex items-center justify-between p-4 bg-white/10 backdrop-blur-sm rounded-xl cursor-pointer border border-white/20"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -4, scale: 1.02, boxShadow: '0 8px 32px 0 rgba(255,255,255,0.15)' }}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-10 h-10 ${stock.color} rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-lg`}>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-white text-lg">{stock.name}</div>
+                      <div className="text-sm text-red-100">{stock.currentScore} pts</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-medium text-gray-900 dark:text-white">{stock.name}</div>
-                    <div className="text-sm font-semibold text-red-900 dark:text-red-200">{stock.currentScore} pts</div>
+                  <div className="text-right">
+                    <div className="text-red-200 font-bold text-lg">{stock.changePercent.toFixed(2)}%</div>
+                    <div className="w-20 h-10 mt-2">
+                      <Sparkline data={stock.history} color="rgba(255,255,255,0.8)" height={40} />
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-red-600 font-semibold">{stock.changePercent.toFixed(2)}%</div>
-                  <div className="w-16 h-8">
-                    <Sparkline data={stock.history} color="#EF4444" height={32} />
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </Card>
-      </div>
+        </div>
+      </motion.div>
 
       {/* Achievement Unlock Modal */}
       {showAchievementModal && (
