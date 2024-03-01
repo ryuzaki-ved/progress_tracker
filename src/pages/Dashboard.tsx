@@ -373,7 +373,7 @@ export const Dashboard: React.FC = () => {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-10 p-4 min-w-80"
+                  className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 p-4 min-w-80"
                 >
                   <div className="space-y-4">
                     <h4 className="font-semibold text-gray-900 dark:text-white">Select Date Range</h4>
@@ -545,7 +545,7 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="h-64 bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+          <div className="h-80 bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={filteredChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
