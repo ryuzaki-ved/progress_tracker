@@ -16,7 +16,7 @@ import { useStreaks } from '../hooks/useStreaks';
 import { useAchievements } from '../hooks/useAchievements';
 import { useAlerts } from '../hooks/useAlerts';
 import { useJournal } from '../hooks/useJournal';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area } from 'recharts';
 import { useTheme } from '../contexts/ThemeContext';
 import { getDb, persistDb } from '../lib/sqlite';
 import { Button } from '../components/ui/Button';
@@ -545,39 +545,81 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="h-80 bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+          <div className="h-80 bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20 shadow-inner">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={filteredChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
+              <LineChart data={filteredChartData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <defs>
+                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="rgba(59, 130, 246, 0.8)" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="rgba(147, 51, 234, 0.6)" stopOpacity={0.6}/>
+                  </linearGradient>
+                  <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="rgba(59, 130, 246, 0.3)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="rgba(147, 51, 234, 0.1)" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="rgba(255,255,255,0.15)" 
+                  strokeWidth={0.5}
+                />
                 <XAxis 
                   dataKey="date" 
                   tickFormatter={(value) => new Date(value).toLocaleDateString()} 
-                  stroke="rgba(255,255,255,0.8)" 
-                  fontSize={12}
+                  stroke="rgba(255,255,255,0.7)" 
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={{ stroke: 'rgba(255,255,255,0.3)', strokeWidth: 1 }}
+                  tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 11 }}
                 />
                 <YAxis 
-                  stroke="rgba(255,255,255,0.8)" 
+                  stroke="rgba(255,255,255,0.7)" 
                   domain={[minY - yMargin, maxY + yMargin]} 
-                  fontSize={12}
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={{ stroke: 'rgba(255,255,255,0.3)', strokeWidth: 1 }}
+                  tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 11 }}
                 />
                 <Tooltip 
                   labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                  formatter={(value) => [`${value}`, 'Index Value']}
+                  formatter={(value) => [`${Number(value).toFixed(1)}`, 'Index Value']}
                   contentStyle={{ 
-                    background: 'rgba(255,255,255,0.95)', 
-                    color: '#1f2937',
-                    border: 'none',
+                    background: 'rgba(17, 24, 39, 0.95)', 
+                    color: '#ffffff',
+                    border: '1px solid rgba(255,255,255,0.2)',
                     borderRadius: '12px',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                    backdropFilter: 'blur(10px)'
                   }}
+                  labelStyle={{ color: '#9ca3af', fontSize: '12px' }}
+                  itemStyle={{ color: '#ffffff', fontSize: '14px', fontWeight: '600' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="url(#chartGradient)" 
+                  fill="url(#areaGradient)"
+                  strokeWidth={3}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="value" 
-                  stroke="rgba(255,255,255,0.9)" 
-                  strokeWidth={4}
-                  dot={{ fill: 'rgba(255,255,255,0.9)', strokeWidth: 3, r: 6 }}
-                  activeDot={{ r: 8, stroke: 'rgba(255,255,255,0.9)', strokeWidth: 2 }}
+                  stroke="url(#chartGradient)" 
+                  strokeWidth={3}
+                  dot={{ 
+                    fill: 'rgba(255,255,255,0.9)', 
+                    stroke: 'rgba(59, 130, 246, 0.8)', 
+                    strokeWidth: 2, 
+                    r: 4,
+                    opacity: 0.8
+                  }}
+                  activeDot={{ 
+                    r: 6, 
+                    stroke: 'rgba(255,255,255,0.9)', 
+                    strokeWidth: 3,
+                    fill: 'rgba(59, 130, 246, 1)',
+                    opacity: 1
+                  }}
                 />
               </LineChart>
             </ResponsiveContainer>
