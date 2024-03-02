@@ -277,7 +277,7 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-slate-100 to-zinc-200 dark:from-gray-900 dark:via-slate-800 dark:to-zinc-900 p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-slate-100 to-zinc-200 dark:from-gray-900 dark:via-slate-800 dark:to-zinc-900 p-6 space-y-6 relative z-0">
       {/* Header Section with Enhanced Design */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
