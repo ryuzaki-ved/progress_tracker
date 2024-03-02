@@ -14,6 +14,7 @@ import { TradingNotificationContainer } from '../components/ui/TradingNotificati
 import { useTradingNotifications } from '../hooks/useTradingNotifications';
 import { OptionHoldingsChart } from '../components/ui/OptionHoldingsChart';
 import { OptionContract, UserOptionHolding, OptionTransaction } from '../types';
+import { PlaceOptionOrderButton } from '../components/ui/PlaceOptionOrderButton';
 import { calculateOptionPrice } from '../utils/optionUtils';
 import { getDb, persistDb } from '../lib/sqlite';
 
@@ -907,7 +908,10 @@ export const TradingDesk: React.FC = () => {
                   )}
                 </div>
                 {optionOrderError && <div className="text-red-600 text-sm">{optionOrderError}</div>}
-                <Button type="submit" variant="primary" className="w-full">Place Option Order</Button>
+                <PlaceOptionOrderButton type="submit">
+                  Place Option Order
+                  <span className="stripe" />
+                </PlaceOptionOrderButton>
               </form>
             </div>
           </div>
