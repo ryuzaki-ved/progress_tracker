@@ -63,18 +63,21 @@ export const Sidebar: React.FC = () => {
     >
       <div className="flex-1 flex flex-col p-4">
         <div className={`flex items-center mb-8 w-full ${isCollapsed ? 'justify-center' : 'justify-center'}`}> 
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center mx-auto">
-            <PieChart className="w-6 h-6 text-white" />
-          </div>
-          <motion.div
-            initial={false}
-            animate={{ opacity: isCollapsed ? 0 : 1, x: isCollapsed ? -20 : 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30, duration: 0.35 }}
-            style={{ display: isCollapsed ? 'none' : 'block' }}
-          >
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white text-center">LifeStock</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center">Track your potential</p>
-          </motion.div>
+          <Link to="/" className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-center'} ${isCollapsed ? 'w-full' : 'w-full'} hover:opacity-80 transition-opacity duration-200`}>
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+              <PieChart className="w-6 h-6 text-white" />
+            </div>
+            <motion.div
+              initial={false}
+              animate={{ opacity: isCollapsed ? 0 : 1, x: isCollapsed ? -20 : 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30, duration: 0.35 }}
+              style={{ display: isCollapsed ? 'none' : 'block' }}
+              className="ml-3"
+            >
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">LifeStock</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Track your potential</p>
+            </motion.div>
+          </Link>
         </div>
         
         <nav className="space-y-2 flex-1">
