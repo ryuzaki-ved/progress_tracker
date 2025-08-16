@@ -22,11 +22,11 @@ export const Button: React.FC<ButtonProps> = ({
   const baseClasses = 'inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-gray-900';
   
   const variantClasses = {
-    primary: 'bg-primary text-white hover:bg-primary-hover focus:ring-primary',
-    secondary: 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500',
-    outline: 'border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-primary',
-    ghost: 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-gray-500',
-    destructive: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+    primary: 'bg-primary text-white hover:bg-primary-hover shadow-neon hover:shadow-neon-accent transition-all duration-300 border border-transparent',
+    secondary: 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm border border-white/10',
+    outline: 'border border-primary/50 text-primary hover:bg-primary/10 hover:border-primary shadow-neon-sm',
+    ghost: 'text-gray-400 hover:text-white hover:bg-white/5',
+    destructive: 'bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 hover:text-red-300 shadow-lg shadow-red-500/20',
   };
   
   const sizeClasses = {

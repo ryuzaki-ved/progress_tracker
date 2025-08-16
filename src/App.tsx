@@ -42,12 +42,12 @@ function App() {
     <ThemeProvider>
       <SidebarProvider>
         <Router>
-          <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+          <div className="min-h-screen text-gray-100">
             <div className="flex">
               <Sidebar />
-              <div className="flex-1">
+              <div className="flex-1 flex flex-col min-h-screen">
                 <Header />
-                <main className="overflow-auto">
+                <main className="flex-1 overflow-auto p-4 perspective-container">
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/stocks" element={<Stocks />} />

@@ -1,84 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --color-primary: #3B82F6;
-  --color-primary-hover: #2563EB;
-  --color-primary-dark: #1D4ED8;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-primary-dark: #1d4ed8;
 }
 
-/* Dark mode color improvements */
-.dark {
-  --tw-bg-opacity: 1;
-  --tw-text-opacity: 1;
+html {
+  font-size: 14px; /* Reduced base size for a more compact look */
 }
 
-/* Better dark mode text colors */
-.dark .text-gray-900 {
-  color: rgb(243 244 246) !important; /* gray-100 */
+body {
+  @apply bg-background text-gray-200 font-sans antialiased overflow-x-hidden;
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.05), transparent 25%), 
+    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.05), transparent 25%);
+  background-attachment: fixed;
 }
 
-.dark .text-gray-800 {
-  color: rgb(229 231 235) !important; /* gray-200 */
+/* 3D Background Animation */
+.perspective-container {
+  perspective: 1000px;
 }
 
-.dark .text-gray-700 {
-  color: rgb(209 213 219) !important; /* gray-300 */
+.card-3d {
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+  transform-style: preserve-3d;
 }
 
-.dark .text-gray-600 {
-  color: rgb(156 163 175) !important; /* gray-400 */
+.card-3d:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 10px 30px -5px rgba(0, 0, 0, 0.3),
+    0 0 10px -3px rgba(59, 130, 246, 0.2);
 }
 
-.dark .text-gray-500 {
-  color: rgb(107 114 128) !important; /* gray-500 */
+/* Glassmorphism - Sleeker */
+.glass-panel {
+  @apply bg-gray-900/70 backdrop-blur-xl border border-white/5 shadow-glass;
 }
 
-/* Dark mode card backgrounds */
-.dark .bg-white {
-  background-color: rgb(31 41 55) !important; /* gray-800 */
+.glass-card {
+  @apply bg-gray-800/30 backdrop-blur-md border border-white/5 shadow-lg hover:bg-gray-800/50 transition-all duration-300;
 }
 
-.dark .bg-gray-50 {
-  background-color: rgb(55 65 81) !important; /* gray-700 */
+/* Custom Scrollbar - Thinner */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
 }
 
-.dark .bg-gray-100 {
-  background-color: rgb(75 85 99) !important; /* gray-600 */
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
 }
 
-/* Dark mode borders */
-.dark .border-gray-200 {
-  border-color: rgb(75 85 99) !important; /* gray-600 */
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-700 rounded-full hover:bg-primary/50;
 }
 
-.dark .border-gray-300 {
-  border-color: rgb(107 114 128) !important; /* gray-500 */
+/* Gamified Elements - Subtler */
+.text-glow {
+  text-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
 }
 
-.bg-primary {
-  background-color: var(--color-primary);
+.border-glow {
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
 }
 
-.bg-primary-hover {
-  background-color: var(--color-primary-hover);
-}
-
-.text-primary {
-  color: var(--color-primary);
-}
-
-.border-primary {
-  border-color: var(--color-primary);
-}
-
-.ring-primary {
-  --tw-ring-color: var(--color-primary);
-}
-
-.focus\:ring-primary:focus {
-  --tw-ring-color: var(--color-primary);
+/* Typography Overrides */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-sans tracking-tight font-semibold;
 }
 
 /* Hide scrollbars for journal editor textareas */
@@ -89,4 +84,20 @@
 .journal-textarea {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Animation Utilities */
+.animate-enter {
+  animation: enter 0.5s ease-out forwards;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

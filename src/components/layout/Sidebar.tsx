@@ -47,25 +47,24 @@ export const Sidebar: React.FC = () => {
   return (
     <motion.div
       layout
-      className={`bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0 flex flex-col ${
-        isCollapsed ? 'w-16' : 'w-64'
+      className={`glass-panel border-r border-white/5 h-screen sticky top-0 flex flex-col z-50 ${
+        isCollapsed ? 'w-16' : 'w-60'
       }`}
       animate={{ 
-        width: isCollapsed ? 64 : 256,
+        width: isCollapsed ? 64 : 240,
       }}
       transition={{ 
         type: 'spring', 
-        stiffness: 400, 
-        damping: 35, 
-        duration: 0.4,
-        mass: 1.2
+        stiffness: 300, 
+        damping: 30, 
+        duration: 0.3,
       }}
     >
-      <div className="flex-1 flex flex-col p-4">
-        <div className={`flex items-center mb-8 w-full ${isCollapsed ? 'justify-center' : 'justify-center'}`}> 
+      <div className="flex-1 flex flex-col p-3">
+        <div className={`flex items-center mb-6 w-full ${isCollapsed ? 'justify-center' : 'justify-center'}`}> 
           <Link to="/" className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-center'} ${isCollapsed ? 'w-full' : 'w-full'} hover:opacity-80 transition-opacity duration-200`}>
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
-              <PieChart className="w-6 h-6 text-white" />
+            <div className="w-8 h-8 bg-primary/20 border border-primary/50 rounded-lg flex items-center justify-center flex-shrink-0 shadow-neon-sm">
+              <PieChart className="w-5 h-5 text-primary" />
             </div>
             <motion.div
               initial={false}
@@ -74,13 +73,12 @@ export const Sidebar: React.FC = () => {
               style={{ display: isCollapsed ? 'none' : 'block' }}
               className="ml-3"
             >
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">LifeStock</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Track your potential</p>
+              <h1 className="text-lg font-bold text-white font-display tracking-wide text-glow">LifeStock</h1>
             </motion.div>
           </Link>
         </div>
         
-        <nav className="space-y-2 flex-1">
+        <nav className="space-y-1 flex-1">
           {menuItems.map((item, idx) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -88,17 +86,25 @@ export const Sidebar: React.FC = () => {
               <Link key={item.path} to={item.path} onClick={() => setTooltipHideKey(k => k + 1)} className="w-full block">
                 <Tooltip content={item.label} show={isCollapsed} placement="right" hideTrigger={tooltipHideKey}>
                   <motion.div
-                    className={`w-full flex items-center px-1 py-2 rounded-lg transition-colors duration-200 ${
+                    className={`w-full flex items-center px-3 py-2 rounded-md transition-all duration-200 relative overflow-hidden ${
                       isActive 
-                        ? 'bg-primary/10 text-primary dark:bg-primary/20' 
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                        ? 'bg-primary/10 text-primary border border-primary/20 shadow-neon-sm' 
+                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
                     } ${isCollapsed ? 'justify-center' : 'space-x-3'}`}
-                    whileHover={{ x: isCollapsed ? 0 : 2 }}
+                    whileHover={{ x: isCollapsed ? 0 : 2, backgroundColor: isActive ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255, 255, 255, 0.03)' }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeSidebar"
+                        className="absolute inset-0 bg-primary/5 rounded-md"
+                        initial={false}
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      />
+                    )}
+                    <Icon className={`w-4 h-4 flex-shrink-0 relative z-10 ${isActive ? 'drop-shadow-[0_0_5px_rgba(59,130,246,0.5)]' : ''}`} />
                     <motion.span
-                      className="font-medium"
+                      className="font-medium text-sm"
                       initial={false}
                       animate={{ opacity: isCollapsed ? 0 : 1, x: isCollapsed ? -10 : 0 }}
                       transition={{ 

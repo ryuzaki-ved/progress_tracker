@@ -24,25 +24,26 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
   const progressPercent = Math.min((achievement.progress / achievement.requirement) * 100, 100);
 
   return (
-    <div className="relative">
+    <div className="relative group">
       <motion.div
         className={`${sizeClasses[size]} ${achievement.color} rounded-full flex items-center justify-center cursor-pointer relative overflow-hidden ${
-          achievement.isUnlocked ? 'shadow-lg' : 'opacity-50 grayscale'
+          achievement.isUnlocked ? 'shadow-neon ring-2 ring-white/20' : 'opacity-30 grayscale blur-[1px]'
         }`}
         onHoverStart={() => setShowTooltip(true)}
         onHoverEnd={() => setShowTooltip(false)}
-        whileHover={{ scale: 1.1 }}
+        whileHover={{ scale: 1.1, rotate: 5 }}
         whileTap={{ scale: 0.95 }}
         animate={achievement.isUnlocked ? {
           boxShadow: [
-            '0 0 0 0 rgba(59, 130, 246, 0.7)',
-            '0 0 0 10px rgba(59, 130, 246, 0)',
-            '0 0 0 0 rgba(59, 130, 246, 0)'
+            '0 0 10px rgba(59, 130, 246, 0.5)',
+            '0 0 20px rgba(59, 130, 246, 0.8)',
+            '0 0 10px rgba(59, 130, 246, 0.5)'
           ]
         } : {}}
         transition={{ duration: 2, repeat: achievement.isUnlocked ? Infinity : 0 }}
       >
-        <span className="text-white font-bold z-10">
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <span className="text-white font-bold z-10 drop-shadow-md">
           {achievement.icon}
         </span>
         

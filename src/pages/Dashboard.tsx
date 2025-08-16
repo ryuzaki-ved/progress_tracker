@@ -277,22 +277,22 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-slate-100 to-zinc-200 dark:from-gray-900 dark:via-slate-800 dark:to-zinc-900 p-6 space-y-6 relative z-0">
+    <div className="space-y-6 relative z-0">
       {/* Header Section with Enhanced Design */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative overflow-hidden rounded-xl bg-gradient-to-r from-white/90 to-white/70 dark:from-gray-800/90 dark:to-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 p-6 shadow-lg"
+        className="glass-panel rounded-xl p-6 relative overflow-hidden"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 to-zinc-500/5 dark:from-slate-400/10 dark:to-zinc-400/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5"></div>
         <div className="relative z-10 flex items-center justify-between">
           <div className="space-y-2">
             <motion.h1 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2, duration: 0.6 }}
-              className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-slate-700 to-zinc-800 dark:from-white dark:via-slate-200 dark:to-zinc-200 bg-clip-text text-transparent"
+              className="text-3xl font-bold text-white text-glow font-display tracking-wide"
             >
               Dashboard
             </motion.h1>
@@ -607,20 +607,20 @@ export const Dashboard: React.FC = () => {
                 <Line 
                   type="monotone" 
                   dataKey="value" 
-                  stroke="url(#chartGradient)" 
-                  strokeWidth={4}
+                  stroke="#3b82f6" 
+                  strokeWidth={3}
                   dot={{ 
-                    fill: 'rgba(255,255,255,1)', 
-                    stroke: 'rgba(255,255,255,0.8)', 
+                    fill: '#1e293b', 
+                    stroke: '#3b82f6', 
                     strokeWidth: 2, 
-                    r: 5,
+                    r: 4,
                     opacity: 1
                   }}
                   activeDot={{ 
-                    r: 7, 
-                    stroke: 'rgba(255,255,255,1)', 
-                    strokeWidth: 3,
-                    fill: 'rgba(255,255,255,1)',
+                    r: 6, 
+                    stroke: '#60a5fa', 
+                    strokeWidth: 2,
+                    fill: '#1e293b',
                     opacity: 1
                   }}
                 />
@@ -692,68 +692,64 @@ export const Dashboard: React.FC = () => {
       >
         <motion.div 
           whileHover={{ scale: 1.02, y: -2 }}
-          className="relative overflow-hidden rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 p-4 shadow-md"
+          className="glass-card p-4 relative overflow-hidden group border-emerald-500/30 hover:border-emerald-500/50"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
-          <div className="absolute top-0 right-0 w-12 h-12 bg-white/5 rounded-full -translate-y-6 translate-x-6"></div>
+          <div className="absolute inset-0 bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors duration-300"></div>
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-xs text-emerald-100 font-medium">Completed Today</p>
-              <p className="text-2xl font-bold text-white">{completedToday}</p>
+              <p className="text-xs text-emerald-400 font-medium uppercase tracking-wider">Completed Today</p>
+              <p className="text-2xl font-bold text-white text-glow">{completedToday}</p>
             </div>
-            <div className="w-10 h-10 bg-white/15 rounded-lg flex items-center justify-center">
-              <Target className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center shadow-neon-sm">
+              <Target className="w-5 h-5 text-emerald-400" />
             </div>
           </div>
         </motion.div>
         
         <motion.div 
           whileHover={{ scale: 1.02, y: -2 }}
-          className="relative overflow-hidden rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 p-4 shadow-md"
+          className="glass-card p-4 relative overflow-hidden group border-blue-500/30 hover:border-blue-500/50"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
-          <div className="absolute top-0 right-0 w-12 h-12 bg-white/5 rounded-full -translate-y-6 translate-x-6"></div>
+          <div className="absolute inset-0 bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors duration-300"></div>
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-xs text-blue-100 font-medium">Pending Tasks</p>
-              <p className="text-2xl font-bold text-white">{pendingTasks}</p>
+              <p className="text-xs text-blue-400 font-medium uppercase tracking-wider">Pending Tasks</p>
+              <p className="text-2xl font-bold text-white text-glow">{pendingTasks}</p>
             </div>
-            <div className="w-10 h-10 bg-white/15 rounded-lg flex items-center justify-center">
-              <Activity className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center shadow-neon-sm">
+              <Activity className="w-5 h-5 text-blue-400" />
             </div>
           </div>
         </motion.div>
         
         <motion.div 
           whileHover={{ scale: 1.02, y: -2 }}
-          className="relative overflow-hidden rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 p-4 shadow-md"
+          className="glass-card p-4 relative overflow-hidden group border-violet-500/30 hover:border-violet-500/50"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
-          <div className="absolute top-0 right-0 w-12 h-12 bg-white/5 rounded-full -translate-y-6 translate-x-6"></div>
+          <div className="absolute inset-0 bg-violet-500/10 group-hover:bg-violet-500/20 transition-colors duration-300"></div>
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-xs text-violet-100 font-medium">Achievements</p>
-              <p className="text-2xl font-bold text-white">{unlockedAchievements.length}</p>
+              <p className="text-xs text-violet-400 font-medium uppercase tracking-wider">Achievements</p>
+              <p className="text-2xl font-bold text-white text-glow">{unlockedAchievements.length}</p>
             </div>
-            <div className="w-10 h-10 bg-white/15 rounded-lg flex items-center justify-center">
-              <Award className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-violet-500/20 rounded-lg flex items-center justify-center shadow-neon-sm">
+              <Award className="w-5 h-5 text-violet-400" />
             </div>
           </div>
         </motion.div>
         
         <motion.div 
           whileHover={{ scale: 1.02, y: -2 }}
-          className="relative overflow-hidden rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 p-4 shadow-md"
+          className="glass-card p-4 relative overflow-hidden group border-amber-500/30 hover:border-amber-500/50"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
-          <div className="absolute top-0 right-0 w-12 h-12 bg-white/5 rounded-full -translate-y-6 translate-x-6"></div>
+          <div className="absolute inset-0 bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors duration-300"></div>
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <p className="text-xs text-amber-100 font-medium">Active Streaks</p>
-              <p className="text-2xl font-bold text-white">{activeStreaks.length}</p>
+              <p className="text-xs text-amber-400 font-medium uppercase tracking-wider">Active Streaks</p>
+              <p className="text-2xl font-bold text-white text-glow">{activeStreaks.length}</p>
             </div>
-            <div className="w-10 h-10 bg-white/15 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center shadow-neon-sm">
+              <TrendingUp className="w-5 h-5 text-amber-400" />
             </div>
           </div>
         </motion.div>
