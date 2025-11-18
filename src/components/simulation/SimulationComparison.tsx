@@ -48,7 +48,7 @@ export const SimulationComparison: React.FC<SimulationComparisonProps> = ({
       case 'improvement': return 'from-green-50 to-emerald-50 border-green-200 text-green-800';
       case 'warning': return 'from-yellow-50 to-amber-50 border-yellow-200 text-yellow-800';
       case 'achievement': return 'from-purple-50 to-violet-50 border-purple-200 text-purple-800';
-      default: return 'from-blue-50 to-indigo-50 border-blue-200 text-blue-800';
+      default: return 'from-violet-50 to-indigo-50 border-violet-200 text-violet-800';
     }
   };
 
@@ -95,13 +95,13 @@ export const SimulationComparison: React.FC<SimulationComparisonProps> = ({
 
       {/* Overview Comparison */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+        <Card className="bg-gradient-to-br from-violet-50 to-indigo-50 border-violet-200">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">Current Reality</h3>
-            <div className="text-3xl font-bold text-blue-600 mb-2">
+            <h3 className="text-lg font-semibold text-violet-900 mb-2">Current Reality</h3>
+            <div className="text-3xl font-bold text-violet-600 mb-2">
               {comparison.realState.indexValue?.toFixed(1) || '0.0'}
             </div>
-            <div className="text-sm text-blue-700 mb-4">Life Index Value</div>
+            <div className="text-sm text-violet-700 mb-4">Life Index Value</div>
             <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
               comparison.realState.recentTrend === 'rising' ? 'bg-green-100 text-green-800' :
               comparison.realState.recentTrend === 'falling' ? 'bg-red-100 text-red-800' :
@@ -159,7 +159,7 @@ export const SimulationComparison: React.FC<SimulationComparisonProps> = ({
             <div className="text-sm text-gray-600">Risk Level</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-violet-600">
               {(simulation.projectedChanges?.balanceScore || 0).toFixed(0)}%
             </div>
             <div className="text-sm text-gray-600">Balance Score</div>
@@ -208,7 +208,7 @@ export const SimulationComparison: React.FC<SimulationComparisonProps> = ({
                 className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                  <div className="w-4 h-4 bg-violet-500 rounded"></div>
                   <span className="font-medium text-gray-900 dark:text-white">{stock.name}</span>
                 </div>
                 <div className="flex items-center space-x-4 text-sm">

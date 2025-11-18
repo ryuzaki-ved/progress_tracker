@@ -11,6 +11,7 @@ export interface Stock {
   color: string;
   weight: number;
   history: { date: Date; value: number }[];
+  isArchived?: boolean;
 }
 
 export interface Task {
@@ -54,7 +55,13 @@ export interface IndexData {
   value: number;
   change: number;
   changePercent: number;
-  history: { date: Date; value: number }[];
+  history: {
+    date: string;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+  }[];
 }
 
 export interface Streak {

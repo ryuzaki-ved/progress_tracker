@@ -47,7 +47,7 @@ export const Tasks: React.FC = () => {
     return (
       <div className="p-6 flex items-center justify-center min-h-96">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading tasks...</p>
         </div>
       </div>
@@ -244,11 +244,11 @@ export const Tasks: React.FC = () => {
           
           {/* Filter Summary */}
           {(filter !== 'all' || filterDate || filterStockId !== 'all') && (
-            <div className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+            <div className="text-sm text-gray-600 dark:text-gray-400 bg-violet-50 dark:bg-violet-900/20 p-3 rounded-lg">
               <span className="font-medium">Active filters:</span>
-              {filter !== 'all' && <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded text-xs">Status: {filter}</span>}
-              {filterDate && <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded text-xs">Date: {new Date(filterDate).toLocaleDateString()}</span>}
-              {filterStockId !== 'all' && <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded text-xs">Stock: {stocks.find(s => s.id === filterStockId)?.name}</span>}
+              {filter !== 'all' && <span className="ml-2 px-2 py-1 bg-violet-100 dark:bg-violet-800 text-violet-800 dark:text-violet-200 rounded text-xs">Status: {filter}</span>}
+              {filterDate && <span className="ml-2 px-2 py-1 bg-violet-100 dark:bg-violet-800 text-violet-800 dark:text-violet-200 rounded text-xs">Date: {new Date(filterDate).toLocaleDateString()}</span>}
+              {filterStockId !== 'all' && <span className="ml-2 px-2 py-1 bg-violet-100 dark:bg-violet-800 text-violet-800 dark:text-violet-200 rounded text-xs">Stock: {stocks.find(s => s.id === filterStockId)?.name}</span>}
               <span className="ml-2 text-gray-500">({filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} shown)</span>
             </div>
           )}
@@ -258,7 +258,7 @@ export const Tasks: React.FC = () => {
       {/* Today Tasks */}
       {todayTasks.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold text-blue-700 dark:text-blue-300 mb-2 flex items-center">
+          <h2 className="text-xl font-semibold text-violet-700 dark:text-violet-300 mb-2 flex items-center">
             Tasks Due Today
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
@@ -527,7 +527,7 @@ export const Tasks: React.FC = () => {
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center cursor-pointer select-none" onClick={() => setShowUpcomingTasks((v) => !v)}>
-              <span className="text-xl font-semibold text-blue-700 dark:text-blue-300 mr-2">Upcoming Tasks</span>
+              <span className="text-xl font-semibold text-violet-700 dark:text-violet-300 mr-2">Upcoming Tasks</span>
               {showUpcomingTasks ? (
                 <ChevronDown className="w-5 h-5" />
               ) : (
@@ -538,7 +538,7 @@ export const Tasks: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={() => setUpcomingTasksReverseOrder(!upcomingTasksReverseOrder)}
-              className="text-blue-600 border-blue-300 hover:bg-blue-50"
+              className="text-violet-600 border-violet-300 hover:bg-violet-50"
             >
               <ArrowUpDown className="w-4 h-4 mr-1" />
               {upcomingTasksReverseOrder ? 'Latest First' : 'Earliest First'}
@@ -939,7 +939,7 @@ export const Tasks: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-violet-600">
               {tasks.filter(t => t.status === 'pending').length}
             </div>
             <div className="text-sm text-gray-600">Pending</div>

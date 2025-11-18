@@ -1,10 +1,8 @@
+import { useAuth } from './useAuth';
 import { useState, useEffect } from 'react';
-import { getDb, persistDb } from '../lib/sqlite';
 import { Achievement } from '../types';
 import { useTasks } from './useTasks';
 import { useStreaks } from './useStreaks';
-
-const currentUserId = 1;
 
 const ACHIEVEMENT_DEFINITIONS = [
   {
@@ -50,7 +48,7 @@ const ACHIEVEMENT_DEFINITIONS = [
     icon: '👑',
     category: 'consistency',
     requirement: 30,
-    color: 'bg-blue-500',
+    color: 'bg-violet-500',
   },
   {
     id: 'early_bird',
@@ -82,6 +80,7 @@ const ACHIEVEMENT_DEFINITIONS = [
 ];
 
 export const useAchievements = () => {
+  const { user } = useAuth();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,76 +88,32 @@ export const useAchievements = () => {
   const { tasks } = useTasks();
   const { streaks } = useStreaks();
 
-  const initializeAchievements = async () => {
-    try {
-      const db = await getDb();
-      
-      // Create achievements table if it doesn't exist
-      db.run(`
-        CREATE TABLE IF NOT EXISTS achievements (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_id INTEGER NOT NULL,
-          achievement_id TEXT NOT NULL,
-          progress INTEGER DEFAULT 0,
-          is_unlocked BOOLEAN DEFAULT false,
-          unlocked_at TEXT,
-          created_at TEXT DEFAULT (datetime('now')),
-          updated_at TEXT DEFAULT (datetime('now')),
-          UNIQUE(user_id, achievement_id)
-        )
-      `);
-
-      // Initialize achievements if they don't exist
-      for (const achievement of ACHIEVEMENT_DEFINITIONS) {
-        const existing = db.exec(
-          'SELECT id FROM achievements WHERE user_id = ? AND achievement_id = ?',
-          [currentUserId, achievement.id]
-        );
-        
-        if (!existing[0]?.values?.length) {
-          db.run(
-            'INSERT INTO achievements (user_id, achievement_id) VALUES (?, ?)',
-            [currentUserId, achievement.id]
-          );
-        }
-      }
-
-      await persistDb();
-      await fetchAchievements();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to initialize achievements');
-    }
-  };
+  const getHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('lifestock_token')}`
+  });
 
   const fetchAchievements = async () => {
+    if (!user) return;
     setLoading(true);
     setError(null);
     try {
-      const db = await getDb();
-      const res = db.exec(
-        'SELECT * FROM achievements WHERE user_id = ?',
-        [currentUserId]
-      );
+      const response = await fetch('/api/achievements', { headers: getHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch achievements');
+      const result = await response.json();
       
-      const rows = res[0]?.values || [];
-      const columns = res[0]?.columns || [];
-      
-      const achievementsList: Achievement[] = rows.map((row: any[]) => {
-        const achievementObj: any = {};
-        columns.forEach((col, i) => (achievementObj[col] = row[i]));
-        
-        const definition = ACHIEVEMENT_DEFINITIONS.find(def => def.id === achievementObj.achievement_id);
-        
+      const achievementsList: Achievement[] = result.data.map((r: any) => {
+        const definition = ACHIEVEMENT_DEFINITIONS.find(def => def.id === r.id);
         return {
-          id: achievementObj.achievement_id,
+          id: r.id,
           title: definition?.title || 'Unknown Achievement',
           description: definition?.description || '',
           icon: definition?.icon || '🏆',
           category: definition?.category || 'completion',
           requirement: definition?.requirement || 1,
-          progress: achievementObj.progress || 0,
-          isUnlocked: Boolean(achievementObj.is_unlocked),
-          unlockedAt: achievementObj.unlocked_at ? new Date(achievementObj.unlocked_at) : undefined,
+          progress: r.progress || 0,
+          isUnlocked: Boolean(r.isUnlocked),
+          unlockedAt: r.unlockedAt ? new Date(r.unlockedAt) : undefined,
           color: definition?.color || 'bg-gray-500',
         };
       });
@@ -172,10 +127,9 @@ export const useAchievements = () => {
   };
 
   const updateAchievements = async () => {
-    if (!tasks.length || !achievements.length) return;
+    if (!user || !tasks.length || !achievements.length) return;
 
     try {
-      const db = await getDb();
       const completedTasks = tasks.filter(task => task.status === 'completed');
       const totalPoints = completedTasks.reduce((sum, task) => sum + task.points, 0);
       const earlyTasks = completedTasks.filter(task => 
@@ -186,53 +140,37 @@ export const useAchievements = () => {
       const onTimeStreak = streaks.find(s => s.type === 'on_time');
 
       const updates = [
-        { id: 'first_task', progress: Math.min(completedTasks.length, 1) },
-        { id: 'century_club', progress: completedTasks.length },
-        { id: 'high_achiever', progress: totalPoints },
-        { id: 'early_bird', progress: earlyTasks.length },
-        { id: 'week_streak', progress: dailyStreak?.currentStreak || 0 },
-        { id: 'consistency_king', progress: dailyStreak?.currentStreak || 0 },
-        { id: 'marathon_runner', progress: dailyStreak?.currentStreak || 0 },
-        { id: 'perfectionist', progress: onTimeStreak?.currentStreak || 0 },
+        { id: 'first_task', progress: Math.min(completedTasks.length, 1), requirement: 1 },
+        { id: 'century_club', progress: completedTasks.length, requirement: 100 },
+        { id: 'high_achiever', progress: totalPoints, requirement: 1000 },
+        { id: 'early_bird', progress: earlyTasks.length, requirement: 50 },
+        { id: 'week_streak', progress: dailyStreak?.currentStreak || 0, requirement: 7 },
+        { id: 'consistency_king', progress: dailyStreak?.currentStreak || 0, requirement: 30 },
+        { id: 'marathon_runner', progress: dailyStreak?.currentStreak || 0, requirement: 50 },
+        { id: 'perfectionist', progress: onTimeStreak?.currentStreak || 0, requirement: 7 },
       ];
 
+      const response = await fetch('/api/achievements/sync', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ updates })
+      });
+      if (!response.ok) throw new Error('Failed to sync achievements');
+      const result = await response.json();
+
       const newlyUnlockedList: Achievement[] = [];
-
-      for (const update of updates) {
-        const achievement = achievements.find(a => a.id === update.id);
-        if (!achievement) continue;
-
-        const shouldUnlock = !achievement.isUnlocked && update.progress >= achievement.requirement;
-        
-        if (shouldUnlock) {
-          newlyUnlockedList.push(achievement);
-          db.run(
-            `UPDATE achievements SET 
-             progress = ?, 
-             is_unlocked = true, 
-             unlocked_at = datetime('now'),
-             updated_at = datetime('now')
-             WHERE user_id = ? AND achievement_id = ?`,
-            [update.progress, currentUserId, update.id]
-          );
-        } else {
-          db.run(
-            `UPDATE achievements SET 
-             progress = ?, 
-             updated_at = datetime('now')
-             WHERE user_id = ? AND achievement_id = ?`,
-            [update.progress, currentUserId, update.id]
-          );
+      for (const res of result.data) {
+        if (res.newlyUnlocked) {
+          const achievement = achievements.find(a => a.id === res.id);
+          if (achievement) newlyUnlockedList.push(achievement);
         }
       }
 
       if (newlyUnlockedList.length > 0) {
         setNewlyUnlocked(newlyUnlockedList);
-        // Clear newly unlocked after 5 seconds
         setTimeout(() => setNewlyUnlocked([]), 5000);
       }
 
-      await persistDb();
       await fetchAchievements();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update achievements');
@@ -240,14 +178,20 @@ export const useAchievements = () => {
   };
 
   useEffect(() => {
-    initializeAchievements();
-  }, []);
+    if (user) {
+        fetchAchievements();
+    } else {
+        setAchievements([]);
+    }
+    // eslint-disable-next-line
+  }, [user]);
 
   useEffect(() => {
-    if (tasks.length > 0 && achievements.length > 0) {
+    if (user && tasks.length > 0 && achievements.length > 0) {
       updateAchievements();
     }
-  }, [tasks, streaks, achievements.length]);
+    // eslint-disable-next-line
+  }, [tasks, streaks, achievements.length, user]);
 
   return {
     achievements,

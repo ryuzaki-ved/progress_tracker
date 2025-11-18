@@ -88,7 +88,7 @@ export const StrategicBrain: React.FC = () => {
           <div className="p-4 text-center">
             <div className={`text-2xl font-bold ${
               strategicBrain.portfolioAnalysis.overallHealth === 'excellent' ? 'text-green-600' :
-              strategicBrain.portfolioAnalysis.overallHealth === 'good' ? 'text-blue-600' :
+              strategicBrain.portfolioAnalysis.overallHealth === 'good' ? 'text-violet-600' :
               strategicBrain.portfolioAnalysis.overallHealth === 'concerning' ? 'text-yellow-600' :
               'text-red-600'
             }`}>
@@ -119,12 +119,12 @@ export const StrategicBrain: React.FC = () => {
           </div>
         </Card>
         
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <Card className="bg-gradient-to-r from-violet-50 to-indigo-50 border-violet-200">
           <div className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-violet-600">
               {strategicBrain.insights.length}
             </div>
-            <div className="text-sm text-blue-700">Active Insights</div>
+            <div className="text-sm text-violet-700">Active Insights</div>
           </div>
         </Card>
       </div>
@@ -239,7 +239,7 @@ export const StrategicBrain: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div 
-                          className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                          className="bg-violet-500 h-2 rounded-full transition-all duration-500"
                           style={{ width: `${strategicBrain.portfolioAnalysis.efficiencyScore}%` }}
                         />
                       </div>

@@ -21,7 +21,7 @@ interface AddStockModalProps {
 }
 
 const STOCK_COLORS = [
-  'bg-blue-500',
+  'bg-violet-500',
   'bg-green-500',
   'bg-purple-500',
   'bg-orange-500',
@@ -54,7 +54,7 @@ export const AddStockModal: React.FC<AddStockModalProps> = ({
     name: '',
     description: '',
     category: 'Personal',
-    color: 'bg-blue-500',
+    color: 'bg-violet-500',
     weight: 20, // percent
     icon: 'activity',
   });
@@ -62,9 +62,9 @@ export const AddStockModal: React.FC<AddStockModalProps> = ({
     if (editMode && initialData) {
       setFormData({
         name: initialData.name || '',
-        description: initialData.description || '',
+        description: (initialData as any).description || '',
         category: initialData.category || 'Personal',
-        color: initialData.color || 'bg-blue-500',
+        color: initialData.color || 'bg-violet-500',
         weight: initialData.weight ? Math.round(initialData.weight * 100) : 20,
         icon: initialData.icon || 'activity',
       });
@@ -73,7 +73,7 @@ export const AddStockModal: React.FC<AddStockModalProps> = ({
         name: '',
         description: '',
         category: 'Personal',
-        color: 'bg-blue-500',
+        color: 'bg-violet-500',
         weight: 20,
         icon: 'activity',
       });
@@ -114,14 +114,14 @@ export const AddStockModal: React.FC<AddStockModalProps> = ({
 
   return (
     isOpen ? (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 pt-12 z-50">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="w-full max-w-md"
+          className="w-full max-w-md max-h-[85vh] flex flex-col"
         >
-          <Card className="p-6">
+          <Card className="p-6 overflow-y-auto flex-1">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{editMode ? 'Edit Stock' : 'Add New Stock'}</h2>
               <button
@@ -184,9 +184,8 @@ export const AddStockModal: React.FC<AddStockModalProps> = ({
                       key={color}
                       type="button"
                       onClick={() => setFormData({ ...formData, color })}
-                      className={`w-8 h-8 rounded-full ${color} ring-2 ring-offset-2 ${
-                        formData.color === color ? 'ring-gray-400' : 'ring-transparent'
-                      }`}
+                      className={`w-8 h-8 rounded-full ${color} ring-2 ring-offset-2 ${formData.color === color ? 'ring-gray-400' : 'ring-transparent'
+                        }`}
                     />
                   ))}
                 </div>

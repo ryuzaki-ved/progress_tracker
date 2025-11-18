@@ -78,36 +78,33 @@ export const Settings: React.FC = () => {
 
   const handleExportData = async (format: 'json' | 'csv') => {
     if (!user) return;
+    setSaving(true);
+    setSaveMessage(null);
 
     try {
-      // Fetch all user data
-      const [stocksData, tasksData, indexData] = await Promise.all([
-        // This part of the code was removed as per the edit hint.
-        // The original code had supabase calls here, which are now removed.
-        // The data will not be exported locally.
-      ]);
-
-      const exportData = {
-        user: { id: user.id, email: user.email },
-        stocks: stocksData.data || [],
-        tasks: tasksData.data || [],
-        indexHistory: indexData.data || [],
-        exportedAt: new Date().toISOString(),
-      };
+      const response = await fetch('/api/data/export', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('lifestock_token')}`
+        }
+      });
+      const result = await response.json();
+      
+      if (result.error) throw new Error(result.error);
+      const exportData = result.data;
 
       if (format === 'json') {
         const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `lifestock-data-${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `lifestock-backup-${new Date().toISOString().split('T')[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
       } else {
         // Simple CSV export for stocks
         const csvContent = [
           'Stock Name,Category,Current Score,Weight,Created At',
-          ...exportData.stocks.map(stock => 
+          ...exportData.stocks.map((stock: any) => 
             `"${stock.name}","${stock.category}",${stock.current_score},${stock.weight},"${stock.created_at}"`
           )
         ].join('\n');
@@ -120,9 +117,84 @@ export const Settings: React.FC = () => {
         a.click();
         URL.revokeObjectURL(url);
       }
-    } catch (error) {
+      setSaveMessage('Data exported safely.');
+    } catch (error: any) {
       console.error('Export failed:', error);
+      setSaveMessage('Failed to export data: ' + error.message);
+    } finally {
+      setSaving(false);
+      setTimeout(() => setSaveMessage(null), 3000);
     }
+  };
+
+  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    if (file.name.endsWith('.csv')) {
+      alert('CSV import is currently unsupported. Please upload a full JSON backup.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'WARNING: Importing a backup will COMPLETELY ERASE and OVERWRITE your current profile data. Are you absolutely sure you wish to proceed?'
+    );
+    if (!confirmed) return;
+
+    setSaving(true);
+    setSaveMessage('Reading file...');
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const text = e.target?.result as string;
+        const parsedData = JSON.parse(text);
+
+        if (!parsedData || !parsedData.user || !parsedData.stocks) {
+          throw new Error('Invalid backup file format. Missing core domains.');
+        }
+
+        if (parsedData.user.id !== user.id && parsedData.user.username !== user.username) {
+           const idConfirmed = window.confirm('This backup belongs to a different user profile. Importing it will remap the data to your current account. Proceed?');
+           if (!idConfirmed) {
+              setSaving(false);
+              setSaveMessage(null);
+              return;
+           }
+        }
+
+        setSaveMessage('Restoring profile data...');
+        const response = await fetch('/api/data/import', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('lifestock_token')}`
+          },
+          body: JSON.stringify({ data: parsedData })
+        });
+        
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+
+        alert('Import successful! The application will now reload to apply the restored state.');
+        window.location.reload();
+      } catch (error: any) {
+        console.error('Import failed:', error);
+        setSaveMessage('Import failed: ' + error.message);
+        setTimeout(() => setSaveMessage(null), 5000);
+      } finally {
+        setSaving(false);
+      }
+    };
+    reader.onerror = () => {
+      setSaveMessage('Failed to read file from disk.');
+      setSaving(false);
+      setTimeout(() => setSaveMessage(null), 3000);
+    };
+    reader.readAsText(file);
+    
+    // Reset file input
+    event.target.value = '';
   };
 
   const handleResetData = async () => {
@@ -228,7 +300,7 @@ export const Settings: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Accent Color</label>
               <div className="flex space-x-2">
                 {[
-                  { name: 'blue', class: 'bg-blue-500' },
+                  { name: 'blue', class: 'bg-violet-500' },
                   { name: 'green', class: 'bg-green-500' },
                   { name: 'purple', class: 'bg-purple-500' },
                   { name: 'orange', class: 'bg-orange-500' },
@@ -445,7 +517,9 @@ export const Settings: React.FC = () => {
               <div className="font-medium text-gray-900 dark:text-white mb-2">Import Data</div>
               <input
                 type="file"
-                accept=".json,.csv"
+                accept=".json"
+                onChange={handleImportData}
+                disabled={saving}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>

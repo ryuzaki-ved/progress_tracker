@@ -16,7 +16,7 @@ interface JournalEditorProps {
 
 const MOOD_OPTIONS = [
   { value: 'great', emoji: '🌟', label: 'Great', color: 'text-green-600' },
-  { value: 'good', emoji: '😊', label: 'Good', color: 'text-blue-600' },
+  { value: 'good', emoji: '😊', label: 'Good', color: 'text-violet-600' },
   { value: 'okay', emoji: '😐', label: 'Okay', color: 'text-yellow-600' },
   { value: 'tough', emoji: '😔', label: 'Tough', color: 'text-orange-600' },
   { value: 'chaotic', emoji: '🌪️', label: 'Chaotic', color: 'text-red-600' },

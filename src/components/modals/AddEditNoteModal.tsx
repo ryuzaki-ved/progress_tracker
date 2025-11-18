@@ -131,27 +131,27 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 pt-12 z-50">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="w-full max-w-2xl max-h-[90vh] overflow-hidden"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="w-full max-w-2xl max-h-[85vh] flex flex-col"
         >
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-700">
+          <Card className="p-6 overflow-y-auto flex-1 bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-violet-900/20 dark:to-indigo-900/20 border-violet-200 dark:border-violet-700">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">
-                <div 
+                <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
                   style={{ backgroundColor: formData.color }}
                 >
                   <Tag className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                  <h2 className="text-2xl font-bold text-violet-900 dark:text-violet-100">
                     {initialNote ? 'Edit Note' : 'Create New Note'}
                   </h2>
-                  <p className="text-blue-700 dark:text-blue-300 text-sm">
+                  <p className="text-violet-700 dark:text-violet-300 text-sm">
                     {initialNote ? 'Update your note' : 'Capture your thoughts and ideas'}
                   </p>
                 </div>
@@ -164,14 +164,14 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
             <form onSubmit={handleSubmit} className="space-y-6 max-h-[60vh] overflow-y-auto">
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+                <label className="block text-sm font-medium text-violet-800 dark:text-violet-200 mb-2">
                   Title *
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-4 py-3 border border-blue-200 dark:border-blue-600 rounded-lg bg-white dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 placeholder-blue-500 dark:placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 font-semibold"
+                  className="w-full px-4 py-3 border border-violet-200 dark:border-violet-600 rounded-lg bg-white dark:bg-violet-900/20 text-violet-900 dark:text-violet-100 placeholder-violet-500 dark:placeholder-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400 font-semibold"
                   placeholder="Enter note title..."
                   required
                 />
@@ -179,12 +179,12 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
 
               {/* Content */}
               <div>
-                <label className="block text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+                <label className="block text-sm font-medium text-violet-800 dark:text-violet-200 mb-2">
                   Content *
                 </label>
                 <textarea
                   id="note-content"
-                  className="journal-textarea w-full min-h-[120px] px-4 py-3 border border-blue-200 dark:border-blue-600 rounded-lg bg-white dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 placeholder-blue-500 dark:placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 font-semibold resize-y"
+                  className="journal-textarea w-full min-h-[120px] px-4 py-3 border border-violet-200 dark:border-violet-600 rounded-lg bg-white dark:bg-violet-900/20 text-violet-900 dark:text-violet-100 placeholder-violet-500 dark:placeholder-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400 font-semibold resize-y"
                   value={formData.content}
                   onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
                   placeholder="Write your note here..."
@@ -201,7 +201,7 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
               {/* Category and Color */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+                  <label className="block text-sm font-medium text-violet-800 dark:text-violet-200 mb-2">
                     Category
                   </label>
                   <div className="space-y-2">
@@ -215,7 +215,7 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
                           setShowNewCategory(false);
                         }
                       }}
-                      className="w-full px-3 py-2 border border-blue-200 dark:border-blue-600 rounded-lg bg-white dark:bg-blue-900/20 text-blue-900 dark:text-blue-100"
+                      className="w-full px-3 py-2 border border-violet-200 dark:border-violet-600 rounded-lg bg-white dark:bg-violet-900/20 text-violet-900 dark:text-violet-100"
                     >
                       {availableCategories.map(category => (
                         <option key={category} value={category}>
@@ -224,7 +224,7 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
                       ))}
                       <option value="new">+ Add New Category</option>
                     </select>
-                    
+
                     {showNewCategory && (
                       <div className="flex space-x-2">
                         <input
@@ -232,7 +232,7 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
                           value={newCategory}
                           onChange={(e) => setNewCategory(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCategory())}
-                          className="flex-1 px-3 py-2 border border-blue-200 dark:border-blue-600 rounded-lg bg-white dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 placeholder-blue-500 dark:placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          className="flex-1 px-3 py-2 border border-violet-200 dark:border-violet-600 rounded-lg bg-white dark:bg-violet-900/20 text-violet-900 dark:text-violet-100 placeholder-violet-500 dark:placeholder-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
                           placeholder="Category name..."
                         />
                         <Button
@@ -249,7 +249,7 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+                  <label className="block text-sm font-medium text-violet-800 dark:text-violet-200 mb-2">
                     <Palette className="w-4 h-4 inline mr-1" />
                     Color
                   </label>
@@ -259,11 +259,10 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
                         key={color}
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, color }))}
-                        className={`w-8 h-8 rounded-lg border-2 transition-all ${
-                          formData.color === color 
-                            ? 'border-gray-400 scale-110 shadow-md' 
+                        className={`w-8 h-8 rounded-lg border-2 transition-all ${formData.color === color
+                            ? 'border-gray-400 scale-110 shadow-md'
                             : 'border-gray-200 hover:border-gray-300 hover:scale-105'
-                        }`}
+                          }`}
                         style={{ backgroundColor: color }}
                       />
                     ))}
@@ -273,7 +272,7 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
 
               {/* Tags */}
               <div>
-                <label className="block text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+                <label className="block text-sm font-medium text-violet-800 dark:text-violet-200 mb-2">
                   <Hash className="w-4 h-4 inline mr-1" />
                   Tags
                 </label>
@@ -284,7 +283,7 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
                       value={newTag}
                       onChange={(e) => setNewTag(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                      className="flex-1 px-3 py-2 border border-blue-200 dark:border-blue-600 rounded-lg bg-white dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 placeholder-blue-500 dark:placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      className="flex-1 px-3 py-2 border border-violet-200 dark:border-violet-600 rounded-lg bg-white dark:bg-violet-900/20 text-violet-900 dark:text-violet-100 placeholder-violet-500 dark:placeholder-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
                       placeholder="Add a tag..."
                     />
                     <Button
@@ -296,7 +295,7 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
-                  
+
                   {/* Existing tags */}
                   {allTags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
@@ -305,14 +304,14 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
                           key={tag}
                           type="button"
                           onClick={() => setFormData(prev => ({ ...prev, tags: [...prev.tags, tag] }))}
-                          className="px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full text-xs hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors"
+                          className="px-2 py-1 bg-violet-100 dark:bg-violet-800 text-violet-800 dark:text-violet-200 rounded-full text-xs hover:bg-violet-200 dark:hover:bg-violet-700 transition-colors"
                         >
                           {tag}
                         </button>
                       ))}
                     </div>
                   )}
-                  
+
                   {/* Selected tags */}
                   {formData.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2">
@@ -321,13 +320,13 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
                           key={tag}
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="inline-flex items-center px-3 py-1 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full text-sm"
+                          className="inline-flex items-center px-3 py-1 bg-violet-200 dark:bg-violet-800 text-violet-800 dark:text-violet-200 rounded-full text-sm"
                         >
                           #{tag}
                           <button
                             type="button"
                             onClick={() => removeTag(tag)}
-                            className="ml-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+                            className="ml-2 text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-200"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -345,9 +344,9 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
                     type="checkbox"
                     checked={formData.isPinned}
                     onChange={(e) => setFormData(prev => ({ ...prev, isPinned: e.target.checked }))}
-                    className="w-4 h-4 text-blue-600 border-blue-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-violet-600 border-violet-300 rounded focus:ring-violet-500"
                   />
-                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200 flex items-center">
+                  <span className="text-sm font-medium text-violet-800 dark:text-violet-200 flex items-center">
                     <Pin className="w-4 h-4 mr-1" />
                     Pin this note
                   </span>
@@ -365,19 +364,19 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
               )}
             </form>
 
-            <div className="flex justify-between items-center mt-6 pt-4 border-t border-blue-200 dark:border-blue-600">
-              <div className="text-sm text-blue-600 dark:text-blue-400">
+            <div className="flex justify-between items-center mt-6 pt-4 border-t border-violet-200 dark:border-violet-600">
+              <div className="text-sm text-violet-600 dark:text-violet-400">
                 {formData.content.length} characters
               </div>
-              
+
               <div className="flex space-x-3">
                 <Button variant="outline" onClick={onClose}>
                   Cancel
                 </Button>
-                <Button 
-                  onClick={handleSubmit} 
+                <Button
+                  onClick={handleSubmit}
                   disabled={loading || !formData.title.trim() || !formData.content.trim()}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-violet-600 hover:bg-violet-700 text-white"
                 >
                   {loading ? (
                     <div className="flex items-center">

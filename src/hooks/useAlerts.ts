@@ -1,76 +1,36 @@
+import { useAuth } from './useAuth';
 import { useState, useEffect } from 'react';
-import { getDb, persistDb } from '../lib/sqlite';
 import { Alert } from '../types';
 import { useStocks } from './useStocks';
 import { useTasks } from './useTasks';
 import { normalizeDateToStartOfDay } from '../utils/stockUtils';
 
-const currentUserId = 1;
-
 export const useAlerts = () => {
+  const { user } = useAuth();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { stocks } = useStocks();
   const { tasks } = useTasks();
 
-  const initializeAlerts = async () => {
-    try {
-      const db = await getDb();
-      
-      // Create alerts table if it doesn't exist
-      db.run(`
-        CREATE TABLE IF NOT EXISTS alerts (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_id INTEGER NOT NULL,
-          type TEXT NOT NULL,
-          title TEXT NOT NULL,
-          message TEXT NOT NULL,
-          stock_id TEXT,
-          severity TEXT DEFAULT 'medium',
-          is_read BOOLEAN DEFAULT false,
-          is_dismissed BOOLEAN DEFAULT false,
-          created_at TEXT DEFAULT (datetime('now'))
-        )
-      `);
-
-      await persistDb();
-      await fetchAlerts();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to initialize alerts');
-    }
-  };
+  const getHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('lifestock_token')}`
+  });
 
   const fetchAlerts = async () => {
+    if (!user) return;
     setLoading(true);
     setError(null);
     try {
-      const db = await getDb();
-      const res = db.exec(
-        'SELECT * FROM alerts WHERE user_id = ? AND is_dismissed = false ORDER BY created_at DESC',
-        [currentUserId]
-      );
+      const response = await fetch('/api/alerts', { headers: getHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch alerts');
+      const result = await response.json();
       
-      const rows = res[0]?.values || [];
-      const columns = res[0]?.columns || [];
-      
-      const alertsList: Alert[] = rows.map((row: any[]) => {
-        const alertObj: any = {};
-        columns.forEach((col, i) => (alertObj[col] = row[i]));
-        
-        return {
-          id: alertObj.id.toString(),
-          type: alertObj.type,
-          title: alertObj.title,
-          message: alertObj.message,
-          stockId: alertObj.stock_id,
-          severity: alertObj.severity,
-          isRead: Boolean(alertObj.is_read),
-          isDismissed: Boolean(alertObj.is_dismissed),
-          createdAt: new Date(alertObj.created_at),
-        };
-      });
-      
+      const alertsList = result.data.map((a: any) => ({
+        ...a,
+        createdAt: new Date(a.createdAt),
+      }));
       setAlerts(alertsList);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch alerts');
@@ -80,31 +40,13 @@ export const useAlerts = () => {
   };
 
   const createAlert = async (alertData: Omit<Alert, 'id' | 'isRead' | 'isDismissed' | 'createdAt'>) => {
+    if (!user) return;
     try {
-      const db = await getDb();
-      
-      // Check if similar alert already exists
-      const existing = db.exec(
-        'SELECT id FROM alerts WHERE user_id = ? AND type = ? AND stock_id = ? AND is_dismissed = false',
-        [currentUserId, alertData.type, alertData.stockId || null]
-      );
-      
-      if (existing[0]?.values?.length) return; // Don't create duplicate alerts
-      
-      db.run(
-        `INSERT INTO alerts (user_id, type, title, message, stock_id, severity) 
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [
-          currentUserId,
-          alertData.type,
-          alertData.title,
-          alertData.message,
-          alertData.stockId || null,
-          alertData.severity,
-        ]
-      );
-      
-      await persistDb();
+      await fetch('/api/alerts', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(alertData)
+      });
       await fetchAlerts();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create alert');
@@ -112,13 +54,9 @@ export const useAlerts = () => {
   };
 
   const markAsRead = async (alertId: string) => {
+    if (!user) return;
     try {
-      const db = await getDb();
-      db.run(
-        'UPDATE alerts SET is_read = true WHERE id = ? AND user_id = ?',
-        [alertId, currentUserId]
-      );
-      await persistDb();
+      await fetch(`/api/alerts/${alertId}/read`, { method: 'POST', headers: getHeaders() });
       await fetchAlerts();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to mark alert as read');
@@ -126,13 +64,9 @@ export const useAlerts = () => {
   };
 
   const dismissAlert = async (alertId: string) => {
+    if (!user) return;
     try {
-      const db = await getDb();
-      db.run(
-        'UPDATE alerts SET is_dismissed = true WHERE id = ? AND user_id = ?',
-        [alertId, currentUserId]
-      );
-      await persistDb();
+      await fetch(`/api/alerts/${alertId}/dismiss`, { method: 'POST', headers: getHeaders() });
       await fetchAlerts();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to dismiss alert');
@@ -140,12 +74,11 @@ export const useAlerts = () => {
   };
 
   const generateAlerts = async () => {
-    if (!stocks.length || !tasks.length) return;
+    if (!user || !stocks.length || !tasks.length) return;
 
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    // Check for neglected stocks
     for (const stock of stocks) {
       const stockTasks = tasks.filter(task => task.stockId === stock.id);
       const recentTasks = stockTasks.filter(task => 
@@ -162,7 +95,6 @@ export const useAlerts = () => {
         });
       }
 
-      // Check for performance drops
       if (stock.changePercent < -15) {
         await createAlert({
           type: 'performance_drop',
@@ -174,7 +106,6 @@ export const useAlerts = () => {
       }
     }
 
-    // Check for overdue tasks
     const overdueTasks = tasks.filter(task => 
       task.status === 'overdue' || 
       (task.dueDate && task.dueDate < normalizeDateToStartOfDay(now) && task.status === 'pending')
@@ -191,14 +122,20 @@ export const useAlerts = () => {
   };
 
   useEffect(() => {
-    initializeAlerts();
-  }, []);
+    if (user) {
+        fetchAlerts();
+    } else {
+        setAlerts([]);
+    }
+    // eslint-disable-next-line
+  }, [user]);
 
   useEffect(() => {
-    if (stocks.length > 0 && tasks.length > 0) {
+    if (user && stocks.length > 0 && tasks.length > 0) {
       generateAlerts();
     }
-  }, [stocks, tasks]);
+    // eslint-disable-next-line
+  }, [stocks, tasks, user]);
 
   return {
     alerts,

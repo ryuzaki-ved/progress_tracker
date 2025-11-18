@@ -51,10 +51,10 @@ export const TradingNotification: React.FC<TradingNotificationProps> = ({
       case 'sell_stock':
         return {
           icon: TrendingDown,
-          bgGradient: 'from-blue-500 to-indigo-600',
-          borderColor: 'border-blue-400',
-          textColor: 'text-blue-900',
-          iconColor: 'text-blue-600',
+          bgGradient: 'from-violet-500 to-indigo-600',
+          borderColor: 'border-violet-400',
+          textColor: 'text-violet-900',
+          iconColor: 'text-violet-600',
           sound: 'sell',
           emoji: '📉',
           animation: 'info'

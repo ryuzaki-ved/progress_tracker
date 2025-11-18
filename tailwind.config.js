@@ -5,53 +5,66 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#030712', // Very dark gray/blue
-        surface: '#111827', // Slightly lighter
+        background: '#05050A', // Ultra-deep cosmic dark
+        surface: '#0B0D17', // Very slight elevation
+        surfaceHover: '#131626',
         primary: {
-          DEFAULT: '#3b82f6',
-          hover: '#2563eb',
-          dark: '#1d4ed8',
-          glow: '#60a5fa',
+          DEFAULT: '#8B5CF6', // Violet
+          hover: '#7C3AED',
+          dark: '#5B21B6',
+          glow: '#C4B5FD',
         },
         accent: {
-          DEFAULT: '#8b5cf6', // Violet
-          hover: '#7c3aed',
-          glow: '#a78bfa',
+          DEFAULT: '#EC4899', // Pink/Rose
+          hover: '#DB2777',
+          glow: '#FBCFE8',
         },
-        success: '#10b981',
-        warning: '#f59e0b',
-        error: '#ef4444',
+        success: '#10B981', // Emerald
+        warning: '#F59E0B', // Amber
+        error: '#EF4444',   // Red
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'], // Body
+        display: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'], // Headers
         mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
-        display: ['Inter', 'system-ui', 'sans-serif'], // Reverted to Inter for sleekness
       },
       animation: {
-        'float': 'float 6s ease-in-out infinite',
+        'float': 'float 8s ease-in-out infinite',
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'glow': 'glow 2s ease-in-out infinite alternate',
-        'spin-slow': 'spin 8s linear infinite',
+        'glow': 'glow 3s ease-in-out infinite alternate',
+        'spin-slow': 'spin 12s linear infinite',
+        'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
       },
       keyframes: {
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-10px)' },
+          '50%': { transform: 'translateY(-15px)' },
         },
         glow: {
-          '0%': { boxShadow: '0 0 5px rgba(59, 130, 246, 0.5)' },
-          '100%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.8), 0 0 10px rgba(59, 130, 246, 0.6)' },
+          '0%': { boxShadow: '0 0 10px rgba(139, 92, 246, 0.3)' },
+          '100%': { boxShadow: '0 0 25px rgba(139, 92, 246, 0.6), 0 0 10px rgba(139, 92, 246, 0.4)' },
         },
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(15px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        }
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'hero-pattern': "url('/grid.svg')", // We can simulate this with CSS
+        'cyber-gradient': 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%)',
       },
       boxShadow: {
-        'neon': '0 0 5px theme("colors.primary.DEFAULT"), 0 0 20px theme("colors.primary.DEFAULT")',
-        'neon-accent': '0 0 5px theme("colors.accent.DEFAULT"), 0 0 20px theme("colors.accent.DEFAULT")',
-        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+        'neon-sm': '0 0 10px theme("colors.primary.DEFAULT"), 0 0 5px theme("colors.primary.DEFAULT")',
+        'neon-accent': '0 0 10px theme("colors.accent.DEFAULT"), 0 0 5px theme("colors.accent.DEFAULT")',
+        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+        'glass-inset': 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.1)',
+        'elevated': '0 20px 40px -10px rgba(0, 0, 0, 0.5)',
       },
+      dropShadow: {
+        'glow': '0 0 8px rgba(139, 92, 246, 0.5)',
+        'glow-success': '0 0 8px rgba(16, 185, 129, 0.5)',
+        'glow-error': '0 0 8px rgba(239, 68, 68, 0.5)',
+      }
     },
   },
   plugins: [],

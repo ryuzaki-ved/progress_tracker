@@ -43,7 +43,7 @@ export const StrategyModePanel: React.FC<StrategyModePanelProps> = ({
     if (!isOnTrack) return 'bg-red-500';
     if (progress >= 80) return 'bg-green-500';
     if (progress >= 50) return 'bg-yellow-500';
-    return 'bg-blue-500';
+    return 'bg-violet-500';
   };
 
   const timeframeOptions = [
@@ -58,7 +58,7 @@ export const StrategyModePanel: React.FC<StrategyModePanelProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-            <Target className="w-6 h-6 mr-2 text-blue-600" />
+            <Target className="w-6 h-6 mr-2 text-violet-600" />
             Strategy Mode
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -175,8 +175,8 @@ export const StrategyModePanel: React.FC<StrategyModePanelProps> = ({
                       </div>
 
                       {/* Tasks Required */}
-                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                        <div className="text-sm text-blue-800 dark:text-blue-200">
+                      <div className="bg-violet-50 dark:bg-violet-900/20 rounded-lg p-3">
+                        <div className="text-sm text-violet-800 dark:text-violet-200">
                           <div className="font-medium mb-1">Tasks Required</div>
                           <div className="flex items-center space-x-2">
                             <TrendingUp className="w-4 h-4" />
@@ -266,8 +266,8 @@ export const StrategyModePanel: React.FC<StrategyModePanelProps> = ({
                   </div>
 
                   {selectedStock && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                      <div className="text-sm text-blue-800 dark:text-blue-200">
+                    <div className="bg-violet-50 dark:bg-violet-900/20 rounded-lg p-3">
+                      <div className="text-sm text-violet-800 dark:text-violet-200">
                         <div className="font-medium">Target Preview</div>
                         <div className="mt-1">
                           {stocks.find(s => s.id === selectedStock)?.currentScore} → {' '}

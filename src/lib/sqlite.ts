@@ -11,7 +11,8 @@ const SCHEMA = `
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL
+  password TEXT NOT NULL,
+  role TEXT DEFAULT 'user'
 );
 CREATE TABLE IF NOT EXISTS stocks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -69,7 +70,10 @@ CREATE TABLE IF NOT EXISTS index_history (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
   date TEXT NOT NULL,
-  index_value REAL NOT NULL,
+  open REAL NOT NULL,
+  high REAL NOT NULL,
+  low REAL NOT NULL,
+  close REAL NOT NULL,
   daily_change REAL DEFAULT 0,
   change_percent REAL DEFAULT 0,
   commentary TEXT,
@@ -169,6 +173,24 @@ CREATE TABLE IF NOT EXISTS option_pnl_history (
 `;
 
 // Migration: add created_at to stocks and tasks if missing
+function migrateUsersTable(db: Database) {
+  const res = db.exec("PRAGMA table_info(users);");
+  const columns = res[0]?.values?.map((row: any) => row[1]) || [];
+  if (!columns.includes('role')) {
+    db.run("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user';");
+  }
+
+  // Ensure 'admin' user exists and is the only admin, and force its password to 'admin123'
+  const adminRes = db.exec("SELECT id FROM users WHERE username = 'admin'");
+  if (!adminRes[0] || adminRes[0].values.length === 0) {
+    db.run("INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin')");
+  } else {
+    db.run("UPDATE users SET role = 'admin', password = 'admin123' WHERE username = 'admin'");
+  }
+  // Demote anyone else who might be an admin
+  db.run("UPDATE users SET role = 'user' WHERE username != 'admin'");
+}
+
 function migrateStocksTable(db: Database) {
   const res = db.exec("PRAGMA table_info(stocks);");
   const columns = res[0]?.values?.map((row: any) => row[1]) || [];
@@ -222,39 +244,66 @@ function migrateStockPerformanceHistoryTable(db: Database) {
 function migrateIndexHistoryTable(db: Database) {
   const res = db.exec("PRAGMA table_info(index_history);");
   const columns = res[0]?.values?.map((row: any) => row[1]) || [];
+
   if (!columns.includes('created_at')) {
     db.run("ALTER TABLE index_history ADD COLUMN created_at TEXT;");
     db.run("UPDATE index_history SET created_at = datetime('now') WHERE created_at IS NULL;");
   }
-  // Add UNIQUE constraint if missing (SQLite doesn't support ALTER TABLE ADD CONSTRAINT directly)
-  // So, recreate the table if needed
-  const indexRes = db.exec("PRAGMA index_list('index_history')");
-  const hasUnique = indexRes[0]?.values?.some((row: any) => row[2] === 1 && row[1].includes('user_id') && row[1].includes('date'));
-  if (!hasUnique) {
-    // Remove duplicates, keep latest by created_at
+
+  const res2 = db.exec("PRAGMA table_info(index_history);");
+  const columns2 = res2[0]?.values?.map((row: any) => row[1]) || [];
+
+  if (!columns2.includes('open')) {
     db.run(`DELETE FROM index_history WHERE id NOT IN (
       SELECT MAX(id) FROM index_history GROUP BY user_id, date
     )`);
-    // Rename old table
+
     db.run("ALTER TABLE index_history RENAME TO index_history_old;");
-    // Recreate table with UNIQUE constraint
     db.run(`CREATE TABLE index_history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
       date TEXT NOT NULL,
-      index_value REAL NOT NULL,
+      open REAL NOT NULL,
+      high REAL NOT NULL,
+      low REAL NOT NULL,
+      close REAL NOT NULL,
       daily_change REAL DEFAULT 0,
       change_percent REAL DEFAULT 0,
       commentary TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       UNIQUE(user_id, date)
     );`);
-    // Copy data back
-    db.run(`INSERT INTO index_history (user_id, date, index_value, daily_change, change_percent, commentary, created_at)
-      SELECT user_id, date, index_value, daily_change, change_percent, commentary, created_at FROM index_history_old;
+    db.run(`INSERT INTO index_history (user_id, date, open, high, low, close, daily_change, change_percent, commentary, created_at)
+      SELECT user_id, date, index_value, index_value, index_value, index_value, daily_change, change_percent, commentary, created_at FROM index_history_old;
     `);
-    // Drop old table
     db.run("DROP TABLE index_history_old;");
+  } else {
+    const indexRes = db.exec("PRAGMA index_list('index_history')");
+    const hasUnique = indexRes[0]?.values?.some((row: any) => row[2] === 1 && row[1].includes('user_id') && row[1].includes('date'));
+    if (!hasUnique) {
+      db.run(`DELETE FROM index_history WHERE id NOT IN (
+        SELECT MAX(id) FROM index_history GROUP BY user_id, date
+      )`);
+      db.run("ALTER TABLE index_history RENAME TO index_history_old;");
+      db.run(`CREATE TABLE index_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        open REAL NOT NULL,
+        high REAL NOT NULL,
+        low REAL NOT NULL,
+        close REAL NOT NULL,
+        daily_change REAL DEFAULT 0,
+        change_percent REAL DEFAULT 0,
+        commentary TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        UNIQUE(user_id, date)
+      );`);
+      db.run(`INSERT INTO index_history (user_id, date, open, high, low, close, daily_change, change_percent, commentary, created_at)
+        SELECT user_id, date, open, high, low, close, daily_change, change_percent, commentary, created_at FROM index_history_old;
+      `);
+      db.run("DROP TABLE index_history_old;");
+    }
   }
 }
 function migrateUserSettingsTable(db: Database) {
@@ -445,6 +494,7 @@ async function loadDatabase(): Promise<Database> {
   const saved = await loadFromIndexedDB(DB_KEY);
   db = saved ? new SQL.Database(new Uint8Array(saved)) : new SQL.Database();
   db.exec(SCHEMA);
+  migrateUsersTable(db);
   migrateStocksTable(db);
   migrateTasksTable(db);
   migrateIndexHistoryTable(db);
@@ -460,6 +510,10 @@ async function loadDatabase(): Promise<Database> {
   // Log initial cash balance after migrations
   const initialSettings = db.exec('SELECT cash_balance FROM user_settings WHERE user_id = 1');
   console.log('SQLite: Initial cash_balance after load/migrations:', initialSettings[0]?.values?.[0]?.[0]);
+
+  // Persist the DB immediately after migrations so the admin user is physically stored in IndexedDB
+  await saveDatabase();
+
   return db;
 }
 
@@ -511,4 +565,34 @@ export async function getDb() {
 }
 export async function persistDb() {
   await saveDatabase();
+}
+
+// Custom hook helper queries for Users
+export async function getAllUsers() {
+  const database = await getDb();
+  const res = database.exec('SELECT id, username, role FROM users ORDER BY id ASC');
+  if (!res[0]) return [];
+  const columns = res[0].columns;
+  return res[0].values.map((row: any[]) => {
+    const userObj: any = {};
+    columns.forEach((col, i) => (userObj[col] = row[i]));
+    return userObj;
+  });
+}
+
+export async function deleteUserAndData(userId: number) {
+  const database = await getDb();
+  database.run('DELETE FROM option_pnl_history WHERE user_id = ?', [userId]);
+  database.run('DELETE FROM user_options_holdings WHERE user_id = ?', [userId]);
+  database.run('DELETE FROM option_transactions WHERE user_id = ?', [userId]);
+  database.run('DELETE FROM notes WHERE user_id = ?', [userId]);
+  database.run('DELETE FROM transactions WHERE user_id = ?', [userId]);
+  database.run('DELETE FROM user_holdings WHERE user_id = ?', [userId]);
+  database.run('DELETE FROM user_settings WHERE user_id = ?', [userId]);
+  database.run('DELETE FROM index_history WHERE user_id = ?', [userId]);
+  database.run('DELETE FROM stock_performance_history WHERE stock_id IN (SELECT id FROM stocks WHERE user_id = ?)', [userId]);
+  database.run('DELETE FROM tasks WHERE stock_id IN (SELECT id FROM stocks WHERE user_id = ?)', [userId]);
+  database.run('DELETE FROM stocks WHERE user_id = ?', [userId]);
+  database.run('DELETE FROM users WHERE id = ?', [userId]);
+  await persistDb();
 } 

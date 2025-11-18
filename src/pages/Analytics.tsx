@@ -41,7 +41,7 @@ export const Analytics: React.FC = () => {
     return (
       <div className="p-6 flex items-center justify-center min-h-96">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading analytics...</p>
         </div>
       </div>
@@ -148,17 +148,17 @@ export const Analytics: React.FC = () => {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+        <Card className="bg-gradient-to-br from-violet-50 to-indigo-50 border-violet-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-600 font-medium">Index Performance</p>
-              <p className="text-2xl font-bold text-blue-900">{indexData.value.toFixed(1)}</p>
-              <div className="flex items-center text-sm text-blue-600">
+              <p className="text-sm text-violet-600 font-medium">Index Performance</p>
+              <p className="text-2xl font-bold text-violet-900">{indexData.value.toFixed(1)}</p>
+              <div className="flex items-center text-sm text-violet-600">
                 <TrendingUp className="w-4 h-4 mr-1" />
                 +{indexData.changePercent.toFixed(2)}%
               </div>
             </div>
-            <BarChart3 className="w-8 h-8 text-blue-600" />
+            <BarChart3 className="w-8 h-8 text-violet-600" />
           </div>
         </Card>
 
@@ -232,7 +232,7 @@ export const Analytics: React.FC = () => {
         {/* Index Performance Chart */}
         <Card>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Index Performance</h3>
-          <div className="h-64">
+          <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={indexData.history.map(h => ({
                 ...h,
@@ -259,7 +259,7 @@ export const Analytics: React.FC = () => {
         {/* Stock Weightage Pie Chart */}
         <Card>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stock Weightage in Index</h3>
-          <div className="h-64 flex items-center justify-center">
+          <div className="h-56 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <RechartsPieChart>
                 <Pie
@@ -283,7 +283,7 @@ export const Analytics: React.FC = () => {
         {/* Stock Performance Chart */}
         <Card>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stock Performance</h3>
-          <div className="h-64">
+          <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stockPerformanceData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -298,7 +298,7 @@ export const Analytics: React.FC = () => {
         {/* Task Completion Rate */}
         <Card>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Task Completion by Stock</h3>
-          <div className="h-64">
+          <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={taskCompletionData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -313,7 +313,7 @@ export const Analytics: React.FC = () => {
         {/* Daily Productivity */}
         <Card>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Daily Productivity</h3>
-          <div className="h-64">
+          <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyProductivityData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -330,14 +330,14 @@ export const Analytics: React.FC = () => {
       </div>
       {/* Expand/Collapse Edit Index Values Section */}
       {indexData.history.length > 0 && (
-        <Card className="bg-blue-50 border-blue-200 mb-6">
+        <Card className="bg-violet-50 border-violet-200 mb-6">
           <div className="flex items-center justify-between mb-2 cursor-pointer" onClick={() => setEditExpanded(v => !v)}>
             <div className="flex items-center">
-              {editExpanded ? <ChevronDown className="w-5 h-5 mr-2 text-blue-700" /> : <ChevronRight className="w-5 h-5 mr-2 text-blue-700" />}
-              <h3 className="text-lg font-semibold text-blue-900">Edit Index Values (Last 7 Days)</h3>
+              {editExpanded ? <ChevronDown className="w-5 h-5 mr-2 text-violet-700" /> : <ChevronRight className="w-5 h-5 mr-2 text-violet-700" />}
+              <h3 className="text-lg font-semibold text-violet-900">Edit Index Values (Last 7 Days)</h3>
             </div>
             {!editMode ? (
-              <button className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={e => { e.stopPropagation(); setEditMode(true); setEditExpanded(true); }}>
+              <button className="px-3 py-1 bg-violet-600 text-white rounded hover:bg-violet-700" onClick={e => { e.stopPropagation(); setEditMode(true); setEditExpanded(true); }}>
                 Edit
               </button>
             ) : (
@@ -428,7 +428,7 @@ export const Analytics: React.FC = () => {
                       <div className="flex items-center space-x-2">
                         <div className="w-16 bg-gray-200 rounded-full h-2">
                           <div 
-                            className="bg-blue-600 h-2 rounded-full" 
+                            className="bg-violet-600 h-2 rounded-full" 
                             style={{ width: `${completionRate}%` }}
                           ></div>
                         </div>

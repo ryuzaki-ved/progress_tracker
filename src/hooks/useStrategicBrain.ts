@@ -18,7 +18,7 @@ const STRATEGIC_MODES: StrategicMode[] = [
     name: 'Balanced Growth',
     description: 'Steady progress across all life areas',
     icon: '⚖️',
-    color: 'bg-blue-500',
+    color: 'bg-violet-500',
     settings: {
       taskLoadMultiplier: 1.0,
       burnoutThreshold: 70,

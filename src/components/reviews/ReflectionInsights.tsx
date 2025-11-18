@@ -18,7 +18,7 @@ const INSIGHT_ICONS = {
 };
 
 const INSIGHT_COLORS = {
-  pattern: 'from-blue-50 to-indigo-50 border-blue-200 dark:from-blue-900/20 dark:to-indigo-900/20 dark:border-blue-700',
+  pattern: 'from-violet-50 to-indigo-50 border-violet-200 dark:from-violet-900/20 dark:to-indigo-900/20 dark:border-violet-700',
   trend: 'from-green-50 to-emerald-50 border-green-200 dark:from-green-900/20 dark:to-emerald-900/20 dark:border-green-700',
   suggestion: 'from-yellow-50 to-amber-50 border-yellow-200 dark:from-yellow-900/20 dark:to-amber-900/20 dark:border-yellow-700',
   achievement: 'from-purple-50 to-violet-50 border-purple-200 dark:from-purple-900/20 dark:to-violet-900/20 dark:border-purple-700',
@@ -91,7 +91,7 @@ export const ReflectionInsights: React.FC<ReflectionInsightsProps> = ({
                     </p>
                     
                     {insight.actionable && (
-                      <div className="flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400">
+                      <div className="flex items-center space-x-1 text-sm text-violet-600 dark:text-violet-400">
                         <Target className="w-4 h-4" />
                         <span>Actionable insight</span>
                       </div>

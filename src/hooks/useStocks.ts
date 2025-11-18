@@ -1,88 +1,32 @@
+import { useAuth } from './useAuth';
 import { useState, useEffect } from 'react';
-import { getDb, persistDb } from '../lib/sqlite';
 import { Stock } from '../types';
-import { subDays } from 'date-fns';
-
-// TEMP: Hardcoded user id for demo (replace with real auth integration)
-const currentUserId = 1;
 
 export const useStocks = () => {
+  const { user } = useAuth();
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const getHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('lifestock_token')}`
+  });
+
   const fetchStocks = async () => {
-    console.log('fetchStocks called');
+    if (!user) return;
     setLoading(true);
     setError(null);
     try {
-      const db = await getDb();
-      const res = db.exec(
-        'SELECT * FROM stocks WHERE user_id = ? ORDER BY created_at',
-        [currentUserId]
-      );
-      console.log('Stocks query result:', res);
-      const rows = res[0]?.values || [];
-      const columns = res[0]?.columns || [];
-      const stocksList: Stock[] = [];
-      for (const row of rows) {
-        const stockObj: any = {};
-        columns.forEach((col, i) => (stockObj[col] = row[i]));
-        // Fetch latest performance history entry for this stock
-        const perfRes = db.exec(
-          'SELECT score_delta, delta_percent FROM stock_performance_history WHERE stock_id = ? ORDER BY date DESC LIMIT 1',
-          [stockObj.id]
-        );
-        const perfRow = perfRes[0]?.values?.[0];
-        const change = perfRow ? perfRow[0] : 0;
-        const changePercent = perfRow ? perfRow[1] : 0;
-
-        // Fetch last 30 days of performance history for this stock
-        const today = new Date();
-        const startDate = subDays(today, 30);
-        const histRes = db.exec(
-          'SELECT date, daily_score, score_delta FROM stock_performance_history WHERE stock_id = ? AND date >= ? ORDER BY date ASC',
-          [stockObj.id, startDate.toISOString().slice(0, 10)]
-        );
-        const histRows = histRes[0]?.values || [];
-        const history = histRows.map((h: any[]) => ({
-          date: new Date(h[0]),
-          value: h[1],
-        }));
-        const scoreDeltas = histRows.map((h: any[]) => h[2]);
-
-        // Calculate standard deviation of score_delta
-        let volatility: 'low' | 'medium' | 'high' = 'low';
-        if (scoreDeltas.length >= 5) {
-          const mean = scoreDeltas.reduce((a, b) => a + b, 0) / scoreDeltas.length;
-          const variance = scoreDeltas.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / scoreDeltas.length;
-          const stdDev = Math.sqrt(variance);
-          if (stdDev < 10) volatility = 'low';
-          else if (stdDev < 30) volatility = 'medium';
-          else volatility = 'high';
-        } else if (scoreDeltas.length > 0) {
-          // Fallback: use max absolute delta
-          const maxAbsDelta = Math.max(...scoreDeltas.map((d: number) => Math.abs(d)));
-          if (maxAbsDelta < 10) volatility = 'low';
-          else if (maxAbsDelta < 30) volatility = 'medium';
-          else volatility = 'high';
-        }
-
-        stocksList.push({
-          id: stockObj.id.toString(),
-          name: stockObj.name,
-          icon: stockObj.icon || 'activity',
-          category: stockObj.category || 'General',
-          currentScore: stockObj.current_score ?? 500,
-          change,
-          changePercent,
-          volatility,
-          lastActivity: stockObj.last_activity_at ? new Date(stockObj.last_activity_at) : new Date(),
-          color: stockObj.color,
-          weight: Number(stockObj.weight),
-          history,
-        });
-      }
+      const response = await fetch('/api/stocks', { headers: getHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch stocks');
+      const result = await response.json();
+      
+      const stocksList = result.data.map((s: any) => ({
+        ...s,
+        lastActivity: new Date(s.lastActivity),
+        history: s.history.map((h: any) => ({ ...h, date: new Date(h.date) }))
+      }));
       setStocks(stocksList);
     } catch (err) {
       console.error('fetchStocks error:', err);
@@ -92,26 +36,32 @@ export const useStocks = () => {
     }
   };
 
-  // Apply decay to stocks based on last activity and settings
   const applyDecayToStocks = async () => {
+    if (!user) return;
     const autoDecayEnabled = localStorage.getItem('auto_decay_enabled') === 'true';
     const decayRate = parseFloat(localStorage.getItem('decay_rate') || '0');
     if (!autoDecayEnabled || !stocks.length || isNaN(decayRate) || decayRate <= 0) return;
-    const db = await getDb();
+
     const now = new Date();
     let updated = false;
+
+    // Use a local copy for processing decay to avoid multiple updates causing flicker
     for (const stock of stocks) {
       const lastActivity = stock.lastActivity instanceof Date ? stock.lastActivity : new Date(stock.lastActivity);
       const daysPassed = Math.floor((now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
       if (daysPassed > 0) {
         const decayAmount = daysPassed * (decayRate / 100) * stock.currentScore;
         const newScore = Math.max(0, stock.currentScore - decayAmount);
-        db.run('UPDATE stocks SET current_score = ?, last_activity_at = ? WHERE id = ?', [newScore, now.toISOString(), stock.id]);
+        
+        await fetch(`/api/stocks/${stock.id}`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify({ current_score: newScore, last_activity_at: now.toISOString() })
+        });
         updated = true;
       }
     }
     if (updated) {
-      await persistDb();
       await fetchStocks(); // Refresh state after decay
     }
   };
@@ -124,50 +74,34 @@ export const useStocks = () => {
     weight: number;
     icon?: string;
   }) => {
+    if (!user) return;
     setError(null);
     try {
-      const db = await getDb();
-      db.run(
-        `INSERT INTO stocks (user_id, name, description, category, color, weight, icon) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          currentUserId,
-          stockData.name,
-          stockData.description || null,
-          stockData.category || null,
-          stockData.color,
-          stockData.weight,
-          stockData.icon || null,
-        ]
-      );
-      await persistDb();
+      const response = await fetch('/api/stocks', {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify(stockData)
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to create stock');
       await fetchStocks();
     } catch (err: any) {
-      if (err.message && err.message.includes('UNIQUE constraint failed')) {
-        setError('A stock with this name already exists.');
-      } else {
       setError(err instanceof Error ? err.message : 'Failed to create stock');
-      }
       throw err;
     }
   };
 
   const updateStock = async (id: string, updates: Partial<Stock>) => {
+    if (!user) return;
     setError(null);
     try {
-      const db = await getDb();
-      db.run(
-        `UPDATE stocks SET name = ?, category = ?, color = ?, weight = ?, icon = ? WHERE id = ? AND user_id = ?`,
-        [
-          updates.name,
-          updates.category,
-          updates.color,
-          updates.weight,
-          updates.icon,
-          id,
-          currentUserId,
-        ]
-      );
-      await persistDb();
+      const response = await fetch(`/api/stocks/${id}`, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify(updates)
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
       await fetchStocks();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update stock');
@@ -176,14 +110,15 @@ export const useStocks = () => {
   };
 
   const deleteStock = async (id: string) => {
+    if (!user) return;
     setError(null);
     try {
-      const db = await getDb();
-      db.run(
-        `DELETE FROM stocks WHERE id = ? AND user_id = ?`,
-        [id, currentUserId]
-      );
-      await persistDb();
+      const response = await fetch(`/api/stocks/${id}`, {
+          method: 'DELETE',
+          headers: getHeaders()
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
       await fetchStocks();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete stock');
@@ -191,12 +126,34 @@ export const useStocks = () => {
     }
   };
 
+  const archiveStock = async (id: string, isArchived: boolean = true) => {
+    if (!user) return;
+    setError(null);
+    try {
+      const response = await fetch(`/api/stocks/${id}`, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify({ is_archived: isArchived })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      await fetchStocks();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to archive stock');
+      throw err;
+    }
+  };
+
   useEffect(() => {
-    fetchStocks().then(() => {
-      applyDecayToStocks();
-    });
+    if (user) {
+        fetchStocks().then(() => {
+          applyDecayToStocks();
+        });
+    } else {
+        setStocks([]);
+    }
     // eslint-disable-next-line
-  }, []);
+  }, [user]);
 
   return {
     stocks,
@@ -205,6 +162,7 @@ export const useStocks = () => {
     createStock,
     updateStock,
     deleteStock,
+    archiveStock,
     refetch: fetchStocks,
   };
 };

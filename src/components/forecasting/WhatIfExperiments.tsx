@@ -39,7 +39,7 @@ export const WhatIfExperiments: React.FC<WhatIfExperimentsProps> = ({
         newChange.weightChange = 0.1;
         break;
       case 'add_stock':
-        newChange.stockData = { name: 'New Stock', weight: 0.1, color: 'bg-blue-500', category: 'Personal' };
+        newChange.stockData = { name: 'New Stock', weight: 0.1, color: 'bg-violet-500', category: 'Personal' };
         break;
     }
     
@@ -91,7 +91,7 @@ export const WhatIfExperiments: React.FC<WhatIfExperimentsProps> = ({
 
   const getImpactColor = (change: number) => {
     if (change > 5) return 'text-green-600';
-    if (change > 0) return 'text-blue-600';
+    if (change > 0) return 'text-violet-600';
     if (change > -5) return 'text-orange-600';
     return 'text-red-600';
   };

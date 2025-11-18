@@ -113,7 +113,7 @@ export const Forecasting: React.FC = () => {
                 <Icon className="w-4 h-4" />
                 <span>{tab.label}</span>
                 {tab.count !== undefined && tab.count > 0 && (
-                  <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 px-2 py-0.5 rounded-full text-xs font-medium">
+                  <span className="bg-violet-100 text-violet-800 dark:bg-violet-900/20 dark:text-violet-400 px-2 py-0.5 rounded-full text-xs font-medium">
                     {tab.count}
                   </span>
                 )}
@@ -161,12 +161,12 @@ export const Forecasting: React.FC = () => {
                 </div>
               </Card>
               
-              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+              <Card className="bg-gradient-to-r from-violet-50 to-indigo-50 border-violet-200">
                 <div className="p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-violet-600">
                     {stockForecasts.filter(f => f.confidence === 'high').length}
                   </div>
-                  <div className="text-sm text-blue-700">High Confidence</div>
+                  <div className="text-sm text-violet-700">High Confidence</div>
                 </div>
               </Card>
             </div>

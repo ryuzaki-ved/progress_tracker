@@ -65,12 +65,12 @@ export const WeekView: React.FC<WeekViewProps> = ({ weekStart, onCreateTask, onR
           return (
             <div key={index} className="text-center">
               <div className={`text-sm font-medium mb-2 ${
-                isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'
+                isToday ? 'text-violet-600 dark:text-violet-400' : 'text-gray-600 dark:text-gray-400'
               }`}>
                 {format(day, 'EEE')}
               </div>
               <div className={`text-lg font-semibold mb-2 ${
-                isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'
+                isToday ? 'text-violet-600 dark:text-violet-400' : 'text-gray-900 dark:text-white'
               }`}>
                 {format(day, 'd')}
               </div>

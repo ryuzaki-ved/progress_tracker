@@ -57,8 +57,8 @@ export const SmartFeedback: React.FC = () => {
         icon: '📈',
         title: 'All stocks are improving!',
         message: "Incredible! Every area of your life is trending upward.",
-        color: 'from-blue-50 to-indigo-50 border-blue-200',
-        textColor: 'text-blue-900',
+        color: 'from-violet-50 to-indigo-50 border-violet-200',
+        textColor: 'text-violet-900',
       });
     }
 

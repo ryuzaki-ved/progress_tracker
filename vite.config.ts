@@ -8,6 +8,7 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   server: {
+    proxy: { '/api': 'http://localhost:3001' },
     mimeTypes: {
       'wasm': 'application/wasm'
     }

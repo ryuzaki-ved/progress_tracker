@@ -275,7 +275,7 @@ export const useForecasting = () => {
               changePercent: 0,
               volatility: 'medium',
               lastActivity: new Date(),
-              color: change.stockData.color || 'bg-blue-500',
+              color: change.stockData.color || 'bg-violet-500',
               weight: change.stockData.weight || 0.1,
               history: [],
             };

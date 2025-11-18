@@ -36,7 +36,7 @@ export const PortfolioHeatmap: React.FC<PortfolioHeatmapProps> = ({
         </h3>
         <div className={`px-3 py-1 rounded-full text-sm font-medium ${
           portfolioAnalysis.overallHealth === 'excellent' ? 'bg-green-100 text-green-800' :
-          portfolioAnalysis.overallHealth === 'good' ? 'bg-blue-100 text-blue-800' :
+          portfolioAnalysis.overallHealth === 'good' ? 'bg-violet-100 text-violet-800' :
           portfolioAnalysis.overallHealth === 'concerning' ? 'bg-yellow-100 text-yellow-800' :
           'bg-red-100 text-red-800'
         }`}>
@@ -130,7 +130,7 @@ export const PortfolioHeatmap: React.FC<PortfolioHeatmapProps> = ({
                   transition={{ delay: index * 0.1 }}
                   className={`p-3 rounded-lg border ${
                     rec.impact === 'high' ? 'bg-red-50 border-red-200 text-red-800' :
-                    'bg-blue-50 border-blue-200 text-blue-800'
+                    'bg-violet-50 border-violet-200 text-violet-800'
                   }`}
                 >
                   <div className="flex items-center space-x-2">

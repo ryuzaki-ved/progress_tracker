@@ -160,7 +160,7 @@ export const JournalTimeline: React.FC<JournalTimelineProps> = ({
                       <div className="flex items-center space-x-1">
                         <span className="text-lg">{MOOD_EMOJIS[entry.mood || 'okay']}</span>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          entry.type === 'daily' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' :
+                          entry.type === 'daily' ? 'bg-violet-100 text-violet-800 dark:bg-violet-900/20 dark:text-violet-400' :
                           entry.type === 'weekly' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
                           'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400'
                         }`}>

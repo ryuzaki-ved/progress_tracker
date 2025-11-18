@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, Activity, RefreshCw, Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
+import { TrendingUp, DollarSign, BarChart3, Activity, Plus, Trash2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card } from '../components/ui/Card';
 import { Button, PlaceOrderButton } from '../components/ui/Button';
@@ -13,39 +13,15 @@ import SlidingNumber from '../components/ui/SlidingNumber';
 import { TradingNotificationContainer } from '../components/ui/TradingNotification';
 import { useTradingNotifications } from '../hooks/useTradingNotifications';
 import { OptionHoldingsChart } from '../components/ui/OptionHoldingsChart';
-import { OptionContract, UserOptionHolding, OptionTransaction } from '../types';
+
 import { PlaceOptionOrderButton } from '../components/ui/PlaceOptionOrderButton';
 import { calculateOptionPrice } from '../utils/optionUtils';
-import { getDb, persistDb } from '../lib/sqlite';
 
-const OptionToggleSwitch: React.FC<{
-  value: 'buy' | 'write';
-  onChange: (value: 'buy' | 'write') => void;
-  option1Label?: string;
-  option2Label?: string;
-  className?: string;
-}> = ({ value, onChange, option1Label = 'Buy', option2Label = 'Write', className }) => (
-  <div className={`flex rounded-full border-2 border-blue-400 overflow-hidden ${className || ''}`} style={{ width: 180, height: 40 }}>
-    <button
-      type="button"
-      className={`flex-1 text-center py-1 font-semibold transition-colors ${value === 'buy' ? 'bg-blue-400 text-white' : 'bg-white text-blue-400'}`}
-      onClick={() => onChange('buy')}
-    >
-      {option1Label}
-    </button>
-    <button
-      type="button"
-      className={`flex-1 text-center py-1 font-semibold transition-colors ${value === 'write' ? 'bg-blue-400 text-white' : 'bg-white text-blue-400'}`}
-      onClick={() => onChange('write')}
-    >
-      {option2Label}
-    </button>
-  </div>
-);
+
 
 export const TradingDesk: React.FC = () => {
   const { stocks, loading: stocksLoading } = useStocks();
-  const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, error, addFunds, optionContracts, userOptionHoldings, optionTransactions, optionPnlHistory, buyOption, writeOption, fetchOptionsData, exitOptionPosition, currentIndexValue, resetOptionsData } = useTrading();
+  const { holdings, cashBalance, transactions, loading: tradingLoading, buyStock, sellStock, addFunds, optionContracts, userOptionHoldings, optionTransactions, optionPnlHistory, buyOption, writeOption, fetchOptionsData, exitOptionPosition, currentIndexValue, resetOptionsData } = useTrading();
   const { notifications, dismissNotification, notifyStockBuy, notifyStockSell, notifyOptionBuy, notifyOptionWrite, notifyOptionExit, notifyOptionPnL } = useTradingNotifications();
   
   // Memoize calculated values to prevent unnecessary re-renders
@@ -97,7 +73,6 @@ export const TradingDesk: React.FC = () => {
   // Memoize option holdings calculations to prevent continuous updates
   const {
     optionHoldingsWithDetails,
-    optionHoldingsDistribution,
     totalOptionsPnL,
     totalOptionsReturn
   } = useMemo(() => {
@@ -106,11 +81,11 @@ export const TradingDesk: React.FC = () => {
       let currentPremium = 0;
       if (contract) {
         currentPremium = calculateOptionPrice(
-          currentIndexValue,
+          currentIndexValue || 0,
           contract.strikePrice,
           contract.expiryDate,
           contract.optionType,
-          contract.createdAt
+          String(contract.createdAt)
         );
       }
       const unrealizedPnL = (currentPremium - h.weightedAvgPremium) * h.quantity * (h.type.startsWith('long') ? 1 : -1);
@@ -126,10 +101,6 @@ export const TradingDesk: React.FC = () => {
       };
     });
 
-    const optionHoldingsDistribution = optionHoldingsWithDetails.map(h => ({
-      name: h.contractName,
-      value: h.contract ? Math.abs(h.contract.strikePrice * h.quantity) : 0,
-    }));
 
     const totalOptionsPnL = optionHoldingsWithDetails.reduce((sum, h) => sum + h.unrealizedPnL, 0);
     const totalOptionsInvested = optionHoldingsWithDetails.reduce((sum, h) => sum + (h.weightedAvgPremium * h.quantity), 0);
@@ -137,7 +108,6 @@ export const TradingDesk: React.FC = () => {
 
     return {
       optionHoldingsWithDetails,
-      optionHoldingsDistribution,
       totalOptionsPnL,
       totalOptionsReturn
     };
@@ -145,15 +115,13 @@ export const TradingDesk: React.FC = () => {
 
 
 
-  const [showPnL, setShowPnL] = useState(true);
+  const [showPnL] = useState(true);
   const [selectedStockId, setSelectedStockId] = useState('');
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
   const [quantity, setQuantity] = useState<string>('');
   const [orderError, setOrderError] = useState<string | null>(null);
   const [showTxHistory, setShowTxHistory] = useState(false);
   
-  // Trading form state
-  const [priceType, setPriceType] = useState('market');
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
 
   // Options trading form state
@@ -175,7 +143,7 @@ export const TradingDesk: React.FC = () => {
     return (
       <div className="p-6 flex items-center justify-center min-h-96">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading trading desk...</p>
         </div>
       </div>
@@ -210,7 +178,6 @@ export const TradingDesk: React.FC = () => {
 
   // Get selected stock details
   const selectedStock = stocks.find(s => s.id.toString() === selectedStockId);
-  const selectedHolding = holdingsWithStock.find(h => h.stockId.toString() === selectedStockId);
   const currentPrice = selectedStock ? selectedStock.currentScore * 0.1 : 0;
 
   // Get selected option contract
@@ -220,11 +187,11 @@ export const TradingDesk: React.FC = () => {
   let optionPremium = 0;
   if (selectedOption) {
     optionPremium = calculateOptionPrice(
-      currentIndexValue,
+      currentIndexValue || 0,
       selectedOption.strikePrice,
       selectedOption.expiryDate,
       selectedOption.optionType,
-      selectedOption.createdAt
+      String(selectedOption.createdAt)
     );
   }
 
@@ -268,11 +235,11 @@ export const TradingDesk: React.FC = () => {
       if (qty <= 0) throw new Error('Enter a valid quantity');
       if (!selectedOption) throw new Error('No option selected');
       const premium = calculateOptionPrice(
-        currentIndexValue,
+        currentIndexValue || 0,
         selectedOption.strikePrice,
         selectedOption.expiryDate,
         selectedOption.optionType,
-        selectedOption.createdAt
+        String(selectedOption.createdAt)
       );
       
       const optionDetails = `${selectedOption.strikePrice} ${selectedOption.optionType}`;
@@ -299,10 +266,15 @@ export const TradingDesk: React.FC = () => {
 
   // Add handler for deleting a strike
   const handleDeleteStrike = async (strike: number) => {
-    const db = await getDb();
-    db.run('DELETE FROM options_contracts WHERE strike_price = ?', [strike]);
-    await persistDb();
-    fetchOptionsData();
+    try {
+      await fetch(`/api/trading/options/strike/${strike}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('lifestock_token')}` }
+      });
+      fetchOptionsData();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   // In the option order form, calculate margin/collateral
@@ -395,17 +367,17 @@ export const TradingDesk: React.FC = () => {
 
       {/* Portfolio Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
+        <Card className="bg-gradient-to-r from-violet-50 to-indigo-50 border-violet-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
           <div className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-violet-600">
               <SlidingNumber value={holdingsWithStock.length} color="#2563eb" />
             </div>
-            <div className="text-sm text-blue-700">Holdings</div>
+            <div className="text-sm text-violet-700">Holdings</div>
           </div>
         </Card>
         <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
           <div className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600 font-share-tech-mono text-digital-shadow">
+            <div className="text-2xl font-bold text-violet-600 font-share-tech-mono text-digital-shadow">
               <SlidingNumber value={totalInvestment} prefix="₹" decimals={2} color="#059669" />
             </div>
             <div className="text-sm text-green-700">Invested</div>
@@ -469,7 +441,7 @@ export const TradingDesk: React.FC = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="border-b border-gray-100 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150 cursor-pointer"
+                        className="border-b border-gray-100 dark:border-gray-700 hover:bg-violet-50 dark:hover:bg-gray-700 transition-colors duration-150 cursor-pointer"
                       >
                         <td className="py-4 px-4">
                           <div className="flex items-center space-x-3">
@@ -535,7 +507,7 @@ export const TradingDesk: React.FC = () => {
                       outerRadius={90}
                       label={({ name, percent = 0 }) => `${name} (${(percent * 100).toFixed(1)}%)`}
                     >
-                      {holdingsDistribution.map((entry, idx) => (
+                      {holdingsDistribution.map((_, idx) => (
                         <Cell key={`cell-${idx}`} fill={pieColors[idx % pieColors.length]} />
                       ))}
                     </Pie>
@@ -564,7 +536,7 @@ export const TradingDesk: React.FC = () => {
                 <select
                   value={selectedStockId}
                   onChange={(e) => setSelectedStockId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-shadow duration-150 hover:border-blue-400 dark:hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-gray-800"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-violet-400 dark:focus:ring-violet-500 transition-shadow duration-150 hover:border-violet-400 dark:hover:border-violet-300 hover:bg-violet-50 dark:hover:bg-gray-800"
                 >
                   <option value="">Choose a stock...</option>
                   {stocks.map(stock => (
@@ -600,7 +572,7 @@ export const TradingDesk: React.FC = () => {
                       setQuantity(val);
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-shadow duration-150"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-400 dark:focus:ring-violet-500 transition-shadow duration-150"
                 />
               </div>
               <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
@@ -626,17 +598,17 @@ export const TradingDesk: React.FC = () => {
         
         {/* Options Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
+          <Card className="bg-gradient-to-r from-violet-50 to-indigo-50 border-violet-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
             <div className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-violet-600">
                 <SlidingNumber value={userOptionHoldings.length} color="#2563eb" />
               </div>
-              <div className="text-sm text-blue-700">Option Holdings</div>
+              <div className="text-sm text-violet-700">Option Holdings</div>
             </div>
           </Card>
           <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 transition-transform duration-200 hover:scale-105 hover:shadow-lg">
             <div className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600 font-share-tech-mono text-digital-shadow">
+              <div className="text-2xl font-bold text-violet-600 font-share-tech-mono text-digital-shadow">
                 <SlidingNumber 
                   value={userOptionHoldings.reduce((sum, h) => {
                     if (h.type === 'long_ce' || h.type === 'long_pe') {
@@ -711,18 +683,18 @@ export const TradingDesk: React.FC = () => {
                         const ce = optionContracts.find(opt => opt.strikePrice === strike && opt.optionType === 'CE');
                         const pe = optionContracts.find(opt => opt.strikePrice === strike && opt.optionType === 'PE');
                         const cePremium = ce ? calculateOptionPrice(
-                          currentIndexValue,
+                          currentIndexValue || 0,
                           ce.strikePrice,
                           ce.expiryDate,
                           ce.optionType,
-                          ce.createdAt
+                          String(ce.createdAt)
                         ) : null;
                         const pePremium = pe ? calculateOptionPrice(
-                          currentIndexValue,
+                          currentIndexValue || 0,
                           pe.strikePrice,
                           pe.expiryDate,
                           pe.optionType,
-                          pe.createdAt
+                          String(pe.createdAt)
                         ) : null;
                         // Calculate OI for CE and PE
                         const ceOI = userOptionHoldings
@@ -738,7 +710,7 @@ export const TradingDesk: React.FC = () => {
                           })
                           .reduce((sum, h) => sum + h.quantity, 0);
                         return (
-                          <tr key={strike} className="hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer">
+                          <tr key={strike} className="hover:bg-violet-50 dark:hover:bg-gray-700 cursor-pointer">
                             <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{ceOI}</td>
                             <td className="py-2 px-4 text-center text-gray-900 dark:text-white" onClick={() => ce && setSelectedOptionId(ce.id.toString())}>
                               {cePremium !== null ? cePremium.toFixed(2) : '-'}
@@ -860,7 +832,7 @@ export const TradingDesk: React.FC = () => {
                   <select
                     value={selectedOptionId}
                     onChange={e => setSelectedOptionId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-shadow duration-150 hover:border-blue-400 dark:hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-gray-800"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-violet-400 dark:focus:ring-violet-500 transition-shadow duration-150 hover:border-violet-400 dark:hover:border-violet-300 hover:bg-violet-50 dark:hover:bg-gray-800"
                   >
                     <option value="">Choose an option...</option>
                     {optionContracts.map(opt => (
@@ -873,9 +845,11 @@ export const TradingDesk: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Order Type</label>
                   <div className="flex justify-center">
-                    <OptionToggleSwitch
+                    <ToggleSwitch
                       value={optionOrderType}
                       onChange={setOptionOrderType}
+                      option1Value="buy"
+                      option2Value="write"
                       option1Label="Buy"
                       option2Label="Write"
                     />
@@ -896,7 +870,7 @@ export const TradingDesk: React.FC = () => {
                         setOptionQuantity(val);
                       }
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500 transition-shadow duration-150"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-400 dark:focus:ring-violet-500 transition-shadow duration-150"
                   />
                 </div>
                 <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
@@ -975,7 +949,7 @@ export const TradingDesk: React.FC = () => {
                       <td className="py-2 px-4 text-center text-gray-900 dark:text-white">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           pnl.position_type.startsWith('long') 
-                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' 
+                            ? 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200' 
                             : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
                         }`}>
                           {pnl.position_type.replace('_', ' ').toUpperCase()}

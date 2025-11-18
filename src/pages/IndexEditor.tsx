@@ -4,8 +4,7 @@ import { Calendar, Save, TrendingUp, Edit3, RefreshCw } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useIndex } from '../hooks/useIndex';
-import { format, subDays, addDays, startOfDay, isToday } from 'date-fns';
-import { getDb } from '../lib/sqlite';
+import { format, subDays, addDays, isToday } from 'date-fns';
 
 export const IndexEditor: React.FC = () => {
   const { indexData, loading, error, updateMultipleIndexValues, refetch } = useIndex();
@@ -52,7 +51,7 @@ export const IndexEditor: React.FC = () => {
       dateRange.push({
         date: dateString,
         displayDate: format(date, 'MMM d, yyyy'),
-        value: existingEntry?.value || 500,
+        value: existingEntry?.close || 500,
         hasData: !!existingEntry,
       });
     }
@@ -98,23 +97,7 @@ export const IndexEditor: React.FC = () => {
     setEditValues({});
   };
 
-  // Debug: Log index_history table
-  const handleDebugLogIndexHistory = async () => {
-    const db = await getDb();
-    const res = db.exec('SELECT * FROM index_history ORDER BY date DESC LIMIT 50');
-    if (res[0]) {
-      const columns = res[0].columns;
-      const values = res[0].values;
-      const rows = values.map(row => {
-        const obj = {};
-        columns.forEach((col, i) => (obj[col] = row[i]));
-        return obj;
-      });
-      console.log('index_history rows:', rows);
-    } else {
-      console.log('No rows in index_history');
-    }
-  };
+
 
   const hasChanges = Object.keys(editValues).length > 0;
 
@@ -122,7 +105,7 @@ export const IndexEditor: React.FC = () => {
     return (
       <div className="p-6 flex items-center justify-center min-h-96">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading index data...</p>
         </div>
       </div>
@@ -135,7 +118,7 @@ export const IndexEditor: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
-            <Edit3 className="w-8 h-8 mr-3 text-blue-600" />
+            <Edit3 className="w-8 h-8 mr-3 text-violet-600" />
             Index Value Editor
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -148,13 +131,11 @@ export const IndexEditor: React.FC = () => {
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
-          <Button variant="outline" onClick={handleDebugLogIndexHistory}>
-            Debug: Log Index History
-          </Button>
+
           <Button 
             onClick={handleSaveChanges} 
             disabled={!hasChanges || saving}
-            className={hasChanges ? 'bg-blue-600 hover:bg-blue-700' : ''}
+            className={hasChanges ? 'bg-violet-600 hover:bg-violet-700' : ''}
           >
             {saving ? (
               <div className="flex items-center">
@@ -285,9 +266,9 @@ export const IndexEditor: React.FC = () => {
                           isToday(new Date(entry.date))
                             ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400'
                             : hasEdit 
-                            ? 'border-blue-300 bg-blue-50 dark:border-blue-600 dark:bg-blue-900/20' 
+                            ? 'border-violet-300 bg-violet-50 dark:border-violet-600 dark:bg-violet-900/20' 
                             : 'border-gray-300 dark:border-gray-600'
-                        } bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400`}
+                        } bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-400`}
                       />
                     </td>
                     <td className="py-3 px-4">
@@ -300,8 +281,8 @@ export const IndexEditor: React.FC = () => {
                         </div>
                       ) : hasEdit ? (
                         <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                          <div className="w-2 h-2 bg-violet-500 rounded-full"></div>
+                          <span className="text-sm text-violet-600 dark:text-violet-400 font-medium">
                             Modified
                           </span>
                         </div>
@@ -336,13 +317,13 @@ export const IndexEditor: React.FC = () => {
 
       {/* Summary */}
       {hasChanges && (
-        <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700">
+        <Card className="bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-700">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-semibold text-blue-900 dark:text-blue-100">
+              <h4 className="font-semibold text-violet-900 dark:text-violet-100">
                 Pending Changes
               </h4>
-              <p className="text-blue-700 dark:text-blue-300 text-sm">
+              <p className="text-violet-700 dark:text-violet-300 text-sm">
                 You have {Object.keys(editValues).length} unsaved change{Object.keys(editValues).length !== 1 ? 's' : ''}. 
                 Click "Save Changes" to apply them to your charts. Today's value is automatically calculated and cannot be edited.
               </p>
@@ -350,7 +331,7 @@ export const IndexEditor: React.FC = () => {
             <Button 
               onClick={handleSaveChanges} 
               disabled={saving}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-violet-600 hover:bg-violet-700 text-white"
             >
               {saving ? 'Saving...' : 'Save Now'}
             </Button>

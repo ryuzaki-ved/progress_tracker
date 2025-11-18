@@ -11,7 +11,7 @@ export const mockStocks: Stock[] = [
     changePercent: 2.04,
     volatility: 'medium',
     lastActivity: new Date('2024-01-15'),
-    color: 'bg-blue-500',
+    color: 'bg-violet-500',
     weight: 0.3,
     history: [
       { date: new Date('2024-01-08'), value: 720 },

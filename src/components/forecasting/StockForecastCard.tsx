@@ -124,20 +124,20 @@ export const StockForecastCard: React.FC<StockForecastCardProps> = ({
               </span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div className={`h-2 bg-blue-500 rounded-full transition-all duration-500 ${getConfidenceWidth()}`} />
+              <div className={`h-2 bg-violet-500 rounded-full transition-all duration-500 ${getConfidenceWidth()}`} />
             </div>
           </div>
 
           {/* Action Required */}
           {forecast.tasksNeeded > 0 && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 mb-4">
+            <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 rounded-lg p-3 mb-4">
               <div className="flex items-center space-x-2 mb-2">
-                <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                <Target className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                <span className="text-sm font-medium text-violet-800 dark:text-violet-200">
                   Action Needed
                 </span>
               </div>
-              <div className="text-sm text-blue-700 dark:text-blue-300">
+              <div className="text-sm text-violet-700 dark:text-violet-300">
                 <div className="flex items-center space-x-4">
                   <span>{forecast.tasksNeeded} tasks</span>
                   <span className="flex items-center">

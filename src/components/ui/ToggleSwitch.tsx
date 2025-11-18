@@ -1,40 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import styled from 'styled-components';
-
-const Container = styled.div`
-  display: flex;
-  align-items: center;
-  width: 400px;
-  height: 50px;
-  border: 2.5px solid #00cfff;
-  border-radius: 30px;
-  position: relative;
-  background: linear-gradient(135deg, #181f2b 60%, #232b3a 100%);
-  box-sizing: border-box;
-  overflow: hidden;
-  box-shadow: 0 0 24px 4px #00cfff99, 0 0 60px 8px #00cfff33;
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
-  
-  &:hover {
-    box-shadow: 0 0 40px 8px #00cfffcc, 0 0 80px 16px #00cfff44;
-    border-color: #00eaff;
-  }
-  
-  @media (max-width: 500px) {
-    width: 100%;
-    min-width: 220px;
-    height: 44px;
-  }
-`;
-
-const HiddenRadio = styled.input.attrs({ type: 'radio' })`
-  display: none;
-`;
+import { TrendingUp, TrendingDown, Edit3 } from 'lucide-react';
 
 interface ToggleSwitchProps {
-  value: 'buy' | 'sell';
-  onChange: (value: 'buy' | 'sell') => void;
+  value: string;
+  onChange: (value: any) => void;
+  option1Value?: string;
+  option2Value?: string;
   option1Label?: string;
   option2Label?: string;
   className?: string;
@@ -43,216 +15,65 @@ interface ToggleSwitchProps {
 export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   value,
   onChange,
+  option1Value = 'buy',
+  option2Value = 'sell',
   option1Label = 'Buy',
   option2Label = 'Sell',
-  className,
+  className = '',
 }) => {
-  const isSell = value === 'sell';
+  const isOpt1 = value === option1Value;
+  const isOpt2 = value === option2Value;
+
+  const Icon1 = option1Label.toLowerCase() === 'buy' ? TrendingUp : TrendingUp;
+  const Icon2 = option2Label.toLowerCase() === 'write' ? Edit3 : TrendingDown;
 
   return (
-    <Container className={className}>
-      {/* Animated sliding background */}
+    <div 
+      className={`relative flex items-center w-full max-w-[400px] h-16 bg-[#0a0a0f]/90 backdrop-blur-2xl border border-white/5 rounded-full p-1.5 shadow-[inset_0_4px_12px_rgba(0,0,0,0.8)] cursor-pointer overflow-hidden transition-all duration-300 ${className}`}
+      onClick={() => onChange(isOpt1 ? option2Value : option1Value)}
+      style={{
+        boxShadow: isOpt1 ? 'inset 0 4px 12px rgba(0,0,0,0.8), 0 0 20px rgba(16,185,129,0.05)' : 'inset 0 4px 12px rgba(0,0,0,0.8), 0 0 20px rgba(244,63,94,0.05)'
+      }}
+    >
+      {/* SLIDING THUMB */}
       <motion.div
-        className="absolute top-0 left-0 w-1/2 h-full z-10"
+        className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] rounded-full flex items-center justify-center overflow-hidden"
         animate={{
-          x: isSell ? '100%' : '0%',
-          background: isSell
-            ? 'linear-gradient(135deg, #2b1a1a 60%, #ff3c6a 100%)'
-            : 'linear-gradient(135deg, #0e2a3a 60%, #00cfff 100%)',
-          boxShadow: isSell
-            ? '0 0 32px 8px #ff3c6a99, 0 0 80px 16px #ff3c6a44'
-            : '0 0 32px 8px #00cfff99, 0 0 80px 16px #00cfff44',
-          borderRadius: '30px',
+          left: isOpt1 ? '6px' : 'calc(50%)',
+          background: isOpt1 ? 'linear-gradient(135deg, #10B981 0%, #047857 100%)' : 'linear-gradient(135deg, #F43F5E 0%, #BE123C 100%)',
+          boxShadow: isOpt1 
+            ? '0 8px 20px rgba(16,185,129,0.4), inset 0 1px 1px rgba(255,255,255,0.4)' 
+            : '0 8px 20px rgba(244,63,94,0.4), inset 0 1px 1px rgba(255,255,255,0.4)'
         }}
-        transition={{
-          type: 'spring',
-          stiffness: 300,
-          damping: 30,
-          duration: 0.4,
-        }}
-      />
-
-      {/* Buy option */}
-      <HiddenRadio
-        id="buy"
-        name="tradeType"
-        checked={value === 'buy'}
-        onChange={() => onChange('buy')}
-      />
-      <motion.label
-        htmlFor="buy"
-        className="flex-1 text-center z-20 cursor-pointer user-select-none relative"
-        animate={{
-          color: value === 'buy' ? '#00cfff' : '#4e5a6e',
-          fontWeight: value === 'buy' ? 'bold' : 'normal',
-          scale: value === 'buy' ? 1.08 : 1,
-          textShadow: value === 'buy'
-            ? '0 0 2px #00eaff, 0 0 7px #00cfff, 0 1px 2px #00cfff88'
-            : '0 0 1.3px #222',
-          y: value === 'buy' ? -3 : 0,
-        }}
-        transition={{
-          type: 'spring',
-          stiffness: 400,
-          damping: 25,
-          duration: 0.3,
-        }}
-        whileHover={{
-          scale: 1.02,
-        }}
-        whileTap={{
-          scale: 0.98,
-        }}
-        style={{
-          fontSize: '1.2rem',
-          lineHeight: '50px',
-        }}
+        transition={{ type: "spring", stiffness: 450, damping: 30 }}
       >
-        <motion.span
-          animate={{
-            y: value === 'buy' ? -1 : 0,
-          }}
-          transition={{
-            type: 'spring',
-            stiffness: 500,
-            damping: 30,
-          }}
+        {/* Sweeping Glass Sheen inside the thumb */}
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-30deg] w-[200%] pointer-events-none"
+          initial={{ left: '-150%' }}
+          animate={{ left: '150%' }}
+          transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut', repeatDelay: 1 }}
+        />
+      </motion.div>
+
+      {/* TEXT LAYER */}
+      <div className="relative flex w-full z-10 font-display font-extrabold text-lg tracking-wide pointer-events-none">
+        <div 
+          className={`flex-1 flex items-center justify-center space-x-2 transition-colors duration-300 ${isOpt1 ? 'text-white' : 'text-gray-500 hover:text-white/60 pointer-events-auto'}`}
+          onClick={(e) => { e.stopPropagation(); onChange(option1Value); }}
         >
-          {option1Label.toUpperCase()}
-        </motion.span>
-        {/* Interactive background for BUY */}
-        {value === 'buy' && (
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.18 }}
-            exit={{ opacity: 0 }}
-            style={{
-              background: 'linear-gradient(90deg, #00eaff33 0%, #00cfff44 100%)',
-              zIndex: -1,
-            }}
-          />
-        )}
-      </motion.label>
-
-      {/* Sell option */}
-      <HiddenRadio
-        id="sell"
-        name="tradeType"
-        checked={value === 'sell'}
-        onChange={() => onChange('sell')}
-      />
-      <motion.label
-        htmlFor="sell"
-        className="flex-1 text-center z-20 cursor-pointer user-select-none relative"
-        animate={{
-          color: value === 'sell' ? '#ff3c6a' : '#4e5a6e',
-          fontWeight: value === 'sell' ? 'bold' : 'normal',
-          scale: value === 'sell' ? 1.08 : 1,
-          textShadow: value === 'sell'
-            ? '0 0 5px #ff3c6a, 0 0 10px #ff3c6a, 0 1px 2px #ff3c6a88'
-            : '0 0 1.3px #222',
-          y: value === 'sell' ? -3 : 0,
-        }}
-        transition={{
-          type: 'spring',
-          stiffness: 400,
-          damping: 25,
-          duration: 0.3,
-        }}
-        whileHover={{
-          scale: 1.02,
-        }}
-        whileTap={{
-          scale: 0.98,
-        }}
-        style={{
-          fontSize: '1.2rem',
-          lineHeight: '50px',
-        }}
-      >
-        <motion.span
-          animate={{
-            y: value === 'sell' ? -1 : 0,
-          }}
-          transition={{
-            type: 'spring',
-            stiffness: 500,
-            damping: 30,
-          }}
+          <Icon1 className={`w-5 h-5 transition-colors duration-300 ${isOpt1 ? 'text-emerald-100' : 'opacity-40'}`} />
+          <span className={`${isOpt1 ? 'drop-shadow-md' : ''}`}>{option1Label}</span>
+        </div>
+        
+        <div 
+          className={`flex-1 flex items-center justify-center space-x-2 transition-colors duration-300 ${isOpt2 ? 'text-white' : 'text-gray-500 hover:text-white/60 pointer-events-auto'}`}
+          onClick={(e) => { e.stopPropagation(); onChange(option2Value); }}
         >
-          {option2Label.toUpperCase()}
-        </motion.span>
-        {/* Interactive background for SELL */}
-        {value === 'sell' && (
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.18 }}
-            exit={{ opacity: 0 }}
-            style={{
-              background: 'linear-gradient(90deg, #ff3c6a33 0%, #ff3c6a55 100%)',
-              zIndex: -1,
-            }}
-          />
-        )}
-      </motion.label>
-
-      {/* Animated border highlight */}
-      <motion.div
-        className="absolute inset-0 rounded-full pointer-events-none"
-        animate={{
-          borderColor: isSell ? '#ff3c6a' : '#00cfff',
-          boxShadow: isSell
-            ? '0 0 0 4px #ff3c6a66, 0 0 24px 4px #ff3c6a99'
-            : '0 0 0 4px #00cfff66, 0 0 24px 4px #00cfff99',
-        }}
-        transition={{
-          duration: 0.35,
-        }}
-        style={{
-          borderWidth: 2,
-          borderStyle: 'solid',
-        }}
-      />
-
-      {/* Pulse effect on selection change */}
-      <motion.div
-        key={value} // This ensures the animation triggers on value change
-        className="absolute inset-0 rounded-full pointer-events-none"
-        initial={{ 
-          scale: 1,
-          opacity: 0.6,
-          background: isSell ? 'rgba(255, 60, 106, 0.18)' : 'rgba(0, 207, 255, 0.18)',
-        }}
-        animate={{ 
-          scale: [1, 1.08, 1],
-          opacity: [0.6, 0.15, 0],
-        }}
-        transition={{
-          duration: 0.7,
-          ease: 'easeOut',
-        }}
-      />
-      {/* Scanline/pulse effect */}
-      <motion.div
-        key={value + '-scanline'}
-        className="absolute inset-0 rounded-full pointer-events-none"
-        initial={{ opacity: 0 }}
-        animate={{
-          opacity: [0.12, 0.22, 0.12],
-          background:
-            value === 'buy'
-              ? 'repeating-linear-gradient(90deg, #00eaff33 0 2px, transparent 2px 8px)'
-              : 'repeating-linear-gradient(90deg, #ff3c6a33 0 2px, transparent 2px 8px)',
-        }}
-        transition={{
-          duration: 1.2,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        style={{ zIndex: 30 }}
-      />
-    </Container>
+          <Icon2 className={`w-5 h-5 transition-colors duration-300 ${isOpt2 ? 'text-rose-100' : 'opacity-40'}`} />
+          <span className={`${isOpt2 ? 'drop-shadow-md' : ''}`}>{option2Label}</span>
+        </div>
+      </div>
+    </div>
   );
 };

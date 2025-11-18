@@ -52,7 +52,7 @@ export const Notes: React.FC = () => {
     return (
       <div className="p-6 flex items-center justify-center min-h-96">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading notes...</p>
         </div>
       </div>
@@ -344,14 +344,14 @@ export const Notes: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
-            <StickyNote className="w-8 h-8 mr-3 text-blue-600" />
+            <StickyNote className="w-8 h-8 mr-3 text-violet-600" />
             Notes
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Capture and organize your thoughts, ideas, and important information
           </p>
         </div>
-        <Button onClick={() => setShowAddModal(true)} className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={() => setShowAddModal(true)} className="bg-violet-600 hover:bg-violet-700">
           <Plus className="w-4 h-4 mr-2" />
           New Note
         </Button>
@@ -391,7 +391,7 @@ export const Notes: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-400"
                 placeholder="Search notes..."
               />
             </div>
@@ -444,12 +444,12 @@ export const Notes: React.FC = () => {
           
           {/* Active Filters Summary */}
           {(searchQuery || selectedCategory !== 'all' || selectedTag !== 'all' || showArchived) && (
-            <div className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+            <div className="text-sm text-gray-600 dark:text-gray-400 bg-violet-50 dark:bg-violet-900/20 p-3 rounded-lg">
               <span className="font-medium">Active filters:</span>
-              {searchQuery && <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded text-xs">Search: "{searchQuery}"</span>}
-              {selectedCategory !== 'all' && <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded text-xs">Category: {selectedCategory}</span>}
-              {selectedTag !== 'all' && <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded text-xs">Tag: #{selectedTag}</span>}
-              {showArchived && <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded text-xs">Archived</span>}
+              {searchQuery && <span className="ml-2 px-2 py-1 bg-violet-100 dark:bg-violet-800 text-violet-800 dark:text-violet-200 rounded text-xs">Search: "{searchQuery}"</span>}
+              {selectedCategory !== 'all' && <span className="ml-2 px-2 py-1 bg-violet-100 dark:bg-violet-800 text-violet-800 dark:text-violet-200 rounded text-xs">Category: {selectedCategory}</span>}
+              {selectedTag !== 'all' && <span className="ml-2 px-2 py-1 bg-violet-100 dark:bg-violet-800 text-violet-800 dark:text-violet-200 rounded text-xs">Tag: #{selectedTag}</span>}
+              {showArchived && <span className="ml-2 px-2 py-1 bg-violet-100 dark:bg-violet-800 text-violet-800 dark:text-violet-200 rounded text-xs">Archived</span>}
               <span className="ml-2 text-gray-500">({filteredNotes.length} note{filteredNotes.length !== 1 ? 's' : ''} shown)</span>
             </div>
           )}
@@ -463,7 +463,7 @@ export const Notes: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-violet-600">
               {notes.filter(n => !n.isArchived).length}
             </div>
             <div className="text-sm text-gray-600">Active Notes</div>
@@ -510,7 +510,7 @@ export const Notes: React.FC = () => {
             }
           </p>
           {!showArchived && (
-            <Button onClick={() => setShowAddModal(true)} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={() => setShowAddModal(true)} className="bg-violet-600 hover:bg-violet-700">
               <Plus className="w-4 h-4 mr-2" />
               Create First Note
             </Button>

@@ -67,7 +67,7 @@ export const PatternDetectionPanel: React.FC<PatternDetectionPanelProps> = ({
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getConfidenceColor(pattern.confidence)}`}>
                       {pattern.confidence}% confidence
                     </span>
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 rounded-full text-xs font-medium">
+                    <span className="px-2 py-1 bg-violet-100 text-violet-800 dark:bg-violet-900/20 dark:text-violet-400 rounded-full text-xs font-medium">
                       {getFrequencyDescription(pattern.frequency)}
                     </span>
                   </div>
@@ -93,16 +93,16 @@ export const PatternDetectionPanel: React.FC<PatternDetectionPanelProps> = ({
               </div>
 
               {/* Interventions */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+              <div className="bg-violet-50 dark:bg-violet-900/20 rounded-lg p-3">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Lightbulb className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  <span className="font-medium text-blue-800 dark:text-blue-200 text-sm">
+                  <Lightbulb className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                  <span className="font-medium text-violet-800 dark:text-violet-200 text-sm">
                     Suggested Interventions
                   </span>
                 </div>
                 <div className="space-y-1">
                   {pattern.interventions.map((intervention, idx) => (
-                    <div key={idx} className="text-sm text-blue-700 dark:text-blue-300">
+                    <div key={idx} className="text-sm text-violet-700 dark:text-violet-300">
                       • {intervention}
                     </div>
                   ))}
@@ -111,7 +111,7 @@ export const PatternDetectionPanel: React.FC<PatternDetectionPanelProps> = ({
 
               {/* Action Buttons */}
               <div className="flex space-x-2 mt-3">
-                <Button size="sm" variant="outline" className="text-blue-600 border-blue-300 hover:bg-blue-50">
+                <Button size="sm" variant="outline" className="text-violet-600 border-violet-300 hover:bg-violet-50">
                   Apply Intervention
                 </Button>
                 <Button size="sm" variant="ghost" className="text-gray-600">

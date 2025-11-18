@@ -1,15 +1,14 @@
+import { useAuth } from './useAuth';
 import { useState, useEffect } from 'react';
-import { getDb, persistDb } from '../lib/sqlite';
 import { WeeklyReview, ReflectionInsight } from '../types';
 import { useTasks } from './useTasks';
 import { useStocks } from './useStocks';
 import { useStreaks } from './useStreaks';
 import { useIndex } from './useIndex';
-import { startOfWeek, endOfWeek, subWeeks, format, isSameWeek } from 'date-fns';
-
-const currentUserId = 1;
+import { endOfWeek, isSameWeek } from 'date-fns';
 
 export const useReviews = () => {
+  const { user } = useAuth();
   const [reviews, setReviews] = useState<WeeklyReview[]>([]);
   const [insights, setInsights] = useState<ReflectionInsight[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,80 +19,25 @@ export const useReviews = () => {
   const { streaks } = useStreaks();
   const { indexData } = useIndex();
 
-  const initializeReviews = async () => {
-    try {
-      const db = await getDb();
-      
-      // Create weekly_reviews table
-      db.run(`
-        CREATE TABLE IF NOT EXISTS weekly_reviews (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_id INTEGER NOT NULL,
-          week_start TEXT NOT NULL,
-          week_end TEXT NOT NULL,
-          rating TEXT NOT NULL,
-          stats TEXT NOT NULL,
-          journal_entry_id INTEGER,
-          insights TEXT,
-          goals TEXT,
-          created_at TEXT DEFAULT (datetime('now')),
-          updated_at TEXT DEFAULT (datetime('now'))
-        )
-      `);
-
-      // Create reflection_insights table
-      db.run(`
-        CREATE TABLE IF NOT EXISTS reflection_insights (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_id INTEGER NOT NULL,
-          type TEXT NOT NULL,
-          title TEXT NOT NULL,
-          description TEXT NOT NULL,
-          data TEXT,
-          confidence TEXT DEFAULT 'medium',
-          actionable BOOLEAN DEFAULT false,
-          dismissed BOOLEAN DEFAULT false,
-          created_at TEXT DEFAULT (datetime('now'))
-        )
-      `);
-
-      await persistDb();
-      await fetchReviews();
-      await fetchInsights();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to initialize reviews');
-    }
-  };
+  const getHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('lifestock_token')}`
+  });
 
   const fetchReviews = async () => {
+    if (!user) return;
     try {
-      const db = await getDb();
-      const res = db.exec(
-        'SELECT * FROM weekly_reviews WHERE user_id = ? ORDER BY week_start DESC',
-        [currentUserId]
-      );
+      const response = await fetch('/api/reviews', { headers: getHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch reviews');
+      const result = await response.json();
       
-      const rows = res[0]?.values || [];
-      const columns = res[0]?.columns || [];
-      
-      const reviewsList: WeeklyReview[] = rows.map((row: any[]) => {
-        const reviewObj: any = {};
-        columns.forEach((col, i) => (reviewObj[col] = row[i]));
-        
-        return {
-          id: reviewObj.id.toString(),
-          userId: reviewObj.user_id.toString(),
-          weekStart: new Date(reviewObj.week_start),
-          weekEnd: new Date(reviewObj.week_end),
-          rating: reviewObj.rating,
-          stats: JSON.parse(reviewObj.stats),
-          journalEntryId: reviewObj.journal_entry_id?.toString(),
-          insights: reviewObj.insights ? JSON.parse(reviewObj.insights) : [],
-          goals: reviewObj.goals ? JSON.parse(reviewObj.goals) : [],
-          createdAt: new Date(reviewObj.created_at),
-          updatedAt: new Date(reviewObj.updated_at),
-        };
-      });
+      const reviewsList = result.data.map((r: any) => ({
+        ...r,
+        weekStart: new Date(r.weekStart),
+        weekEnd: new Date(r.weekEnd),
+        createdAt: new Date(r.createdAt),
+        updatedAt: new Date(r.updatedAt),
+      }));
       
       setReviews(reviewsList);
     } catch (err) {
@@ -102,32 +46,16 @@ export const useReviews = () => {
   };
 
   const fetchInsights = async () => {
+    if (!user) return;
     try {
-      const db = await getDb();
-      const res = db.exec(
-        'SELECT * FROM reflection_insights WHERE user_id = ? AND dismissed = false ORDER BY created_at DESC',
-        [currentUserId]
-      );
+      const response = await fetch('/api/reviews/insights', { headers: getHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch insights');
+      const result = await response.json();
       
-      const rows = res[0]?.values || [];
-      const columns = res[0]?.columns || [];
-      
-      const insightsList: ReflectionInsight[] = rows.map((row: any[]) => {
-        const insightObj: any = {};
-        columns.forEach((col, i) => (insightObj[col] = row[i]));
-        
-        return {
-          id: insightObj.id.toString(),
-          type: insightObj.type,
-          title: insightObj.title,
-          description: insightObj.description,
-          data: insightObj.data ? JSON.parse(insightObj.data) : null,
-          confidence: insightObj.confidence,
-          actionable: Boolean(insightObj.actionable),
-          dismissed: Boolean(insightObj.dismissed),
-          createdAt: new Date(insightObj.created_at),
-        };
-      });
+      const insightsList = result.data.map((i: any) => ({
+        ...i,
+        createdAt: new Date(i.createdAt),
+      }));
       
       setInsights(insightsList);
     } catch (err) {
@@ -138,24 +66,24 @@ export const useReviews = () => {
   const generateWeeklyStats = (weekStart: Date) => {
     const weekEnd = endOfWeek(weekStart);
     const weekTasks = tasks.filter(task => 
-      task.createdAt >= weekStart && task.createdAt <= weekEnd
+      task.createdAt && task.createdAt >= weekStart && task.createdAt <= weekEnd
     );
     
     const completedTasks = weekTasks.filter(task => task.status === 'completed');
-    const missedTasks = weekTasks.filter(task => task.status === 'overdue' || task.status === 'failed');
+    const missedTasks = weekTasks.filter(task => task.status === 'overdue' || (task.status as any) === 'failed');
     const rescheduledTasks = weekTasks.filter(task => 
-      task.dueDate && task.updatedAt && task.updatedAt > task.createdAt
+      task.dueDate && (task as any).updatedAt && (task as any).updatedAt > task.createdAt
     );
 
     const activeStreaks = streaks.filter(streak => streak.isActive);
     const brokenStreaks = streaks.filter(streak => !streak.isActive && streak.currentStreak === 0);
 
     const topStock = stocks.reduce((best, stock) => 
-      stock.changePercent > (best?.changePercent || -Infinity) ? stock : best, null
+      stock.changePercent > (best?.changePercent || -Infinity) ? stock : best, null as any
     );
     
     const strugglingStock = stocks.reduce((worst, stock) => 
-      stock.changePercent < (worst?.changePercent || Infinity) ? stock : worst, null
+      stock.changePercent < (worst?.changePercent || Infinity) ? stock : worst, null as any
     );
 
     return {
@@ -170,41 +98,9 @@ export const useReviews = () => {
     };
   };
 
-  const createWeeklyReview = async (weekStart: Date, rating: WeeklyReview['rating'], journalEntryId?: string) => {
-    setError(null);
-    try {
-      const db = await getDb();
-      const weekEnd = endOfWeek(weekStart);
-      const stats = generateWeeklyStats(weekStart);
-      const insights = await generateInsights();
-      
-      db.run(
-        `INSERT INTO weekly_reviews (user_id, week_start, week_end, rating, stats, journal_entry_id, insights, goals) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          currentUserId,
-          weekStart.toISOString(),
-          weekEnd.toISOString(),
-          rating,
-          JSON.stringify(stats),
-          journalEntryId || null,
-          JSON.stringify(insights),
-          JSON.stringify([]),
-        ]
-      );
-      
-      await persistDb();
-      await fetchReviews();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create weekly review');
-      throw err;
-    }
-  };
-
   const generateInsights = async (): Promise<string[]> => {
-    const insights: string[] = [];
+    const newInsights: string[] = [];
     
-    // Analyze task completion patterns
     const tasksByDay = tasks.reduce((acc, task) => {
       if (task.completedAt) {
         const day = task.completedAt.getDay();
@@ -218,36 +114,61 @@ export const useReviews = () => {
       count < (tasksByDay[parseInt(min[0])] || Infinity) ? [day, count] : min, ['0', Infinity]
     );
 
-    if (parseInt(leastProductiveDay[0]) >= 0) {
-      insights.push(`You tend to complete fewer tasks on ${dayNames[parseInt(leastProductiveDay[0])]}`);
+    if (parseInt(leastProductiveDay[0]) >= 0 && leastProductiveDay[1] !== Infinity) {
+      newInsights.push(`You tend to complete fewer tasks on ${dayNames[parseInt(leastProductiveDay[0])]}`);
     }
 
-    // Analyze stock performance
     const decliningStocks = stocks.filter(stock => stock.changePercent < -5);
     if (decliningStocks.length > 0) {
-      insights.push(`${decliningStocks[0].name} needs attention - consider adding more tasks here`);
+      newInsights.push(`${decliningStocks[0].name} needs attention - consider adding more tasks here`);
     }
 
-    // Analyze streaks
     const longestStreak = streaks.reduce((max, streak) => 
       streak.longestStreak > max ? streak.longestStreak : max, 0
     );
     
     if (longestStreak > 7) {
-      insights.push(`Great job maintaining streaks! Your longest is ${longestStreak} days`);
+      newInsights.push(`Great job maintaining streaks! Your longest is ${longestStreak} days`);
     }
 
-    return insights;
+    return newInsights;
+  };
+
+  const createWeeklyReview = async (weekStart: Date, rating: WeeklyReview['rating'], journalEntryId?: string) => {
+    if (!user) return;
+    setError(null);
+    try {
+      const weekEnd = endOfWeek(weekStart);
+      const stats = generateWeeklyStats(weekStart);
+      const generatedInsights = await generateInsights();
+      
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          weekStart: weekStart.toISOString(),
+          weekEnd: weekEnd.toISOString(),
+          rating,
+          stats,
+          journalEntryId,
+          insights: generatedInsights,
+          goals: []
+        })
+      });
+
+      if (!response.ok) throw new Error((await response.json()).error);
+      
+      await fetchReviews();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create weekly review');
+      throw err;
+    }
   };
 
   const dismissInsight = async (insightId: string) => {
+    if (!user) return;
     try {
-      const db = await getDb();
-      db.run(
-        'UPDATE reflection_insights SET dismissed = true WHERE id = ? AND user_id = ?',
-        [insightId, currentUserId]
-      );
-      await persistDb();
+      await fetch(`/api/reviews/insights/${insightId}/dismiss`, { method: 'POST', headers: getHeaders() });
       await fetchInsights();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to dismiss insight');
@@ -259,14 +180,21 @@ export const useReviews = () => {
   };
 
   useEffect(() => {
-    initializeReviews();
-  }, []);
+    if (user) {
+        fetchReviews();
+        fetchInsights();
+    } else {
+        setReviews([]);
+        setInsights([]);
+    }
+    // eslint-disable-next-line
+  }, [user]);
 
   useEffect(() => {
-    if (tasks.length > 0 && stocks.length > 0) {
+    if (user && tasks.length > 0 && stocks.length > 0) {
       setLoading(false);
     }
-  }, [tasks, stocks]);
+  }, [tasks, stocks, user]);
 
   return {
     reviews,

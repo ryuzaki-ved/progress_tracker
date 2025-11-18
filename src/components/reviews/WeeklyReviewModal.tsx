@@ -18,7 +18,7 @@ interface WeeklyReviewModalProps {
 
 const RATING_OPTIONS = [
   { value: 'great', emoji: '🌟', label: 'Great Week', color: 'bg-green-100 text-green-800 border-green-300' },
-  { value: 'good', emoji: '😊', label: 'Good Week', color: 'bg-blue-100 text-blue-800 border-blue-300' },
+  { value: 'good', emoji: '😊', label: 'Good Week', color: 'bg-violet-100 text-violet-800 border-violet-300' },
   { value: 'okay', emoji: '😐', label: 'Okay Week', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
   { value: 'tough', emoji: '😔', label: 'Tough Week', color: 'bg-orange-100 text-orange-800 border-orange-300' },
   { value: 'chaotic', emoji: '🌪️', label: 'Chaotic Week', color: 'bg-red-100 text-red-800 border-red-300' },
@@ -83,9 +83,9 @@ export const WeeklyReviewModal: React.FC<WeeklyReviewModalProps> = ({
               <div className="text-2xl font-bold text-red-600">{stats.tasksMissed}</div>
               <div className="text-sm text-red-700 dark:text-red-300">Missed</div>
             </div>
-            <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{stats.streaksMaintained}</div>
-              <div className="text-sm text-blue-700 dark:text-blue-300">Streaks</div>
+            <div className="text-center p-4 bg-violet-50 dark:bg-violet-900/20 rounded-lg">
+              <div className="text-2xl font-bold text-violet-600">{stats.streaksMaintained}</div>
+              <div className="text-sm text-violet-700 dark:text-violet-300">Streaks</div>
             </div>
             <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
               <div className="text-2xl font-bold text-purple-600">{stats.indexChange.toFixed(1)}%</div>
@@ -174,10 +174,10 @@ export const WeeklyReviewModal: React.FC<WeeklyReviewModalProps> = ({
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="flex items-start space-x-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg"
+                  className="flex items-start space-x-3 p-4 bg-violet-50 dark:bg-violet-900/20 rounded-lg"
                 >
-                  <Target className="w-5 h-5 text-blue-600 mt-0.5" />
-                  <p className="text-blue-800 dark:text-blue-200">{insight}</p>
+                  <Target className="w-5 h-5 text-violet-600 mt-0.5" />
+                  <p className="text-violet-800 dark:text-violet-200">{insight}</p>
                 </motion.div>
               ))}
             </div>

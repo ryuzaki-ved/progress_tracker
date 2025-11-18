@@ -242,7 +242,7 @@ export const SimulationDashboard: React.FC<SimulationDashboardProps> = ({
                     
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">Balance Score</span>
-                      <span className="font-semibold text-blue-600">
+                      <span className="font-semibold text-violet-600">
                         {simulation.projectedChanges.balanceScore.toFixed(0)}%
                       </span>
                     </div>

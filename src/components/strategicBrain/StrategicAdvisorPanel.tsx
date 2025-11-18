@@ -59,14 +59,14 @@ export const StrategicAdvisorPanel: React.FC<StrategicAdvisorPanelProps> = ({
       case 'critical': return 'from-red-50 to-pink-50 border-red-200 text-red-800';
       case 'high': return 'from-orange-50 to-red-50 border-orange-200 text-orange-800';
       case 'medium': return 'from-yellow-50 to-amber-50 border-yellow-200 text-yellow-800';
-      case 'low': return 'from-blue-50 to-indigo-50 border-blue-200 text-blue-800';
+      case 'low': return 'from-violet-50 to-indigo-50 border-violet-200 text-violet-800';
     }
   };
 
   const getHealthColor = (health: string) => {
     switch (health) {
       case 'excellent': return 'text-green-600 bg-green-100';
-      case 'good': return 'text-blue-600 bg-blue-100';
+      case 'good': return 'text-violet-600 bg-violet-100';
       case 'concerning': return 'text-yellow-600 bg-yellow-100';
       case 'critical': return 'text-red-600 bg-red-100';
       default: return 'text-gray-600 bg-gray-100';

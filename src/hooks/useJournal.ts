@@ -1,76 +1,33 @@
+import { useAuth } from './useAuth';
 import { useState, useEffect } from 'react';
-import { getDb, persistDb } from '../lib/sqlite';
 import { JournalEntry } from '../types';
 
-const currentUserId = 1;
-
 export const useJournal = () => {
+  const { user } = useAuth();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const initializeJournal = async () => {
-    try {
-      const db = await getDb();
-      
-      // Create journal_entries table if it doesn't exist
-      db.run(`
-        CREATE TABLE IF NOT EXISTS journal_entries (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_id INTEGER NOT NULL,
-          type TEXT NOT NULL DEFAULT 'daily',
-          date TEXT NOT NULL,
-          title TEXT,
-          content TEXT NOT NULL,
-          mood TEXT,
-          prompts TEXT,
-          tags TEXT,
-          is_private BOOLEAN DEFAULT true,
-          created_at TEXT DEFAULT (datetime('now')),
-          updated_at TEXT DEFAULT (datetime('now'))
-        )
-      `);
-
-      await persistDb();
-      await fetchEntries();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to initialize journal');
-    }
-  };
+  const getHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('lifestock_token')}`
+  });
 
   const fetchEntries = async () => {
+    if (!user) return;
     setLoading(true);
     setError(null);
     try {
-      const db = await getDb();
-      const res = db.exec(
-        'SELECT * FROM journal_entries WHERE user_id = ? ORDER BY date DESC',
-        [currentUserId]
-      );
+      const response = await fetch('/api/journal', { headers: getHeaders() });
+      if (!response.ok) throw new Error('Failed to fetch journal entries');
+      const result = await response.json();
       
-      const rows = res[0]?.values || [];
-      const columns = res[0]?.columns || [];
-      
-      const entriesList: JournalEntry[] = rows.map((row: any[]) => {
-        const entryObj: any = {};
-        columns.forEach((col, i) => (entryObj[col] = row[i]));
-        
-        return {
-          id: entryObj.id.toString(),
-          userId: entryObj.user_id.toString(),
-          type: entryObj.type,
-          date: new Date(entryObj.date),
-          title: entryObj.title,
-          content: entryObj.content,
-          mood: entryObj.mood,
-          prompts: entryObj.prompts ? JSON.parse(entryObj.prompts) : undefined,
-          tags: entryObj.tags ? JSON.parse(entryObj.tags) : [],
-          isPrivate: Boolean(entryObj.is_private),
-          createdAt: new Date(entryObj.created_at),
-          updatedAt: new Date(entryObj.updated_at),
-        };
-      });
-      
+      const entriesList = result.data.map((e: any) => ({
+        ...e,
+        date: new Date(e.date),
+        createdAt: new Date(e.createdAt),
+        updatedAt: new Date(e.updatedAt),
+      }));
       setEntries(entriesList);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch journal entries');
@@ -80,27 +37,19 @@ export const useJournal = () => {
   };
 
   const createEntry = async (entryData: Omit<JournalEntry, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
+    if (!user) return;
     setError(null);
     try {
-      const db = await getDb();
-      
-      db.run(
-        `INSERT INTO journal_entries (user_id, type, date, title, content, mood, prompts, tags, is_private) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          currentUserId,
-          entryData.type,
-          entryData.date.toISOString(),
-          entryData.title || null,
-          entryData.content,
-          entryData.mood || null,
-          entryData.prompts ? JSON.stringify(entryData.prompts) : null,
-          entryData.tags ? JSON.stringify(entryData.tags) : null,
-          entryData.isPrivate,
-        ]
-      );
-      
-      await persistDb();
+      const payload = {
+          ...entryData,
+          date: entryData.date.toISOString(),
+      };
+      const response = await fetch('/api/journal', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) throw new Error((await response.json()).error);
       await fetchEntries();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create journal entry');
@@ -109,47 +58,17 @@ export const useJournal = () => {
   };
 
   const updateEntry = async (id: string, updates: Partial<JournalEntry>) => {
+    if (!user) return;
     setError(null);
     try {
-      const db = await getDb();
-      
-      const setClause = [];
-      const values = [];
-      
-      if (updates.title !== undefined) {
-        setClause.push('title = ?');
-        values.push(updates.title);
-      }
-      if (updates.content !== undefined) {
-        setClause.push('content = ?');
-        values.push(updates.content);
-      }
-      if (updates.mood !== undefined) {
-        setClause.push('mood = ?');
-        values.push(updates.mood);
-      }
-      if (updates.prompts !== undefined) {
-        setClause.push('prompts = ?');
-        values.push(JSON.stringify(updates.prompts));
-      }
-      if (updates.tags !== undefined) {
-        setClause.push('tags = ?');
-        values.push(JSON.stringify(updates.tags));
-      }
-      if (updates.isPrivate !== undefined) {
-        setClause.push('is_private = ?');
-        values.push(updates.isPrivate);
-      }
-      
-      setClause.push('updated_at = datetime("now")');
-      values.push(id, currentUserId);
-      
-      db.run(
-        `UPDATE journal_entries SET ${setClause.join(', ')} WHERE id = ? AND user_id = ?`,
-        values
-      );
-      
-      await persistDb();
+      const payload = { ...updates };
+      if (payload.date) payload.date = payload.date.toISOString() as any;
+      const response = await fetch(`/api/journal/${id}`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) throw new Error((await response.json()).error);
       await fetchEntries();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update journal entry');
@@ -158,14 +77,11 @@ export const useJournal = () => {
   };
 
   const deleteEntry = async (id: string) => {
+    if (!user) return;
     setError(null);
     try {
-      const db = await getDb();
-      db.run(
-        'DELETE FROM journal_entries WHERE id = ? AND user_id = ?',
-        [id, currentUserId]
-      );
-      await persistDb();
+      const response = await fetch(`/api/journal/${id}`, { method: 'DELETE', headers: getHeaders() });
+      if (!response.ok) throw new Error((await response.json()).error);
       await fetchEntries();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete journal entry');
@@ -181,8 +97,13 @@ export const useJournal = () => {
   };
 
   useEffect(() => {
-    initializeJournal();
-  }, []);
+    if (user) {
+        fetchEntries();
+    } else {
+        setEntries([]);
+    }
+    // eslint-disable-next-line
+  }, [user]);
 
   return {
     entries,

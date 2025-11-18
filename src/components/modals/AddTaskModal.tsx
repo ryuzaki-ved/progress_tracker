@@ -69,7 +69,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         estimatedDuration: formData.estimatedDuration || undefined,
         points: formData.points || undefined,
       });
-      
+
       // Reset form
       setFormData({
         title: '',
@@ -81,7 +81,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         priority: 'medium',
         points: 10,
       });
-      
+
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create task');
@@ -95,14 +95,14 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const selectedStock = stocks.find(s => s.id === formData.stockId);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 pt-12 z-50">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md max-h-[85vh] flex flex-col"
       >
-        <Card className="p-6">
+        <Card className="p-6 overflow-y-auto flex-1">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add New Task</h2>
             <button

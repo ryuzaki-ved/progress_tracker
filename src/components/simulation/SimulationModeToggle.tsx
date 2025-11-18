@@ -81,7 +81,7 @@ export const SimulationModeToggle: React.FC = () => {
 
         {/* Animated border */}
         <motion.div
-          className="h-1 bg-gradient-to-r from-yellow-400 via-pink-400 to-blue-400 dark:from-yellow-300 dark:via-pink-300 dark:to-blue-300"
+          className="h-1 bg-gradient-to-r from-yellow-400 via-pink-400 to-violet-400 dark:from-yellow-300 dark:via-pink-300 dark:to-violet-300"
           animate={{
             background: [
               'linear-gradient(90deg, #fbbf24, #f472b6, #3b82f6)',

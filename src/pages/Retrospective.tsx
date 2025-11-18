@@ -174,7 +174,7 @@ export const Retrospective: React.FC = () => {
                   <div className="text-xs text-gray-600 dark:text-gray-400">Missed</div>
                 </div>
                 <div className="text-center p-3 bg-white dark:bg-indigo-900/30 rounded-lg">
-                  <div className="text-xl font-bold text-blue-600">{currentWeekStats.streaksMaintained}</div>
+                  <div className="text-xl font-bold text-violet-600">{currentWeekStats.streaksMaintained}</div>
                   <div className="text-xs text-gray-600 dark:text-gray-400">Streaks</div>
                 </div>
                 <div className="text-center p-3 bg-white dark:bg-indigo-900/30 rounded-lg">
@@ -239,7 +239,7 @@ export const Retrospective: React.FC = () => {
                             <div className="text-gray-500">Done</div>
                           </div>
                           <div>
-                            <div className="font-semibold text-blue-600">{review.stats.streaksMaintained}</div>
+                            <div className="font-semibold text-violet-600">{review.stats.streaksMaintained}</div>
                             <div className="text-gray-500">Streaks</div>
                           </div>
                           <div>

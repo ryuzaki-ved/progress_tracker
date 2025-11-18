@@ -40,9 +40,9 @@ export const AlertCard: React.FC<AlertCardProps> = ({ alert, onDismiss, onMarkAs
         };
       case 'low':
         return {
-          bg: 'from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-700',
-          text: 'text-blue-900 dark:text-blue-200',
-          icon: 'text-blue-600',
+          bg: 'from-violet-50 to-indigo-50 dark:from-violet-900/20 dark:to-indigo-900/20 border-violet-200 dark:border-violet-700',
+          text: 'text-violet-900 dark:text-violet-200',
+          icon: 'text-violet-600',
         };
       default:
         return {

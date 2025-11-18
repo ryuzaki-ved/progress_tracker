@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { LogIn, UserPlus, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { LogIn, UserPlus, User, Lock, Eye, EyeOff, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { useAuth } from '../../hooks/useAuth';
 
 export const AuthForm: React.FC = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
+  const [mode, setMode] = useState<'signin' | 'signup' | 'admin'>('signin');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const { signIn, signUp } = useAuth();
 
@@ -21,12 +23,15 @@ export const AuthForm: React.FC = () => {
     setError(null);
 
     try {
-      const { error } = isSignUp 
-        ? await signUp(email, password)
-        : await signIn(email, password);
+      const { error } = mode === 'signup'
+        ? await signUp(username, password)
+        : await signIn(mode === 'admin' ? 'admin' : username, password);
 
       if (error) {
         setError(error.message);
+      } else {
+        if (mode === 'admin') navigate('/admin');
+        else navigate('/');
       }
     } catch (err) {
       setError('An unexpected error occurred');
@@ -35,46 +40,64 @@ export const AuthForm: React.FC = () => {
     }
   };
 
+  const getTitle = () => {
+    if (mode === 'admin') return 'Admin Portal';
+    if (mode === 'signup') return 'Create your account';
+    return 'Welcome back';
+  };
+
+  const getButtonText = () => {
+    if (loading) return 'Loading...';
+    if (mode === 'admin') return 'Access Admin Panel';
+    if (mode === 'signup') return 'Create Account';
+    return 'Sign In';
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <Card className="p-8">
+        <Card className="p-8 relative overflow-hidden">
+          {mode === 'admin' && (
+            <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
+          )}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+            <div className={`w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4 ${mode === 'admin' ? 'bg-red-500/20 shadow-neon-sm border border-red-500/50' : 'bg-primary'}`}>
               <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                animate={{ rotate: mode === 'admin' ? 0 : 360 }}
+                transition={{ duration: 2, repeat: mode === 'admin' ? 0 : Infinity, ease: "linear" }}
               >
-                📈
+                {mode === 'admin' ? <Shield className="w-8 h-8 text-red-500" /> : '📈'}
               </motion.div>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">LifeStock</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">LifeStock</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              {isSignUp ? 'Create your account' : 'Welcome back'}
+              {getTitle()}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  placeholder="Enter your email"
-                  required
-                />
+            {mode !== 'admin' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Username
+                </label>
+                <div className="relative">
+                  <User className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter your username"
+                    required
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -112,36 +135,48 @@ export const AuthForm: React.FC = () => {
 
             <Button
               type="submit"
-              className="w-full"
+              className={`w-full ${mode === 'admin' ? 'bg-red-600 hover:bg-red-700 shadow-neon-sm border border-red-500/50' : ''}`}
               disabled={loading}
+              variant={mode === 'admin' ? 'outline' : 'primary'}
             >
-              {loading ? (
-                <div className="flex items-center">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  {isSignUp ? 'Creating Account...' : 'Signing In...'}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center">
-                  {isSignUp ? <UserPlus className="w-4 h-4 mr-2" /> : <LogIn className="w-4 h-4 mr-2" />}
-                  {isSignUp ? 'Create Account' : 'Sign In'}
-                </div>
-              )}
+              <div className="flex items-center justify-center">
+                {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />}
+                {!loading && mode === 'admin' && <Shield className="w-4 h-4 mr-2" />}
+                {!loading && mode === 'signup' && <UserPlus className="w-4 h-4 mr-2" />}
+                {!loading && mode === 'signin' && <LogIn className="w-4 h-4 mr-2" />}
+                {getButtonText()}
+              </div>
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setError(null);
-              }}
-              className="text-primary hover:text-primary-hover text-sm font-medium"
-            >
-              {isSignUp 
-                ? 'Already have an account? Sign in' 
-                : "Don't have an account? Sign up"
-              }
-            </button>
+          <div className="mt-6 flex flex-col space-y-3 text-center">
+            {mode === 'signin' && (
+              <>
+                <button onClick={() => { setMode('signup'); setError(null); }} className="text-primary hover:text-primary-hover text-sm font-medium">
+                  Don't have an account? Sign up
+                </button>
+                <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                  <button onClick={() => { setMode('admin'); setError(null); }} className="text-gray-500 hover:text-red-500 text-xs font-medium uppercase tracking-wider transition-colors flex items-center justify-center mx-auto space-x-1">
+                    <Shield className="w-3 h-3" />
+                    <span>Admin Login</span>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {mode === 'signup' && (
+              <>
+                <button onClick={() => { setMode('signin'); setError(null); }} className="text-primary hover:text-primary-hover text-sm font-medium">
+                  Already have an account? Sign in
+                </button>
+              </>
+            )}
+
+            {mode === 'admin' && (
+              <button onClick={() => { setMode('signin'); setError(null); }} className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
+                &larr; Back to User Login
+              </button>
+            )}
           </div>
         </Card>
       </motion.div>
