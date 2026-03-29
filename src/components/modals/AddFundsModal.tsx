@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, DollarSign } from 'lucide-react';
 
 interface AddFundsModalProps {
@@ -34,7 +35,7 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose, o
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-sm w-full p-6 relative border border-gray-200 dark:border-gray-700">
         <button
@@ -89,6 +90,7 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose, o
           </button>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }; 

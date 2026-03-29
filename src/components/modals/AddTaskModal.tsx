@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { X, Plus, Calendar, Flag } from 'lucide-react';
+import { X, Plus, Calendar, Flag, Repeat2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Stock } from '../../types';
@@ -17,6 +18,12 @@ interface AddTaskModalProps {
     estimatedDuration?: number;
     priority: 'low' | 'medium' | 'high' | 'critical';
     points?: number;
+    repeatPattern?: {
+      type: 'none' | 'daily' | 'weekly' | 'custom';
+      endDate?: Date;
+      daysOfWeek?: number[]; // 0-6 (Sunday-Saturday)
+      customDates?: Date[];
+    };
   }) => Promise<void>;
   stocks: Stock[];
   defaultStockId?: string;
@@ -45,6 +52,13 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [repeatType, setRepeatType] = useState<'none' | 'daily' | 'weekly' | 'custom'>('none');
+  const [repeatEndDate, setRepeatEndDate] = useState('');
+  const [selectedDaysOfWeek, setSelectedDaysOfWeek] = useState<number[]>([]);
+  const [customDates, setCustomDates] = useState<string[]>([]);
+  const [newCustomDate, setNewCustomDate] = useState('');
+
+  const dayLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   useEffect(() => {
     setFormData(f => ({
@@ -61,6 +75,13 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
     setError(null);
 
     try {
+      const repeatPattern = repeatType !== 'none' ? {
+        type: repeatType,
+        endDate: repeatEndDate ? new Date(repeatEndDate) : undefined,
+        daysOfWeek: repeatType === 'weekly' ? selectedDaysOfWeek : undefined,
+        customDates: repeatType === 'custom' ? customDates.map(d => new Date(d)) : undefined,
+      } : undefined;
+
       await onSubmit({
         ...formData,
         description: formData.description || undefined,
@@ -68,6 +89,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         scheduledTime: formData.scheduledTime || undefined,
         estimatedDuration: formData.estimatedDuration || undefined,
         points: formData.points || undefined,
+        repeatPattern,
       });
 
       // Reset form
@@ -81,6 +103,11 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         priority: 'medium',
         points: 10,
       });
+      setRepeatType('none');
+      setRepeatEndDate('');
+      setSelectedDaysOfWeek([]);
+      setCustomDates([]);
+      setNewCustomDate('');
 
       onClose();
     } catch (err) {
@@ -94,8 +121,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
   const selectedStock = stocks.find(s => s.id === formData.stockId);
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 pt-12 z-50">
+  return createPortal(
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -272,6 +299,137 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               </div>
             </div>
 
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 mb-4 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={repeatType !== 'none'}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setRepeatType('daily');
+                    } else {
+                      setRepeatType('none');
+                      setRepeatEndDate('');
+                      setSelectedDaysOfWeek([]);
+                      setCustomDates([]);
+                    }
+                  }}
+                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary cursor-pointer"
+                />
+                <Repeat2 className="w-4 h-4 ml-2 mr-2" />
+                Repeat this task on multiple days
+              </label>
+
+              {repeatType !== 'none' && (
+                <div className="space-y-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Repeat Pattern
+                    </label>
+                    <select
+                      value={repeatType}
+                      onChange={(e) => {
+                        setRepeatType(e.target.value as any);
+                        setSelectedDaysOfWeek([]);
+                        setCustomDates([]);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="custom">Custom Dates</option>
+                    </select>
+                  </div>
+
+                  {repeatType === 'weekly' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Select Days of Week
+                      </label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {dayLabels.map((day, index) => (
+                          <label key={index} className="flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedDaysOfWeek.includes(index)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedDaysOfWeek([...selectedDaysOfWeek, index]);
+                                } else {
+                                  setSelectedDaysOfWeek(selectedDaysOfWeek.filter(d => d !== index));
+                                }
+                              }}
+                              className="w-3 h-3 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary cursor-pointer"
+                            />
+                            <span className="ml-1 text-xs text-gray-600 dark:text-gray-400">{day.slice(0, 3)}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {repeatType === 'custom' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Select Specific Dates
+                      </label>
+                      <div className="flex gap-2 mb-2">
+                        <input
+                          type="date"
+                          value={newCustomDate}
+                          onChange={(e) => setNewCustomDate(e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (newCustomDate && !customDates.includes(newCustomDate)) {
+                              setCustomDates([...customDates, newCustomDate]);
+                              setNewCustomDate('');
+                            }
+                          }}
+                          className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
+                        >
+                          Add
+                        </button>
+                      </div>
+                      {customDates.length > 0 && (
+                        <div className="space-y-1">
+                          {customDates.map((date, idx) => (
+                            <div key={idx} className="flex items-center justify-between bg-white dark:bg-gray-700 px-3 py-2 rounded text-sm">
+                              <span className="text-gray-900 dark:text-white">{new Date(date).toLocaleDateString()}</span>
+                              <button
+                                type="button"
+                                onClick={() => setCustomDates(customDates.filter((_, i) => i !== idx))}
+                                className="text-red-500 hover:text-red-700 text-xs font-medium"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Repeat Until (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      value={repeatEndDate}
+                      onChange={(e) => setRepeatEndDate(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Leave empty to repeat indefinitely
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
                 {error}
@@ -308,6 +466,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
           </form>
         </Card>
       </motion.div>
-    </div>
+    </div>,
+    document.body
   );
 };

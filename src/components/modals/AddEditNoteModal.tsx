@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Plus, Tag, Pin, Palette, Hash } from 'lucide-react';
 import { Button } from '../ui/Button';
@@ -129,9 +130,9 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 pt-12 z-50">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -395,6 +396,7 @@ export const AddEditNoteModal: React.FC<AddEditNoteModalProps> = ({
           </Card>
         </motion.div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };

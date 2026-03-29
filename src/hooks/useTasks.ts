@@ -45,13 +45,31 @@ export const useTasks = () => {
     estimatedDuration?: number;
     priority: 'low' | 'medium' | 'high' | 'critical';
     points?: number;
+    repeatPattern?: {
+      type: 'none' | 'daily' | 'weekly' | 'custom';
+      endDate?: Date;
+      daysOfWeek?: number[]; // 0-6 (Sunday-Saturday)
+      customDates?: Date[];
+    };
   }) => {
     if (!user) return;
     setError(null);
     try {
       const payload = {
-          ...taskData,
+          title: taskData.title,
+          description: taskData.description,
+          stockId: taskData.stockId,
           dueDate: taskData.dueDate?.toISOString(),
+          scheduledTime: taskData.scheduledTime,
+          estimatedDuration: taskData.estimatedDuration,
+          priority: taskData.priority,
+          points: taskData.points,
+          recurringPattern: taskData.repeatPattern ? {
+            type: taskData.repeatPattern.type,
+            endDate: taskData.repeatPattern.endDate?.toISOString(),
+            daysOfWeek: taskData.repeatPattern.daysOfWeek,
+            customDates: taskData.repeatPattern.customDates?.map(d => d.toISOString()),
+          } : null,
       };
       const response = await fetch('/api/tasks', {
           method: 'POST',

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { X, Plus } from 'lucide-react';
 import { Button } from '../ui/Button';
@@ -113,8 +114,8 @@ export const AddStockModal: React.FC<AddStockModalProps> = ({
   };
 
   return (
-    isOpen ? (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 pt-12 z-50">
+    isOpen ? createPortal(
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -245,7 +246,8 @@ export const AddStockModal: React.FC<AddStockModalProps> = ({
             </form>
           </Card>
         </motion.div>
-      </div>
+      </div>,
+      document.body
     ) : null
   );
 };

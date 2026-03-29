@@ -21,6 +21,7 @@ import { Simulation } from './pages/Simulation';
 import { StrategicBrain } from './pages/StrategicBrain';
 import { IndexEditor } from './pages/IndexEditor';
 import { Notes } from './pages/Notes';
+import { PerformanceBonds } from './pages/PerformanceBonds';
 import { AdminDashboard } from './pages/AdminDashboard';
 
 function AppContent() {
@@ -66,6 +67,7 @@ function AppContent() {
                   <Route path="/strategic-brain" element={<StrategicBrain />} />
                   <Route path="/index-editor" element={<IndexEditor />} />
                   <Route path="/notes" element={<Notes />} />
+                  <Route path="/performance-bonds" element={<PerformanceBonds />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                 </Routes>
               </main>
