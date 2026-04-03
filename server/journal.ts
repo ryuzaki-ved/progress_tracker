@@ -1,6 +1,6 @@
 import express from 'express';
 import db from './db.js';
-import { authenticateToken } from './middleware.js';
+import { authenticateToken, checkMaintenanceMode } from './middleware.js';
 
 const router = express.Router();
 router.use(authenticateToken);
@@ -27,7 +27,7 @@ router.get('/', (req: any, res) => {
   } catch (err: any) { res.status(500).json({ error: err.message }) }
 });
 
-router.post('/', (req: any, res) => {
+router.post('/', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { type, date, title, content, mood, prompts, tags, isPrivate } = req.body;
   try {
@@ -36,7 +36,7 @@ router.post('/', (req: any, res) => {
   } catch (err: any) { res.status(500).json({ error: err.message }) }
 });
 
-router.put('/:id', (req: any, res) => {
+router.put('/:id', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { id } = req.params;
   const updates = req.body;
@@ -61,7 +61,7 @@ router.put('/:id', (req: any, res) => {
   } catch (err: any) { res.status(500).json({ error: err.message }) }
 });
 
-router.delete('/:id', (req: any, res) => {
+router.delete('/:id', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { id } = req.params;
   try {

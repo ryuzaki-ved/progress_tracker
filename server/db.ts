@@ -280,6 +280,35 @@ try {
       UNIQUE(user_id, achievement_id)
     )
   `).run();
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS performance_bonds (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      creator_id INTEGER NOT NULL,
+      challenger_id INTEGER NOT NULL,
+      creator_task_id INTEGER NOT NULL,
+      challenger_task_id INTEGER,
+      creator_amount INTEGER NOT NULL,
+      challenger_amount INTEGER,
+      creator_completed BOOLEAN DEFAULT 0,
+      challenger_completed BOOLEAN DEFAULT 0,
+      due_date TEXT NOT NULL,
+      status TEXT DEFAULT 'pending_acceptance',
+      winner TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      completed_at TEXT,
+      FOREIGN KEY(creator_id) REFERENCES users(id),
+      FOREIGN KEY(challenger_id) REFERENCES users(id),
+      FOREIGN KEY(creator_task_id) REFERENCES tasks(id),
+      FOREIGN KEY(challenger_task_id) REFERENCES tasks(id)
+    )
+  `).run();
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS system_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT,
+      updated_at TEXT DEFAULT (datetime('now'))
+    )
+  `).run();
 } catch (e) {}
 
 // Ensure cash_balance initialization

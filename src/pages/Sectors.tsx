@@ -53,24 +53,41 @@ export const Sectors: React.FC = () => {
         byDate[h.date] += h.daily_score;
       });
 
-      // Sort dates
-      const sortedDates = Object.keys(byDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-      
-      const ohlc = [];
-      let previousClose = 0;
+      const ohlc: { date: string; open: number; high: number; low: number; close: number }[] = [];
+      let lastKnownValue = 500;
+      const today = new Date();
 
-      for (let i = 0; i < sortedDates.length; i++) {
-        const date = sortedDates[i];
-        const value = byDate[date];
-        const open = i === 0 ? value : previousClose;
-        const close = value;
-        // Make sure there is a slight body for lightweight charts to render a flat candle visibly
-        const high = Math.max(open, close) === close && open === close ? close + 0.1 : Math.max(open, close);
-        const low = Math.min(open, close) === close && open === close ? close - 0.1 : Math.min(open, close);
-        
-        ohlc.push({ date, open, high, low, close });
-        previousClose = close;
+      for (let i = 29; i >= 0; i--) {
+        const currentDate = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+        const date =
+          currentDate.getFullYear() +
+          '-' +
+          String(currentDate.getMonth() + 1).padStart(2, '0') +
+          '-' +
+          String(currentDate.getDate()).padStart(2, '0');
+
+        if (Object.prototype.hasOwnProperty.call(byDate, date)) {
+          const value = byDate[date];
+          const open = lastKnownValue;
+          const close = value;
+          const high =
+            Math.max(open, close) === close && open === close ? close + 0.1 : Math.max(open, close);
+          const low =
+            Math.min(open, close) === close && open === close ? close - 0.1 : Math.min(open, close);
+          ohlc.push({ date, open, high, low, close });
+          lastKnownValue = close;
+        } else {
+          ohlc.push({
+            date,
+            open: lastKnownValue,
+            high: lastKnownValue,
+            low: lastKnownValue,
+            close: lastKnownValue,
+          });
+        }
       }
+
+      ohlc.sort((a, b) => a.date.localeCompare(b.date));
 
       // Calculate current summary
       const currentScore = ohlc.length > 0 ? ohlc[ohlc.length - 1].close : 0;

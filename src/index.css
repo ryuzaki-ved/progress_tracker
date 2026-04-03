@@ -11,17 +11,33 @@
 }
 
 html {
+  height: 100%;
   font-size: 15px; /* Slightly larger for elegant readability */
+  background-color: #05050A;
 }
 
 body {
-  @apply bg-background text-gray-200 font-sans antialiased overflow-x-hidden;
+  height: 100%;
+  margin: 0;
+  @apply bg-background text-gray-200 font-sans antialiased;
+  overflow: hidden;
+  overscroll-behavior: none;
   /* Deep, sophisticated radial gradients */
   background-image: 
     radial-gradient(ellipse at 10% 0%, rgba(139, 92, 246, 0.12), transparent 40%),
     radial-gradient(ellipse at 90% 100%, rgba(236, 72, 153, 0.12), transparent 40%),
     radial-gradient(circle at 50% 50%, rgba(11, 13, 23, 1), #05050A 100%);
   background-attachment: fixed;
+}
+
+#root {
+  height: 100%;
+  min-height: 0;
+}
+
+/* Primary scroll region: keep rubber-band / overscroll inside the app shell */
+.app-main-scroll {
+  overscroll-behavior: contain;
 }
 
 /* Base Headings */

@@ -16,6 +16,7 @@ import tradingRouter from './trading.js';
 import adminRouter from './admin.js';
 import leaderboardRouter from './leaderboard.js';
 import dataManagementRouter from './data-management.js';
+import bondsRouter from './bonds.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -41,7 +42,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/data', dataManagementRouter);
 
-// --- AUTHENTICATION ---
+// --- AUTHENTICATION (must be before bondsRouter which has auth middleware) ---
 app.post('/api/auth/signin', (req, res) => {
   const { username, password } = req.body;
   
@@ -77,6 +78,34 @@ app.post('/api/auth/signup', (req, res) => {
     } else {
       res.status(500).json({ data: null, error: err.message });
     }
+  }
+});
+
+// Mount routers
+app.use('/api/stocks', stocksRouter);
+app.use('/api/tasks', tasksRouter);
+app.use('/api/index', indexDataRouter);
+app.use('/api/notes', notesRouter);
+app.use('/api/journal', journalRouter);
+app.use('/api/streaks', streaksRouter);
+app.use('/api/alerts', alertsRouter);
+app.use('/api/reviews', reviewsRouter);
+app.use('/api/achievements', achievementsRouter);
+app.use('/api/trading', tradingRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/leaderboard', leaderboardRouter);
+app.use('/api/data-management', dataManagementRouter);
+app.use('/api/bonds', bondsRouter);
+
+// Public endpoint to check maintenance status (no auth required)
+app.get('/api/maintenance-status', (req: any, res: any) => {
+  try {
+    const setting = db.prepare('SELECT value FROM system_settings WHERE key = ?').get('maintenance_mode') as any;
+    const maintenanceMode = setting ? setting.value === '1' : false;
+    res.json({ data: { maintenanceMode }, error: null });
+  } catch (err: any) {
+    console.error('Maintenance status fetch error:', err);
+    res.status(500).json({ data: null, error: err.message });
   }
 });
 

@@ -1,6 +1,6 @@
 import express from 'express';
 import db from './db.js';
-import { authenticateToken } from './middleware.js';
+import { authenticateToken, checkMaintenanceMode } from './middleware.js';
 import { calculateTaskScore } from './utils.js';
 
 const router = express.Router();
@@ -31,7 +31,7 @@ router.get('/', (req: any, res) => {
   }
 });
 
-router.post('/', (req: any, res) => {
+router.post('/', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { stockId, title, description, priority, dueDate, scheduledTime, estimatedDuration, points } = req.body;
   try {
@@ -44,7 +44,7 @@ router.post('/', (req: any, res) => {
   }
 });
 
-router.put('/:id', (req: any, res) => {
+router.put('/:id', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id; // Could verify ownership deeply, but stocks join implicitly guards it in reads
   const { id } = req.params;
   const updates = req.body;
@@ -69,7 +69,7 @@ router.put('/:id', (req: any, res) => {
   }
 });
 
-router.delete('/:id', (req: any, res) => {
+router.delete('/:id', checkMaintenanceMode, (req: any, res) => {
   const { id } = req.params;
   try {
     db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
@@ -77,7 +77,7 @@ router.delete('/:id', (req: any, res) => {
   } catch(err:any) { res.status(500).json({ error: err.message }) }
 });
 
-router.post('/:id/complete', (req: any, res) => {
+router.post('/:id/complete', checkMaintenanceMode, (req: any, res) => {
   const { id } = req.params;
   try {
     const taskObj = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as any;
@@ -103,7 +103,7 @@ router.post('/:id/complete', (req: any, res) => {
   } catch(err:any) { res.status(500).json({ error: err.message }) }
 });
 
-router.post('/:id/uncomplete', (req: any, res) => {
+router.post('/:id/uncomplete', checkMaintenanceMode, (req: any, res) => {
   const { id } = req.params;
   try {
     db.prepare(`UPDATE tasks SET status = 'pending', completed_at = NULL, updated_at = datetime('now') WHERE id = ?`).run(id);
@@ -111,7 +111,7 @@ router.post('/:id/uncomplete', (req: any, res) => {
   } catch(err:any) { res.status(500).json({ error: err.message }) }
 });
 
-router.post('/:id/fail', (req: any, res) => {
+router.post('/:id/fail', checkMaintenanceMode, (req: any, res) => {
   const { id } = req.params;
   try {
     const taskObj = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as any;

@@ -1,6 +1,6 @@
 import express, { type NextFunction, type Request, type Response } from 'express';
 import db from './db.js';
-import { authenticateToken } from './middleware.js';
+import { authenticateToken, isMaintenanceEnabled } from './middleware.js';
 
 const router = express.Router();
 router.use(authenticateToken);
@@ -328,6 +328,232 @@ router.delete('/users/:id', isAdmin, (req: Request, res: Response) => {
     })();
     res.json({ data: true, error: null });
   } catch (err: unknown) {
+    res.status(500).json({ data: null, error: getErrorMessage(err) });
+  }
+});
+
+// --- MAINTENANCE MODE ENDPOINTS ---
+
+// Get maintenance status
+router.get('/maintenance/status', isAdmin, (req: Request, res: Response) => {
+  try {
+    const maintenanceMode = isMaintenanceEnabled();
+    res.json({ data: { isEnabled: maintenanceMode }, error: null });
+  } catch (err: unknown) {
+    res.status(500).json({ data: null, error: getErrorMessage(err) });
+  }
+});
+
+// Enable maintenance mode
+router.post('/maintenance/enable', isAdmin, (req: Request, res: Response) => {
+  try {
+    const { message } = req.body;
+    const maintenanceMessage = message || 'The system is under maintenance. We will be back shortly.';
+    
+    // Enable maintenance mode
+    db.prepare('INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)').run('maintenance_mode', 'true');
+    
+    // Create maintenance alert for all non-admin users
+    try {
+      const users = db.prepare('SELECT id FROM users WHERE role != ?').all('admin') as { id: number }[];
+      users.forEach((user: any) => {
+        try {
+          db.prepare(`
+            INSERT INTO alerts (user_id, type, title, message, severity)
+            VALUES (?, ?, ?, ?, ?)
+          `).run(user.id, 'maintenance', 'System Maintenance', maintenanceMessage, 'high');
+        } catch (alertErr) {
+          console.error('Alert insert error for user:', user.id, alertErr);
+        }
+      });
+    } catch (usersErr) {
+      console.error('Users query error:', usersErr);
+    }
+
+    res.json({ data: true, error: null });
+  } catch (err: unknown) {
+    console.error('Maintenance enable error:', err);
+    res.status(500).json({ data: null, error: getErrorMessage(err) });
+  }
+});
+
+// Disable maintenance mode
+router.post('/maintenance/disable', isAdmin, (req: Request, res: Response) => {
+  try {
+    // Disable maintenance mode
+    db.prepare('INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)').run('maintenance_mode', 'false');
+    
+    // Create alert to all non-admin users that system is back
+    try {
+      const users = db.prepare('SELECT id FROM users WHERE role != ?').all('admin') as { id: number }[];
+      users.forEach((user: any) => {
+        try {
+          db.prepare(`
+            INSERT INTO alerts (user_id, type, title, message, severity)
+            VALUES (?, ?, ?, ?, ?)
+          `).run(user.id, 'maintenance_end', 'System Back Online', 'The system is now back to normal. Thank you for your patience!', 'medium');
+        } catch (alertErr) {
+          console.error('Alert insert error for user:', user.id, alertErr);
+        }
+      });
+    } catch (usersErr) {
+      console.error('Users query error:', usersErr);
+    }
+
+    res.json({ data: true, error: null });
+  } catch (err: unknown) {
+    console.error('Maintenance disable error:', err);
+    res.status(500).json({ data: null, error: getErrorMessage(err) });
+  }
+});
+
+// Get all bonds statistics for admin
+router.get('/bonds/statistics', isAdmin, (req: Request, res: Response) => {
+  try {
+    const bonds = db.prepare('SELECT * FROM performance_bonds').all() as any[];
+    
+    // Calculate deposited pool (money from bonds where both failed/completed late = winner = 'none')
+    const depositedBonds = bonds.filter(b => b.status === 'completed' && b.winner === 'none');
+    const totalDeposited = depositedBonds.reduce((sum, b) => sum + (b.creator_amount || 0) + (b.challenger_amount || 0), 0);
+    
+    // Get stored deposited amount from system_settings
+    const depositedSetting = db.prepare('SELECT value FROM system_settings WHERE "key" = ?').get('bonds_deposited_pool') as any;
+    const storedDeposited = depositedSetting ? parseInt(depositedSetting.value || '0') : 0;
+    
+    // Calculate statistics
+    const stats = {
+      totalBonds: bonds.length,
+      pendingBonds: bonds.filter(b => b.status === 'pending_acceptance').length,
+      activeBonds: bonds.filter(b => b.status === 'active').length,
+      completedBonds: bonds.filter(b => b.status === 'completed').length,
+      bothWon: bonds.filter(b => b.status === 'completed' && b.winner === 'both').length,
+      bothFailed: bonds.filter(b => b.status === 'completed' && b.winner === 'none').length,
+      creatorWon: bonds.filter(b => b.status === 'completed' && b.winner === 'creator').length,
+      challengerWon: bonds.filter(b => b.status === 'completed' && b.winner === 'challenger').length,
+      calculatedDeposited: totalDeposited,
+      storedDeposited: storedDeposited,
+      totalMoneyInBonds: bonds.reduce((sum, b) => sum + (b.creator_amount || 0) + (b.challenger_amount || 0), 0),
+    };
+
+    res.json({ data: stats, error: null });
+  } catch (err: unknown) {
+    console.error('Bonds stats error:', err);
+    res.status(500).json({ data: null, error: getErrorMessage(err) });
+  }
+});
+
+// Get all bonds with user info for admin
+router.get('/bonds/all', isAdmin, (req: Request, res: Response) => {
+  try {
+    const bonds = db.prepare(`
+      SELECT 
+        b.*,
+        cu.username as creator_username,
+        ch.username as challenger_username
+      FROM performance_bonds b
+      LEFT JOIN users cu ON b.creator_id = cu.id
+      LEFT JOIN users ch ON b.challenger_id = ch.id
+      ORDER BY b.created_at DESC
+    `).all() as any[];
+
+    res.json({ data: bonds, error: null });
+  } catch (err: unknown) {
+    console.error('Bonds fetch error:', err);
+    res.status(500).json({ data: null, error: getErrorMessage(err) });
+  }
+});
+
+// Delete a bond (admin only)
+router.delete('/bonds/:id', isAdmin, (req: Request, res: Response) => {
+  try {
+    const bondId = req.params.id;
+    const result = db.prepare('DELETE FROM performance_bonds WHERE id = ?').run(bondId);
+    
+    if ((result as any).changes === 0) {
+      return res.status(404).json({ data: null, error: 'Bond not found' });
+    }
+    
+    console.log('Bond deleted:', bondId);
+    res.json({ data: true, error: null });
+  } catch (err: unknown) {
+    console.error('Bond delete error:', err);
+    res.status(500).json({ data: null, error: getErrorMessage(err) });
+  }
+});
+
+// Update deposited pool
+router.post('/bonds/deposited-pool/update', isAdmin, (req: AuthedRequest, res: Response) => {
+  try {
+    const { amount } = req.body;
+    
+    if (typeof amount !== 'number' || amount < 0) {
+      return res.status(400).json({ error: 'Invalid amount' });
+    }
+
+    db.prepare('INSERT OR REPLACE INTO system_settings ("key", value) VALUES (?, ?)').run('bonds_deposited_pool', amount.toString());
+
+    res.json({ data: { depositedPool: amount }, error: null });
+  } catch (err: unknown) {
+    console.error('Deposited pool update error:', err);
+    res.status(500).json({ data: null, error: getErrorMessage(err) });
+  }
+});
+
+// Reset deposited pool to zero
+router.post('/bonds/deposited-pool/reset', isAdmin, (req: Request, res: Response) => {
+  try {
+    db
+      .prepare(
+        `
+          INSERT INTO system_settings ("key", value, updated_at)
+          VALUES (?, ?, datetime('now'))
+          ON CONFLICT("key") DO UPDATE SET
+            value = excluded.value,
+            updated_at = datetime('now')
+        `.trim()
+      )
+      .run('bonds_deposited_pool', '0');
+
+    const verify1 = db.prepare('SELECT value FROM system_settings WHERE "key" = ?').get('bonds_deposited_pool') as any;
+    const finalValue = verify1 ? parseInt(verify1.value || '0') : 0;
+
+    res.json({ data: { depositedPool: finalValue, message: 'Pool reset successfully' }, error: null });
+  } catch (err: unknown) {
+    console.error('Deposited pool reset error:', err);
+    res.status(500).json({ data: null, error: getErrorMessage(err) });
+  }
+});
+
+// Get maintenance mode status (admin only)
+router.get('/maintenance', isAdmin, (req: Request, res: Response) => {
+  try {
+    const setting = db.prepare('SELECT value FROM system_settings WHERE key = ?').get('maintenance_mode') as any;
+    const maintenanceMode = setting ? setting.value === '1' : false;
+    
+    console.log('Fetched maintenance mode:', maintenanceMode);
+    res.json({ data: { maintenanceMode }, error: null });
+  } catch (err: unknown) {
+    console.error('Maintenance mode fetch error:', err);
+    res.status(500).json({ data: null, error: getErrorMessage(err) });
+  }
+});
+
+// Toggle maintenance mode (admin only)
+router.post('/maintenance', isAdmin, (req: Request, res: Response) => {
+  try {
+    const { maintenanceMode } = req.body;
+    
+    if (typeof maintenanceMode !== 'boolean') {
+      return res.status(400).json({ error: 'maintenanceMode must be a boolean' });
+    }
+    
+    const value = maintenanceMode ? '1' : '0';
+    db.prepare('INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)').run('maintenance_mode', value);
+    
+    console.log('Maintenance mode set to:', maintenanceMode);
+    res.json({ data: { maintenanceMode }, error: null });
+  } catch (err: unknown) {
+    console.error('Maintenance mode toggle error:', err);
     res.status(500).json({ data: null, error: getErrorMessage(err) });
   }
 });

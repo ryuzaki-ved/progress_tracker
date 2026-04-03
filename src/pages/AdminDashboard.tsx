@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Card } from '../components/ui/Card';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Shield, Trash2, Users, Download, X, ChevronRight, Info, Activity, Coins, Database } from 'lucide-react';
+import { Shield, Trash2, Users, Download, X, ChevronRight, Info, Activity, Coins, Database, AlertTriangle, ToggleRight, ToggleLeft } from 'lucide-react';
 import { useAuth, User } from '../hooks/useAuth';
+import { BondsManagement } from '../components/admin/BondsManagement';
 
 
 interface UserWithLeaderboard extends User {
@@ -398,6 +399,8 @@ export const AdminDashboard: React.FC = () => {
     const [detailsLoading, setDetailsLoading] = useState(false);
     const [detailsError, setDetailsError] = useState<string | null>(null);
     const [selectedUserDetails, setSelectedUserDetails] = useState<AdminUserDetails | null>(null);
+    const [maintenanceMode, setMaintenanceMode] = useState(false);
+    const [maintenanceLoading, setMaintenanceLoading] = useState(false);
 
     const fetchUsers = async () => {
         try {
@@ -414,9 +417,42 @@ export const AdminDashboard: React.FC = () => {
         }
     };
 
+    const fetchMaintenanceMode = async () => {
+        try {
+            const response = await fetch('/api/admin/maintenance', {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('lifestock_token')}` }
+            });
+            const result = await response.json();
+            if (result.data) setMaintenanceMode(result.data.maintenanceMode);
+        } catch (err) {
+            console.error('Failed to fetch maintenance mode:', err);
+        }
+    };
+
+    const toggleMaintenanceMode = async () => {
+        try {
+            setMaintenanceLoading(true);
+            const response = await fetch('/api/admin/maintenance', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('lifestock_token')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ maintenanceMode: !maintenanceMode })
+            });
+            const result = await response.json();
+            if (result.data) setMaintenanceMode(result.data.maintenanceMode);
+        } catch (err) {
+            console.error('Failed to toggle maintenance mode:', err);
+        } finally {
+            setMaintenanceLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (user?.role === 'admin') {
             fetchUsers();
+            fetchMaintenanceMode();
         }
     }, [user]);
 
@@ -532,6 +568,34 @@ export const AdminDashboard: React.FC = () => {
                     <p className="text-3xl font-bold text-white">{allUsers.length}</p>
                 </Card>
             </div>
+
+            {/* Maintenance Mode Section */}
+            <Card className={`p-6 border ${maintenanceMode ? 'border-amber-500/50 bg-amber-500/10' : 'border-gray-700 bg-gray-800/40'}`}>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${maintenanceMode ? 'bg-amber-500/20' : 'bg-gray-700/40'}`}>
+                            <AlertTriangle className={`w-6 h-6 ${maintenanceMode ? 'text-amber-400' : 'text-gray-400'}`} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-white">System Maintenance Mode</h3>
+                            <p className="text-sm text-gray-400">When enabled, users cannot create/modify data</p>
+                            <p className={`text-xs font-mono ${maintenanceMode ? 'text-amber-300' : 'text-gray-500'}`}>
+                                Status: {maintenanceMode ? 'ENABLED' : 'Disabled'}
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={toggleMaintenanceMode}
+                        disabled={maintenanceLoading}
+                        className={`p-3 rounded-lg transition-all ${maintenanceMode ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'} disabled:opacity-50`}
+                    >
+                        {maintenanceMode ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
+                    </button>
+                </div>
+            </Card>
+
+            {/* Bonds Management Section */}
+            <BondsManagement />
 
             <Card>
                 <div className="p-6">

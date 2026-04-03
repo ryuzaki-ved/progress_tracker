@@ -1,6 +1,6 @@
 import express from 'express';
 import db from './db.js';
-import { authenticateToken } from './middleware.js';
+import { authenticateToken, checkMaintenanceMode } from './middleware.js';
 
 const router = express.Router();
 router.use(authenticateToken);
@@ -24,7 +24,7 @@ router.get('/', (req: any, res) => {
   } catch(err:any) { res.status(500).json({ error: err.message }) }
 });
 
-router.post('/', (req: any, res) => {
+router.post('/', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { type, title, message, stockId, severity } = req.body;
   try {
@@ -36,7 +36,7 @@ router.post('/', (req: any, res) => {
   } catch(err:any) { res.status(500).json({ error: err.message }) }
 });
 
-router.post('/:id/read', (req: any, res) => {
+router.post('/:id/read', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { id } = req.params;
   try {
@@ -45,7 +45,7 @@ router.post('/:id/read', (req: any, res) => {
   } catch(err:any) { res.status(500).json({ error: err.message }) }
 });
 
-router.post('/:id/dismiss', (req: any, res) => {
+router.post('/:id/dismiss', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { id } = req.params;
   try {

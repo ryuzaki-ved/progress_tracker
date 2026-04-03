@@ -1,6 +1,6 @@
 import express from 'express';
 import db from './db.js';
-import { authenticateToken } from './middleware.js';
+import { authenticateToken, checkMaintenanceMode } from './middleware.js';
 
 const router = express.Router();
 
@@ -16,7 +16,7 @@ router.get('/', (req: any, res) => {
   }
 });
 
-router.post('/update', (req: any, res) => {
+router.post('/update', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { currentValue } = req.body;
   
@@ -54,7 +54,7 @@ router.post('/update', (req: any, res) => {
   }
 });
 
-router.post('/multiple', (req: any, res) => {
+router.post('/multiple', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { updates } = req.body;
   

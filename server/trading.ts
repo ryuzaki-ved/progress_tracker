@@ -1,6 +1,6 @@
 import express from 'express';
 import db from './db.js';
-import { authenticateToken } from './middleware.js';
+import { authenticateToken, checkMaintenanceMode } from './middleware.js';
 import { generateWeeklyOptionsContracts, calculateOptionPrice } from '../src/utils/optionUtils.js';
 
 const router = express.Router();
@@ -20,7 +20,7 @@ router.get('/cash', (req: any, res) => {
   } catch(err:any) { res.status(500).json({ error: err.message }); }
 });
 
-router.post('/add-funds', (req: any, res) => {
+router.post('/add-funds', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { amount } = req.body;
   try {
@@ -45,7 +45,7 @@ router.get('/transactions', (req: any, res) => {
   } catch(err:any) { res.status(500).json({ error: err.message }); }
 });
 
-router.post('/buy-stock', (req: any, res) => {
+router.post('/buy-stock', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { stockId, quantity, price } = req.body;
   try {
@@ -69,7 +69,7 @@ router.post('/buy-stock', (req: any, res) => {
   } catch(err:any) { res.status(500).json({ error: err.message }); }
 });
 
-router.post('/sell-stock', (req: any, res) => {
+router.post('/sell-stock', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { stockId, quantity, price } = req.body;
   try {
@@ -124,7 +124,7 @@ router.post('/options/fetch', (req: any, res) => {
   } catch(err:any) { res.status(500).json({ error: err.message }); }
 });
 
-router.post('/options/buy', (req: any, res) => {
+router.post('/options/buy', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { contractId, quantity, premium } = req.body;
   try {
@@ -152,7 +152,7 @@ router.post('/options/buy', (req: any, res) => {
   } catch(err:any) { res.status(500).json({ error: err.message }); }
 });
 
-router.post('/options/write', (req: any, res) => {
+router.post('/options/write', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { contractId, quantity, premium } = req.body;
   try {
@@ -181,7 +181,7 @@ router.post('/options/write', (req: any, res) => {
   } catch(err:any) { res.status(500).json({ error: err.message }); }
 });
 
-router.post('/options/exit', (req: any, res) => {
+router.post('/options/exit', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { holdingId, quantity, currentIndexValue } = req.body;
   try {

@@ -23,13 +23,14 @@ import { IndexEditor } from './pages/IndexEditor';
 import { Notes } from './pages/Notes';
 import { PerformanceBonds } from './pages/PerformanceBonds';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { MaintenanceBanner } from './components/MaintenanceBanner';
 
 function AppContent() {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="h-full min-h-0 overflow-y-auto bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-violet-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
@@ -45,12 +46,13 @@ function AppContent() {
   return (
     <ThemeProvider>
       <SidebarProvider>
-        <div className="min-h-screen text-gray-100">
-          <div className="flex">
+        <div className="h-full min-h-0 flex flex-col text-gray-100">
+          <MaintenanceBanner />
+          <div className="flex flex-1 min-h-0 min-w-0">
             <Sidebar />
-            <div className="flex-1 flex flex-col min-h-screen">
+            <div className="flex-1 flex flex-col min-h-0 min-w-0">
               <Header />
-              <main className="flex-1 overflow-auto p-4 perspective-container">
+              <main className="app-main-scroll flex-1 min-h-0 overflow-y-auto p-4 perspective-container">
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/stocks" element={<Stocks />} />
@@ -81,9 +83,11 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <div className="h-full min-h-0">
+      <Router>
+        <AppContent />
+      </Router>
+    </div>
   );
 }
 
