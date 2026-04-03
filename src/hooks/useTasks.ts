@@ -1,6 +1,7 @@
 import { useAuth } from './useAuth';
 import { useState, useEffect } from 'react';
 import { Task } from '../types';
+import { notifyStocksMutated, pushSequentialIndexUpdate } from '../utils/indexSync';
 
 export const useTasks = () => {
   const { user } = useAuth();
@@ -109,6 +110,8 @@ export const useTasks = () => {
     try {
       const response = await fetch(`/api/tasks/${id}/complete`, { method: 'POST', headers: getHeaders() });
       if (!response.ok) throw new Error((await response.json()).error);
+      await pushSequentialIndexUpdate();
+      notifyStocksMutated();
       await fetchTasks();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to complete task');
@@ -148,6 +151,8 @@ export const useTasks = () => {
     try {
       const response = await fetch(`/api/tasks/${id}/fail`, { method: 'POST', headers: getHeaders() });
       if (!response.ok) throw new Error((await response.json()).error);
+      await pushSequentialIndexUpdate();
+      notifyStocksMutated();
       await fetchTasks();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to mark as failed');

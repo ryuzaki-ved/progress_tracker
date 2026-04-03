@@ -1,6 +1,7 @@
 import { useAuth } from './useAuth';
 import { useState, useEffect } from 'react';
 import { Stock } from '../types';
+import { LIFESTOCK_STOCKS_MUTATED } from '../utils/indexSync';
 
 export const useStocks = () => {
   const { user } = useAuth();
@@ -153,6 +154,16 @@ export const useStocks = () => {
         setStocks([]);
     }
     // eslint-disable-next-line
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const onMutate = () => {
+      void fetchStocks();
+    };
+    window.addEventListener(LIFESTOCK_STOCKS_MUTATED, onMutate);
+    return () => window.removeEventListener(LIFESTOCK_STOCKS_MUTATED, onMutate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch uses latest fetchStocks; avoid re-subscribing every render
   }, [user]);
 
   return {
