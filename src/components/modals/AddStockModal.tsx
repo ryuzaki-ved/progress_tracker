@@ -83,6 +83,25 @@ export const AddStockModal: React.FC<AddStockModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Calculate the maximum weight allowed for this stock
+  const calculateMaxWeight = (): number => {
+    let availableWeight = 100 - currentTotalWeight;
+    // In edit mode, add back the initial weight so we can adjust it
+    if (editMode && initialData) {
+      availableWeight += initialData.weight ? Math.round(initialData.weight * 100) : 0;
+    }
+    return Math.max(1, availableWeight); // minimum 1%
+  };
+
+  const maxWeight = calculateMaxWeight();
+
+  const handleWeightChange = (newWeight: number) => {
+    // Don't allow the weight to exceed the maximum allowed
+    if (newWeight <= maxWeight) {
+      setFormData({ ...formData, weight: newWeight });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -202,7 +221,7 @@ export const AddStockModal: React.FC<AddStockModalProps> = ({
                   max="100"
                   step="1"
                   value={formData.weight}
-                  onChange={(e) => setFormData({ ...formData, weight: parseInt(e.target.value) })}
+                  onChange={(e) => handleWeightChange(parseInt(e.target.value))}
                   className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
                 />
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
