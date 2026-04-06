@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { Tooltip } from '../ui/Tooltip';
-import { useState } from 'react';
 
 import { useAuth } from '../../hooks/useAuth';
 
@@ -49,7 +48,6 @@ export const Sidebar: React.FC = () => {
   const location = useLocation();
   const { isCollapsed, toggleSidebar } = useSidebar();
   const { user } = useAuth();
-  const [tooltipHideKey, setTooltipHideKey] = useState(0);
 
   const displayItems = user?.role === 'admin'
     ? [...menuItems, { path: '/admin', icon: BookOpen, label: 'Admin Panel' }]
@@ -71,7 +69,6 @@ export const Sidebar: React.FC = () => {
     </AnimatePresence>
 
     <motion.div
-      layout
       className={`bg-surface/50 backdrop-blur-2xl border border-white/[0.08] h-[calc(100vh-32px)] m-4 rounded-3xl flex flex-col z-50 shadow-elevated
                   fixed inset-y-0 left-0 lg:sticky lg:top-4 transition-transform duration-300
                   ${isCollapsed ? '-translate-x-[120%] lg:translate-x-0 lg:w-16' : 'translate-x-0 w-60'}
@@ -109,8 +106,8 @@ export const Sidebar: React.FC = () => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
-              <Link key={item.path} to={item.path} onClick={() => setTooltipHideKey(k => k + 1)} className="w-full block">
-                <Tooltip content={item.label} show={isCollapsed} placement="right" hideTrigger={tooltipHideKey}>
+              <Link key={item.path} to={item.path} className="w-full block">
+                <Tooltip content={item.label} show={isCollapsed} placement="right">
                   <motion.div
                     className={`w-full flex items-center px-3 py-2 rounded-md transition-all duration-200 relative overflow-hidden ${isActive
                         ? 'bg-primary/10 text-primary border border-primary/20 shadow-neon-sm'

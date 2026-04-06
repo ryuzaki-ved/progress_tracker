@@ -172,6 +172,15 @@ export const TradingDesk: React.FC = () => {
     }).format(amount);
   };
 
+  const formatCashBalance = (amount: number) => {
+    const oneCrore = 10000000;
+    if (Math.abs(amount) >= oneCrore) {
+      const inCrores = amount / oneCrore;
+      return `₹${inCrores.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Crores`;
+    }
+    return formatCurrency(amount);
+  };
+
   const formatPercent = (percent: number) => {
     return `${percent >= 0 ? '+' : ''}${percent.toFixed(2)}%`;
   };
@@ -345,7 +354,7 @@ export const TradingDesk: React.FC = () => {
                   duration={1.5}
                   separator="," 
                   decimals={2}
-                  formattingFn={formatCurrency}
+                  formattingFn={formatCashBalance}
                   preserveValue
                   redraw={false}
                   start={memoizedCashBalance}
