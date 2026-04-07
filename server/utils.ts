@@ -14,7 +14,7 @@ export function calculateTaskScore({
   const priorityMap = { low: 1, medium: 2, high: 3, critical: 4 };
   const p = priorityMap[priority] || 1;
   const c = complexity || 1;
-  let baseScore = p * c * 10;
+  let baseScore = p * c * 6;
   if (type === 'milestone') baseScore *= 1.2;
   if (type === 'recurring') baseScore *= 0.9;
   let timeMultiplier = 1.0;

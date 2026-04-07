@@ -21,10 +21,11 @@ export interface Task {
   dueDate: Date | null | undefined;
   scheduledTime?: string; // HH:MM format for specific time scheduling
   estimatedDuration?: number; // in minutes
+  complexity?: number;
   priority: 'low' | 'medium' | 'high';
-  status: 'pending' | 'completed' | 'overdue';
+  status: 'pending' | 'completed' | 'overdue' | 'failed';
   stockId: string;
-  points: number;
+  score?: number;
   createdAt: Date;
   completedAt?: Date;
 }

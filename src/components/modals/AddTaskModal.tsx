@@ -17,7 +17,7 @@ interface AddTaskModalProps {
     scheduledTime?: string;
     estimatedDuration?: number;
     priority: 'low' | 'medium' | 'high' | 'critical';
-    points?: number;
+    complexity?: number;
     repeatPattern?: {
       type: 'none' | 'daily' | 'weekly' | 'custom';
       endDate?: Date;
@@ -48,7 +48,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
     scheduledTime: defaultTime || '',
     estimatedDuration: 30,
     priority: 'medium' as 'low' | 'medium' | 'high' | 'critical',
-    points: 10,
+    complexity: 1,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +88,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
         scheduledTime: formData.scheduledTime || undefined,
         estimatedDuration: formData.estimatedDuration || undefined,
-        points: formData.points || undefined,
+        complexity: formData.complexity || undefined,
         repeatPattern,
       });
 
@@ -101,7 +101,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         scheduledTime: defaultTime || '',
         estimatedDuration: 30,
         priority: 'medium',
-        points: 10,
+        complexity: 1,
       });
       setRepeatType('none');
       setRepeatEndDate('');
@@ -281,21 +281,22 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               </div>
             </div>
 
-            <div>
+            <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Points: {formData.points}
+                Complexity: {formData.complexity}
               </label>
               <input
                 type="range"
-                min="5"
-                max="50"
-                step="5"
-                value={formData.points}
-                onChange={(e) => setFormData({ ...formData, points: parseInt(e.target.value) })}
+                min="1"
+                max="5"
+                step="1"
+                value={formData.complexity}
+                onChange={(e) => setFormData({ ...formData, complexity: parseInt(e.target.value) })}
                 className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
               />
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Points earned when completing this task
+              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <span>1 (Simple)</span>
+                <span>5 (Hard)</span>
               </div>
             </div>
 

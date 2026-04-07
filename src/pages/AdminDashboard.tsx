@@ -62,7 +62,7 @@ type AdminUserDetails = {
             title: string;
             status: string;
             priority: string;
-            points: number;
+            score?: number;
             due_date: string | null;
             completed_at: string | null;
             created_at: string | null;
@@ -318,7 +318,7 @@ const UserDetailsDrawer: React.FC<{
                                                             </div>
                                                             <div className="mt-2 flex flex-wrap gap-2 text-xs">
                                                                 <span className="px-2 py-1 rounded-md bg-gray-800 text-gray-300 border border-gray-700">Priority: {t.priority}</span>
-                                                                <span className="px-2 py-1 rounded-md bg-gray-800 text-gray-300 border border-gray-700">Points: {t.points}</span>
+                                                                <span className="px-2 py-1 rounded-md bg-gray-800 text-gray-300 border border-gray-700">Score: {t.score || 0}</span>
                                                                 {t.due_date ? (
                                                                     <span className="px-2 py-1 rounded-md bg-gray-800 text-gray-300 border border-gray-700">Due: {t.due_date}</span>
                                                                 ) : null}

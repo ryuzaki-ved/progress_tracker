@@ -45,7 +45,7 @@ export const useTasks = () => {
     scheduledTime?: string;
     estimatedDuration?: number;
     priority: 'low' | 'medium' | 'high' | 'critical';
-    points?: number;
+    complexity?: number;
     repeatPattern?: {
       type: 'none' | 'daily' | 'weekly' | 'custom';
       endDate?: Date;
@@ -64,7 +64,7 @@ export const useTasks = () => {
           scheduledTime: taskData.scheduledTime,
           estimatedDuration: taskData.estimatedDuration,
           priority: taskData.priority,
-          points: taskData.points,
+          complexity: taskData.complexity,
           recurringPattern: taskData.repeatPattern ? {
             type: taskData.repeatPattern.type,
             endDate: taskData.repeatPattern.endDate?.toISOString(),

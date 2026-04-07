@@ -958,7 +958,7 @@ export const Tasks: React.FC = () => {
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-gray-900 dark:text-white">
-              {tasks.reduce((sum, task) => sum + task.points, 0)}
+              {tasks.reduce((sum, task) => sum + (task.score || 0), 0)}
             </div>
             <div className="text-sm text-gray-600">Total Points</div>
           </div>

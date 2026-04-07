@@ -17,9 +17,15 @@ router.get('/', (req: any, res) => {
       description: taskObj.description || '',
       dueDate: taskObj.due_date ? new Date(taskObj.due_date) : null,
       priority: taskObj.priority || 'medium',
+      complexity: taskObj.complexity || 1,
       status: taskObj.status || 'pending',
       stockId: taskObj.stock_id.toString(),
-      points: taskObj.points || 10,
+      score: taskObj.score || calculateTaskScore({
+        priority: taskObj.priority || 'medium',
+        complexity: taskObj.complexity || 1,
+        type: taskObj.type,
+        dueDate: taskObj.due_date ? new Date(taskObj.due_date) : undefined,
+      }),
       createdAt: taskObj.created_at ? new Date(taskObj.created_at) : new Date(),
       completedAt: taskObj.completed_at ? new Date(taskObj.completed_at) : undefined,
       scheduledTime: taskObj.scheduled_time || undefined,
@@ -33,10 +39,10 @@ router.get('/', (req: any, res) => {
 
 router.post('/', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
-  const { stockId, title, description, priority, dueDate, scheduledTime, estimatedDuration, points } = req.body;
+  const { stockId, title, description, priority, complexity, dueDate, scheduledTime, estimatedDuration } = req.body;
   try {
-    const info = db.prepare(`INSERT INTO tasks (stock_id, title, description, priority, due_date, scheduled_time, estimated_duration, points, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`).run(
-      stockId, title, description || null, priority, dueDate || null, scheduledTime || null, estimatedDuration || 30, points || 10, 'pending'
+    const info = db.prepare(`INSERT INTO tasks (stock_id, title, description, priority, complexity, due_date, scheduled_time, estimated_duration, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`).run(
+      stockId, title, description || null, priority, complexity || 1, dueDate || null, scheduledTime || null, estimatedDuration || 30, 'pending'
     );
     res.json({ data: { id: info.lastInsertRowid }, error: null });
   } catch (err: any) {
@@ -52,12 +58,12 @@ router.put('/:id', checkMaintenanceMode, (req: any, res) => {
     const existingTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as any;
     if (!existingTask) return res.status(404).json({ error: 'Task not found' });
     
-    db.prepare(`UPDATE tasks SET title = ?, description = ?, priority = ?, due_date = ?, points = ?, status = ?, scheduled_time = ?, estimated_duration = ?, updated_at = datetime('now') WHERE id = ?`).run(
+    db.prepare(`UPDATE tasks SET title = ?, description = ?, priority = ?, complexity = ?, due_date = ?, status = ?, scheduled_time = ?, estimated_duration = ?, updated_at = datetime('now') WHERE id = ?`).run(
       updates.title ?? existingTask.title,
       updates.description ?? existingTask.description,
       updates.priority ?? existingTask.priority,
+      updates.complexity ?? existingTask.complexity,
       updates.dueDate !== undefined ? updates.dueDate : existingTask.due_date,
-      updates.points ?? existingTask.points,
       updates.status ?? existingTask.status,
       updates.scheduledTime ?? existingTask.scheduled_time,
       updates.estimatedDuration ?? existingTask.estimated_duration,

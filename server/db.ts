@@ -198,6 +198,9 @@ try { db.prepare("ALTER TABLE stocks ADD COLUMN created_at TEXT DEFAULT (datetim
 try { db.prepare("ALTER TABLE stocks ADD COLUMN current_score REAL DEFAULT 500").run(); } catch (e) {}
 try { db.prepare("ALTER TABLE stocks ADD COLUMN last_activity_at TEXT").run(); } catch (e) {}
 try { db.prepare("ALTER TABLE tasks ADD COLUMN created_at TEXT DEFAULT (datetime('now'))").run(); } catch (e) {}
+
+// Migration to add complexity if missing
+try { db.prepare("ALTER TABLE tasks ADD COLUMN complexity INTEGER DEFAULT 1").run(); } catch (e) {}
 try { db.prepare("ALTER TABLE tasks ADD COLUMN score REAL").run(); } catch (e) {}
 try { db.prepare("ALTER TABLE tasks ADD COLUMN estimated_duration INTEGER").run(); } catch (e) {}
 try { db.prepare("ALTER TABLE tasks ADD COLUMN scheduled_time TEXT").run(); } catch (e) {}

@@ -5,8 +5,8 @@ export const calculateStockScore = (stock: Stock, tasks: Task[]): number => {
   const completedTasks = stockTasks.filter(task => task.status === 'completed');
   const overdueTasks = stockTasks.filter(task => task.status === 'overdue');
   
-  const completedPoints = completedTasks.reduce((sum, task) => sum + task.points, 0);
-  const overduePoints = overdueTasks.reduce((sum, task) => sum + task.points, 0);
+  const completedPoints = completedTasks.reduce((sum, task) => sum + (task.score || 0), 0);
+  const overduePoints = overdueTasks.reduce((sum, task) => sum + (task.score || 0), 0);
   
   return Math.max(0, stock.currentScore + completedPoints - (overduePoints * 0.5));
 };

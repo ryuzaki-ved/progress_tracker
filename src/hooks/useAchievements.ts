@@ -71,7 +71,7 @@ const ACHIEVEMENT_DEFINITIONS = [
   {
     id: 'high_achiever',
     title: 'High Achiever',
-    description: 'Earn 1000 total points',
+    description: 'Earn 1000 total score',
     icon: '🚀',
     category: 'completion',
     requirement: 1000,
@@ -131,7 +131,7 @@ export const useAchievements = () => {
 
     try {
       const completedTasks = tasks.filter(task => task.status === 'completed');
-      const totalPoints = completedTasks.reduce((sum, task) => sum + task.points, 0);
+      const totalScore = completedTasks.reduce((sum, task) => sum + (task.score || 0), 0);
       const earlyTasks = completedTasks.filter(task => 
         task.dueDate && task.completedAt && task.completedAt < task.dueDate
       );
@@ -142,7 +142,7 @@ export const useAchievements = () => {
       const updates = [
         { id: 'first_task', progress: Math.min(completedTasks.length, 1), requirement: 1 },
         { id: 'century_club', progress: completedTasks.length, requirement: 100 },
-        { id: 'high_achiever', progress: totalPoints, requirement: 1000 },
+        { id: 'high_achiever', progress: totalScore, requirement: 1000 },
         { id: 'early_bird', progress: earlyTasks.length, requirement: 50 },
         { id: 'week_streak', progress: dailyStreak?.currentStreak || 0, requirement: 7 },
         { id: 'consistency_king', progress: dailyStreak?.currentStreak || 0, requirement: 30 },

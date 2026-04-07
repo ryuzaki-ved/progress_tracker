@@ -129,6 +129,7 @@ export const TradingDesk: React.FC = () => {
   const [optionOrderType, setOptionOrderType] = useState<'buy' | 'write'>('buy');
   const [optionQuantity, setOptionQuantity] = useState('');
   const [optionOrderError, setOptionOrderError] = useState<string | null>(null);
+  const [autoHedge, setAutoHedge] = useState(false);
 
   // Add state for showing the options transaction modal and quantity input
   const [showOptionTxHistory, setShowOptionTxHistory] = useState(false);
@@ -255,10 +256,10 @@ export const TradingDesk: React.FC = () => {
       const totalCost = premium * qty;
       
       if (optionOrderType === 'buy') {
-        await buyOption(Number(selectedOptionId), qty, premium);
+        await buyOption(Number(selectedOptionId), qty, premium, autoHedge);
         notifyOptionBuy(optionDetails, qty, premium, totalCost);
       } else {
-        await writeOption(Number(selectedOptionId), qty, premium);
+        await writeOption(Number(selectedOptionId), qty, premium, autoHedge);
         notifyOptionWrite(optionDetails, qty, premium, totalCost);
       }
       setOptionQuantity('');
@@ -881,6 +882,21 @@ export const TradingDesk: React.FC = () => {
                     }}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-400 dark:focus:ring-violet-500 transition-shadow duration-150"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Auto-Hedge (&gt; 100Cr)</label>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setAutoHedge(!autoHedge)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${autoHedge ? 'bg-violet-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ${autoHedge ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {autoHedge ? 'Enabled (Auto-buy hedge if needed)' : 'Disabled (Reject if unhedged)'}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                   <span>Premium: <span className="font-medium text-gray-900 dark:text-white">{optionPremium && selectedOption ? optionPremium.toFixed(2) : '-'}</span></span>

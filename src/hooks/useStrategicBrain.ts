@@ -131,10 +131,10 @@ export const useStrategicBrain = () => {
       (recentTasks.filter(task => task.status === 'completed').length / recentTasks.length) * 100 : 0;
     const momentumScore = completionRate;
     
-    // Calculate efficiency (points per task)
-    const avgPoints = recentTasks.length > 0 ? 
-      recentTasks.reduce((sum, task) => sum + task.points, 0) / recentTasks.length : 0;
-    const efficiencyScore = Math.min(100, (avgPoints / 15) * 100); // Assuming 15 is good average
+    // Calculate efficiency (score per task)
+    const efficiency = recentTasks.length > 0 ?
+      recentTasks.reduce((sum, task) => sum + (task.score || 0), 0) / recentTasks.length : 0;
+    const efficiencyScore = Math.min(100, (efficiency / 15) * 100); // Assuming 15 is good average
     
     // Generate recommendations
     const recommendations = currentBalance

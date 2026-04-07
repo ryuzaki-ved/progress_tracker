@@ -529,13 +529,13 @@ export const PerformanceBonds: React.FC = () => {
                       <div>
                         <span className="text-gray-400">Creator:</span>{' '}
                         <span className={userCompleted && isCreator ? 'text-green-400' : 'text-gray-300'}>
-                          {bond.creator_amount} points {isCreator && userCompleted && '✓'}
+                          {bond.creator_amount} score {isCreator && userCompleted && '✓'}
                         </span>
                       </div>
                       <div>
                         <span className="text-gray-400">Challenger:</span>{' '}
                         <span className={userCompleted && !isCreator ? 'text-green-400' : 'text-gray-300'}>
-                          {bond.challenger_amount} points {!isCreator && userCompleted && '✓'}
+                          {bond.challenger_amount} score {!isCreator && userCompleted && '✓'}
                         </span>
                       </div>
                     </div>

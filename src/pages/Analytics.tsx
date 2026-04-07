@@ -198,9 +198,9 @@ export const Analytics: React.FC = () => {
         <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-orange-600 font-medium">Points Earned</p>
+              <p className="text-sm text-orange-600 font-medium">Score Earned</p>
               <p className="text-2xl font-bold text-orange-900">
-                {tasks.filter(t => t.status === 'completed').reduce((sum, task) => sum + task.points, 0)}
+                {tasks.filter(t => t.status === 'completed').reduce((sum, task) => sum + (task.score || 0), 0)}
               </p>
               <div className="flex items-center text-sm text-orange-600">
                 <TrendingUp className="w-4 h-4 mr-1" />

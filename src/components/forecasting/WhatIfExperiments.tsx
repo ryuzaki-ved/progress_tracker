@@ -32,7 +32,7 @@ export const WhatIfExperiments: React.FC<WhatIfExperimentsProps> = ({
     switch (type) {
       case 'add_task':
         newChange.stockId = stocks[0]?.id;
-        newChange.taskData = { title: 'New Task', points: 15, priority: 'medium' };
+        newChange.taskData = { title: 'New Task', score: 15, priority: 'medium' };
         break;
       case 'change_weight':
         newChange.stockId = stocks[0]?.id;
@@ -394,16 +394,15 @@ export const WhatIfExperiments: React.FC<WhatIfExperimentsProps> = ({
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                  Points
-                                </label>
+                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Score</label>
                                 <input
                                   type="number"
-                                  value={change.taskData?.points || 15}
-                                  onChange={(e) => updateChange(index, {
-                                    taskData: { ...change.taskData, points: parseInt(e.target.value) || 15 }
+                                  min="5" max="50" step="5"
+                                  value={change.taskData?.score || 15}
+                                  onChange={e => updateChange(index, {
+                                    taskData: { ...change.taskData, score: parseInt(e.target.value) || 15 }
                                   })}
-                                  className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                  className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                                 />
                               </div>
                             </div>

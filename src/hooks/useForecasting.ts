@@ -125,7 +125,7 @@ export const useForecasting = () => {
     
     const targetScore = stock.currentScore * (1 + targetChangePercent / 100);
     const scoreIncrease = targetScore - stock.currentScore;
-    const tasksRequired = Math.ceil(scoreIncrease / 15); // Assume 15 points per task
+    const tasksRequired = Math.ceil(scoreIncrease / 15); // Assume 15 score per task
     
     // Calculate weekly milestones
     const weeks = Math.ceil(timeframe / 7);
@@ -169,10 +169,10 @@ export const useForecasting = () => {
           dueDate: new Date(),
           scheduledTime: undefined,
           estimatedDuration: Math.round((change.additionalHours * 60) / change.additionalTasks) || 30,
-          priority: 'medium',
-          status: change.isPositive ? 'completed' : 'overdue',
+          priority: 'medium' as const,
+          status: (change.isPositive ? 'completed' : 'overdue') as 'completed' | 'overdue',
           stockId: change.stockId,
-          points: 10,
+          score: 10,
           createdAt: new Date(),
           completedAt: change.isPositive ? new Date() : undefined,
         };
@@ -184,7 +184,7 @@ export const useForecasting = () => {
           dueDate: task.dueDate,
           completedAt: task.completedAt,
         });
-        task.points = score;
+        task.score = score;
         simulatedTasks.push(task);
       }
     });
@@ -237,15 +237,15 @@ export const useForecasting = () => {
               dueDate: new Date(),
               scheduledTime: undefined,
               estimatedDuration: 30,
-              priority: change.taskData.priority || 'medium',
-              status: 'completed',
+              priority: (change.taskData.priority || 'medium') as 'low' | 'medium' | 'high',
+              status: 'completed' as const,
               stockId: change.stockId,
-              points: change.taskData.points || 10,
+              score: change.taskData.score || 10,
               createdAt: new Date(),
               completedAt: new Date(),
             };
             // Calculate real score for this task
-            task.points = calculateTaskScore({
+            task.score = calculateTaskScore({
               priority: task.priority,
               complexity: 1,
               type: undefined,

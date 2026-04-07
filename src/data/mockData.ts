@@ -122,8 +122,8 @@ export const mockTasks: Task[] = [
     priority: 'high',
     status: 'pending',
     stockId: '1',
-    points: 50,
-    createdAt: new Date('2024-01-10'),
+    score: 50,
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
   },
   {
     id: '2',
@@ -133,7 +133,7 @@ export const mockTasks: Task[] = [
     priority: 'medium',
     status: 'completed',
     stockId: '2',
-    points: 20,
+    score: 20,
     createdAt: new Date('2024-01-15'),
     completedAt: new Date('2024-01-15'),
   },
@@ -145,7 +145,7 @@ export const mockTasks: Task[] = [
     priority: 'medium',
     status: 'overdue',
     stockId: '3',
-    points: 30,
+    score: 30,
     createdAt: new Date('2024-01-12'),
   },
   {
@@ -156,7 +156,7 @@ export const mockTasks: Task[] = [
     priority: 'low',
     status: 'pending',
     stockId: '4',
-    points: 25,
+    score: 25,
     createdAt: new Date('2024-01-14'),
   },
   {
@@ -167,7 +167,7 @@ export const mockTasks: Task[] = [
     priority: 'high',
     status: 'pending',
     stockId: '5',
-    points: 15,
+    score: 15,
     createdAt: new Date('2024-01-15'),
   },
 ];
@@ -177,12 +177,12 @@ export const mockIndexData: IndexData = {
   change: 12.4,
   changePercent: 1.68,
   history: [
-    { date: new Date('2024-01-08'), value: 735.8 },
-    { date: new Date('2024-01-09'), value: 738.2 },
-    { date: new Date('2024-01-10'), value: 740.5 },
-    { date: new Date('2024-01-11'), value: 742.8 },
-    { date: new Date('2024-01-12'), value: 745.1 },
-    { date: new Date('2024-01-13'), value: 746.3 },
-    { date: new Date('2024-01-14'), value: 748.2 },
+    { date: new Date('2024-01-08').toISOString(), value: 735.8 },
+    { date: new Date('2024-01-09').toISOString(), value: 738.2 },
+    { date: new Date('2024-01-10').toISOString(), value: 740.5 },
+    { date: new Date('2024-01-11').toISOString(), value: 742.8 },
+    { date: new Date('2024-01-12').toISOString(), value: 745.1 },
+    { date: new Date('2024-01-13').toISOString(), value: 746.3 },
+    { date: new Date('2024-01-14').toISOString(), value: 748.2 },
   ]
 };

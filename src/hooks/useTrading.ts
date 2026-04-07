@@ -142,24 +142,24 @@ export const useTrading = () => {
     fetchOptionsData();
   }, [fetchOptionsData]);
 
-  const buyOption = async (contractId: number, quantity: number, premium: number) => {
+  const buyOption = async (contractId: number, quantity: number, premium: number, autoHedge: boolean = false) => {
     if (!user) throw new Error('No user');
     const response = await fetch('/api/trading/options/buy', {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ contractId, quantity, premium })
+        body: JSON.stringify({ contractId, quantity, premium, autoHedge, currentIndexValue })
     });
     if (!response.ok) throw new Error((await response.json()).error);
     await fetchCashBalance();
     await fetchOptionsData();
   };
 
-  const writeOption = async (contractId: number, quantity: number, premium: number) => {
+  const writeOption = async (contractId: number, quantity: number, premium: number, autoHedge: boolean = false) => {
     if (!user) throw new Error('No user');
     const response = await fetch('/api/trading/options/write', {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ contractId, quantity, premium })
+        body: JSON.stringify({ contractId, quantity, premium, autoHedge, currentIndexValue })
     });
     if (!response.ok) throw new Error((await response.json()).error);
     await fetchCashBalance();
