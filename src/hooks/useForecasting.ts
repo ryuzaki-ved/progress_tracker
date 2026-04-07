@@ -7,7 +7,7 @@ import { addDays, subDays, differenceInDays, startOfDay } from 'date-fns';
 import { calculateStockScore, calculateIndexValue, calculateTaskScore } from '../utils/stockUtils';
 
 export const useForecasting = () => {
-  const { stocks } = useStocks();
+  const { stocks, indexDivisor } = useStocks();
   const { tasks } = useTasks();
   const { indexData } = useIndex();
   const [strategyGoals, setStrategyGoals] = useState<StrategyGoal[]>([]);
@@ -204,7 +204,7 @@ export const useForecasting = () => {
       const impact = projectedImpact.find(i => i.stockId === stock.id);
       if (impact) stock.currentScore += impact.scoreChange;
     });
-    const projectedIndex = calculateIndexValue(simulatedStocks);
+    const projectedIndex = calculateIndexValue(simulatedStocks, indexDivisor);
     const currentIndex = indexData?.value || 500;
     const overallIndexChange = ((projectedIndex - currentIndex) / currentIndex) * 100;
     return {
@@ -299,7 +299,7 @@ export const useForecasting = () => {
     });
 
     // Calculate projected index value
-    const projectedIndex = calculateIndexValue(simulatedStocks);
+    const projectedIndex = calculateIndexValue(simulatedStocks, indexDivisor);
     const currentIndex = indexData?.value || 500;
     const indexChange = ((projectedIndex - currentIndex) / currentIndex) * 100;
 

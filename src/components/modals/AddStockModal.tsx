@@ -41,6 +41,9 @@ const STOCK_CATEGORIES = [
   'Social',
   'Financial',
   'Spiritual',
+  'Leisure',
+  'Self Development',
+  'Others',
 ];
 
 export const AddStockModal: React.FC<AddStockModalProps> = ({

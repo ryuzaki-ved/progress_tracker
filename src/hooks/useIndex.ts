@@ -6,7 +6,7 @@ import { calculateIndexValue } from '../utils/stockUtils';
 
 export const useIndex = () => {
   const { user } = useAuth();
-  const { stocks } = useStocks();
+  const { stocks, indexDivisor } = useStocks();
   const [indexData, setIndexData] = useState<IndexData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +18,7 @@ export const useIndex = () => {
   });
 
   const getCurrentIndexValue = () => {
-    return calculateIndexValue(stocks);
+    return calculateIndexValue(stocks, indexDivisor);
   };
 
   const fetchIndexData = async () => {

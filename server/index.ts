@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import db from './db.js';
+import { authenticateToken } from './middleware.js';
 
 import stocksRouter from './stocks.js';
 import tasksRouter from './tasks.js';
@@ -71,6 +72,31 @@ app.post('/api/auth/signup', (req, res) => {
     const info = db.prepare("INSERT INTO users (username, password, role) VALUES (?, ?, 'user')").run(username, password);
     const user = { id: info.lastInsertRowid, username, role: 'user' };
     const token = jwt.sign(user, JWT_SECRET);
+    res.json({ data: { user, token }, error: null });
+  } catch (err: any) {
+    if (err.message.includes('UNIQUE constraint failed')) {
+      res.status(400).json({ data: null, error: 'Username already exists' });
+    } else {
+      res.status(500).json({ data: null, error: err.message });
+    }
+  }
+});
+
+app.put('/api/auth/username', authenticateToken, (req: any, res: any) => {
+  const { username } = req.body;
+  if (!username) return res.status(400).json({ error: 'Username required' });
+  
+  if (username.toLowerCase() === 'admin' && req.user.role !== 'admin') {
+    return res.status(400).json({ error: 'Username reserved' });
+  }
+
+  try {
+    const userId = req.user.id;
+    db.prepare('UPDATE users SET username = ? WHERE id = ?').run(username, userId);
+    
+    const user = db.prepare('SELECT id, username, role FROM users WHERE id = ?').get(userId) as any;
+    const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET);
+    
     res.json({ data: { user, token }, error: null });
   } catch (err: any) {
     if (err.message.includes('UNIQUE constraint failed')) {

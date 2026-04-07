@@ -4,6 +4,35 @@ import { authenticateToken, checkMaintenanceMode } from './middleware.js';
 
 const router = express.Router();
 
+function withDivisorAdjustment(userId: number, action: () => any) {
+  return db.transaction(() => {
+    const stocksOld = db.prepare('SELECT current_score, weight FROM stocks WHERE user_id = ?').all(userId) as any[];
+    const oldSum = stocksOld.reduce((sum, s) => sum + ((s.current_score ?? 500) * Number(s.weight)), 0);
+    const oldSettings = db.prepare('SELECT index_divisor FROM user_settings WHERE user_id = ?').get(userId) as any;
+    const oldDivisor = oldSettings?.index_divisor ?? 1.0;
+    const oldIndex = oldDivisor > 0 ? (oldSum / oldDivisor) : oldSum;
+
+    const result = action();
+
+    const stocksNew = db.prepare('SELECT current_score, weight FROM stocks WHERE user_id = ?').all(userId) as any[];
+    const newSum = stocksNew.reduce((sum, s) => sum + ((s.current_score ?? 500) * Number(s.weight)), 0);
+    
+    let newDivisor = 1.0;
+    if (oldIndex > 0) {
+      newDivisor = newSum / oldIndex;
+    } else if (newSum > 0) {
+      newDivisor = 1.0;
+    }
+    
+    if (!oldSettings) {
+        db.prepare('INSERT INTO user_settings (user_id, index_divisor, cash_balance) VALUES (?, ?, 10000000)').run(userId, newDivisor);
+    } else {
+        db.prepare('UPDATE user_settings SET index_divisor = ? WHERE user_id = ?').run(newDivisor, userId);
+    }
+    return result;
+  })();
+}
+
 router.use(authenticateToken);
 
 router.get('/history', (req: any, res) => {
@@ -25,6 +54,9 @@ router.get('/history', (req: any, res) => {
 router.get('/', (req: any, res) => {
   const userId = req.user.id;
   try {
+    const settings = db.prepare('SELECT index_divisor FROM user_settings WHERE user_id = ?').get(userId) as any;
+    const indexDivisor = settings?.index_divisor ?? 1.0;
+    
     const stocks = db.prepare('SELECT * FROM stocks WHERE user_id = ? ORDER BY created_at').all(userId) as any[];
     
     const stocksList = stocks.map(stockObj => {
@@ -72,7 +104,7 @@ router.get('/', (req: any, res) => {
         history,
       };
     });
-    res.json({ data: stocksList, error: null });
+    res.json({ data: stocksList, meta: { indexDivisor }, error: null });
   } catch (err: any) {
     res.status(500).json({ data: null, error: err.message });
   }
@@ -82,7 +114,9 @@ router.post('/', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
   const { name, description, category, color, weight, icon } = req.body;
   try {
-    const info = db.prepare('INSERT INTO stocks (user_id, name, description, category, color, weight, icon) VALUES (?, ?, ?, ?, ?, ?, ?)').run(userId, name, description || null, category || null, color, weight, icon || null);
+    const info = withDivisorAdjustment(userId, () => {
+      return db.prepare('INSERT INTO stocks (user_id, name, description, category, color, weight, icon) VALUES (?, ?, ?, ?, ?, ?, ?)').run(userId, name, description || null, category || null, color, weight, icon || null);
+    });
     res.json({ data: { id: info.lastInsertRowid }, error: null });
   } catch (err: any) {
     if (err.message && err.message.includes('UNIQUE constraint failed')) {
@@ -115,7 +149,9 @@ router.put('/:id', checkMaintenanceMode, (req: any, res) => {
   }
 
   try {
-    db.prepare('UPDATE stocks SET name = ?, category = ?, color = ?, weight = ?, icon = ? WHERE id = ? AND user_id = ?').run(updates.name, updates.category, updates.color, updates.weight, updates.icon, id, userId);
+    withDivisorAdjustment(userId, () => {
+      db.prepare('UPDATE stocks SET name = ?, category = ?, color = ?, weight = ?, icon = ? WHERE id = ? AND user_id = ?').run(updates.name, updates.category, updates.color, updates.weight, updates.icon, id, userId);
+    });
     res.json({ data: true, error: null });
   } catch (err: any) {
     res.status(500).json({ data: null, error: err.message });
@@ -131,7 +167,7 @@ router.delete('/:id', checkMaintenanceMode, (req: any, res) => {
       return res.status(404).json({ data: null, error: 'Stock not found or unauthorized' });
     }
 
-    db.transaction(() => {
+    withDivisorAdjustment(userId, () => {
       // Cascade delete dependent records
       db.prepare('DELETE FROM tasks WHERE stock_id = ?').run(id);
       db.prepare('DELETE FROM stock_performance_history WHERE stock_id = ?').run(id);
@@ -141,7 +177,7 @@ router.delete('/:id', checkMaintenanceMode, (req: any, res) => {
       
       // Delete parent stock
       db.prepare('DELETE FROM stocks WHERE id = ? AND user_id = ?').run(id, userId);
-    })();
+    });
     
     res.json({ data: true, error: null });
   } catch(err: any) {

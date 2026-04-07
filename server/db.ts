@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS index_history (
 CREATE TABLE IF NOT EXISTS user_settings (
   user_id INTEGER PRIMARY KEY,
   cash_balance REAL DEFAULT 10000000,
+  index_divisor REAL DEFAULT 1.0,
   FOREIGN KEY(user_id) REFERENCES users(id)
 );
 CREATE TABLE IF NOT EXISTS user_holdings (
@@ -186,9 +187,9 @@ db.exec(SCHEMA);
 const stmt = db.prepare("SELECT id FROM users WHERE username = 'admin'");
 const adminExists = stmt.get();
 if (!adminExists) {
-  db.prepare("INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin')").run();
+  db.prepare("INSERT INTO users (username, password, role) VALUES ('admin', 'admin157', 'admin')").run();
 } else {
-  db.prepare("UPDATE users SET role = 'admin', password = 'admin123' WHERE username = 'admin'").run();
+  db.prepare("UPDATE users SET role = 'admin', password = 'admin157' WHERE username = 'admin'").run();
 }
 
 // Ensure columns and migrations
@@ -322,11 +323,12 @@ try {
 
 // Ensure cash_balance initialization
 try { db.prepare("ALTER TABLE user_settings ADD COLUMN cash_balance REAL DEFAULT 10000000").run(); } catch (e) {}
+try { db.prepare("ALTER TABLE user_settings ADD COLUMN index_divisor REAL DEFAULT 1.0").run(); } catch (e) {}
 const usersRes = db.prepare("SELECT id FROM users").all() as { id: number }[];
 usersRes.forEach(u => {
-  const settings = db.prepare('SELECT cash_balance FROM user_settings WHERE user_id = ?').get(u.id);
+  const settings = db.prepare('SELECT cash_balance, index_divisor FROM user_settings WHERE user_id = ?').get(u.id);
   if (!settings) {
-    db.prepare('INSERT INTO user_settings (user_id, cash_balance) VALUES (?, 10000000)').run(u.id);
+    db.prepare('INSERT INTO user_settings (user_id, cash_balance, index_divisor) VALUES (?, 10000000, 1.0)').run(u.id);
   }
 });
 

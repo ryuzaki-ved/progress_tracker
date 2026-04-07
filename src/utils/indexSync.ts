@@ -24,6 +24,7 @@ export async function pushSequentialIndexUpdate(): Promise<void> {
     const result = await res.json();
     const data = result.data;
     if (!Array.isArray(data)) return;
+    const indexDivisor = result.meta?.indexDivisor ?? 1.0;
 
     const stocks: Stock[] = data.map((s: any) => ({
       ...s,
@@ -31,7 +32,7 @@ export async function pushSequentialIndexUpdate(): Promise<void> {
       history: (s.history || []).map((h: any) => ({ date: new Date(h.date), value: h.value })),
     }));
 
-    const currentValue = calculateIndexValue(stocks);
+    const currentValue = calculateIndexValue(stocks, indexDivisor);
     const upd = await fetch('/api/index/update', {
       method: 'POST',
       headers,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { LogIn, UserPlus, User, Lock, Eye, EyeOff, Shield } from 'lucide-react';
+import { LogIn, UserPlus, User, Lock, Eye, EyeOff, Shield, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../hooks/useAuth';
@@ -64,16 +64,24 @@ export const AuthForm: React.FC = () => {
             <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
           )}
           <div className="text-center mb-8">
-            <div className={`w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4 ${mode === 'admin' ? 'bg-red-500/20 shadow-neon-sm border border-red-500/50' : 'bg-primary'}`}>
+            <div className={`relative w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${mode === 'admin' ? 'bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.3)] border border-red-500/50' : 'bg-violet-500/20 shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-500/50'}`}>
+              {/* Outer pulsing ring for non-admin */}
+              {mode !== 'admin' && (
+                <motion.div
+                  className="absolute inset-0 rounded-2xl border-2 border-violet-500/30"
+                  animate={{ scale: [1, 1.25, 1], opacity: [0.5, 0, 0.5] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
+              )}
               <motion.div
-                animate={{ rotate: mode === 'admin' ? 0 : 360 }}
-                transition={{ duration: 2, repeat: mode === 'admin' ? 0 : Infinity, ease: "linear" }}
+                animate={mode === 'admin' ? { scale: [1, 1.05, 1] } : { y: [0, -4, 0], scale: [1, 1.05, 1] }}
+                transition={{ duration: mode === 'admin' ? 3 : 2.5, repeat: Infinity, ease: "easeInOut" }}
               >
-                {mode === 'admin' ? <Shield className="w-8 h-8 text-red-500" /> : '📈'}
+                {mode === 'admin' ? <Shield className="w-8 h-8 text-red-500" /> : <TrendingUp className="w-8 h-8 text-violet-400" />}
               </motion.div>
             </div>
-            <h1 className="text-2xl font-bold text-white">LifeStock</h1>
-            <p className="text-gray-300 mt-2">
+            <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-indigo-300 tracking-tight">LifeStock</h1>
+            <p className="text-gray-400 mt-2 font-medium">
               {getTitle()}
             </p>
           </div>

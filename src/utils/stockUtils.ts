@@ -11,8 +11,9 @@ export const calculateStockScore = (stock: Stock, tasks: Task[]): number => {
   return Math.max(0, stock.currentScore + completedPoints - (overduePoints * 0.5));
 };
 
-export const calculateIndexValue = (stocks: Stock[]): number => {
-  return stocks.reduce((sum, stock) => sum + (stock.currentScore * stock.weight), 0);
+export const calculateIndexValue = (stocks: Stock[], divisor: number = 1.0): number => {
+  const sum = stocks.reduce((acc, stock) => acc + (stock.currentScore * stock.weight), 0);
+  return divisor > 0 ? (sum / divisor) : sum;
 };
 
 export const getVolatilityColor = (volatility: string): string => {

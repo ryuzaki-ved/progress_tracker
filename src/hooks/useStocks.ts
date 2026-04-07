@@ -6,6 +6,7 @@ import { LIFESTOCK_STOCKS_MUTATED } from '../utils/indexSync';
 export const useStocks = () => {
   const { user } = useAuth();
   const [stocks, setStocks] = useState<Stock[]>([]);
+  const [indexDivisor, setIndexDivisor] = useState<number>(1.0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +30,9 @@ export const useStocks = () => {
         history: s.history.map((h: any) => ({ ...h, date: new Date(h.date) }))
       }));
       setStocks(stocksList);
+      if (result.meta?.indexDivisor) {
+        setIndexDivisor(result.meta.indexDivisor);
+      }
     } catch (err) {
       console.error('fetchStocks error:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch stocks');
@@ -168,6 +172,7 @@ export const useStocks = () => {
 
   return {
     stocks,
+    indexDivisor,
     loading,
     error,
     createStock,

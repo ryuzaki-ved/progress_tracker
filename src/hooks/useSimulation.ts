@@ -59,7 +59,7 @@ const SIMULATION_TEMPLATES: SimulationTemplate[] = [
 ];
 
 export const useSimulation = () => {
-  const { stocks } = useStocks();
+  const { stocks, indexDivisor } = useStocks();
   const { tasks } = useTasks();
   const { indexData } = useIndex();
   const { streaks } = useStreaks();
@@ -106,7 +106,7 @@ export const useSimulation = () => {
       stocks: stocks.map(stock => ({ ...stock })),
       tasks: tasks.map(task => ({ ...task })),
       indexHistory: indexData?.history ? indexData.history.map(h => ({ ...h })) : [],
-      currentIndexValue: indexData?.value || calculateIndexValue(stocks),
+      currentIndexValue: indexData?.value || calculateIndexValue(stocks, indexDivisor),
       
       tags: [],
       color: '#8B5CF6', // Purple theme for simulations
@@ -224,8 +224,8 @@ export const useSimulation = () => {
     }
     
     // Recalculate index value with new weights
-    const newIndexValue = calculateIndexValue(simulation.stocks);
-    const originalIndexValue = indexData?.value || calculateIndexValue(stocks);
+    const newIndexValue = calculateIndexValue(simulation.stocks, indexDivisor);
+    const originalIndexValue = indexData?.value || calculateIndexValue(stocks, indexDivisor);
     const indexChange = newIndexValue - originalIndexValue;
     const indexChangePercent = originalIndexValue > 0 ? (indexChange / originalIndexValue) * 100 : 0;
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Moon, Sun, Palette, Sliders, Bell, Shield, Monitor } from 'lucide-react';
+import { Save, Moon, Sun, Palette, Sliders, Bell, Shield, Monitor, User as UserIcon, Edit2 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useStocks } from '../hooks/useStocks';
@@ -9,9 +9,11 @@ import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const Settings: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUsername } = useAuth();
   const { stocks, updateStock } = useStocks();
   const { mode, accent, setMode, setAccent } = useTheme();
+  const [newUsername, setNewUsername] = useState(user?.username || '');
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [autoDecay, setAutoDecay] = useState(true);
   const [decayRate, setDecayRate] = useState(1);
@@ -48,6 +50,15 @@ export const Settings: React.FC = () => {
     setSaveMessage(null);
 
     try {
+      // Update username if changed
+      if (newUsername && newUsername.trim() !== '' && newUsername !== user.username) {
+        const usernameResult = await updateUsername(newUsername.trim());
+        if (usernameResult.error) {
+          throw usernameResult.error;
+        }
+        setIsEditingUsername(false);
+      }
+
       // Update stock weights
       const updatePromises = Object.entries(stockWeights).map(([stockId, weight]) => {
         const stock = stocks.find(s => s.id === stockId);
@@ -262,6 +273,48 @@ export const Settings: React.FC = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Account Settings */}
+        <Card className="lg:col-span-2">
+          <div className="flex items-center space-x-3 mb-4">
+            <UserIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Account Profile</h3>
+          </div>
+          
+          <div className="space-y-4 max-w-md">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Username</label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  disabled={!isEditingUsername}
+                  className={`flex-1 px-3 py-2 border ${
+                    isEditingUsername 
+                      ? 'border-primary ring-1 ring-primary focus:outline-none bg-white dark:bg-gray-800' 
+                      : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800'
+                  } rounded-lg text-gray-900 dark:text-white`}
+                  placeholder="Enter username"
+                />
+                {!isEditingUsername ? (
+                  <Button variant="outline" onClick={() => setIsEditingUsername(true)} type="button">
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                ) : (
+                  <Button variant="outline" onClick={() => {
+                    setNewUsername(user?.username || '');
+                    setIsEditingUsername(false);
+                  }} type="button">
+                    Cancel
+                  </Button>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 mt-2">Changes will be applied when you click "Save Changes" at the top.</p>
+            </div>
+          </div>
+        </Card>
+
         {/* Appearance */}
         <Card>
           <div className="flex items-center space-x-3 mb-4">
