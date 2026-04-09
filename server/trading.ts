@@ -155,11 +155,11 @@ router.post('/buy-stock', checkMaintenanceMode, (req: any, res) => {
       if (holding) {
         const newQty = holding.quantity + quantity;
         const newAvg = ((holding.quantity * holding.weighted_avg_buy_price) + (quantity * price)) / newQty;
-        db.prepare('UPDATE user_holdings SET quantity = ?, weighted_avg_buy_price = ?, updated_at = datetime("now") WHERE id = ?').run(newQty, newAvg, holding.id);
+        db.prepare('UPDATE user_holdings SET quantity = ?, weighted_avg_buy_price = ?, updated_at = datetime(\'now\') WHERE id = ?').run(newQty, newAvg, holding.id);
       } else {
-        db.prepare('INSERT INTO user_holdings (user_id, stock_id, quantity, weighted_avg_buy_price, created_at) VALUES (?, ?, ?, ?, datetime("now"))').run(userId, stockId, quantity, price);
+        db.prepare('INSERT INTO user_holdings (user_id, stock_id, quantity, weighted_avg_buy_price, created_at) VALUES (?, ?, ?, ?, datetime(\'now\'))').run(userId, stockId, quantity, price);
       }
-      db.prepare('INSERT INTO transactions (user_id, stock_id, type, quantity, price, brokerage_fee, timestamp) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').run(userId, stockId, 'buy', quantity, price, Math.max(20, (quantity * price) * 0.0003));
+      db.prepare('INSERT INTO transactions (user_id, stock_id, type, quantity, price, brokerage_fee, timestamp) VALUES (?, ?, ?, ?, ?, ?, datetime(\'now\'))').run(userId, stockId, 'buy', quantity, price, Math.max(20, (quantity * price) * 0.0003));
     });
     tx();
     res.json({ data: true });
@@ -182,11 +182,11 @@ router.post('/sell-stock', checkMaintenanceMode, (req: any, res) => {
             const totalOriginalCost = holding.quantity * holding.weighted_avg_buy_price;
             const soldSharesCost = quantity * holding.weighted_avg_buy_price;
             const newAvg = (totalOriginalCost - soldSharesCost) / newQty;
-            db.prepare('UPDATE user_holdings SET quantity = ?, weighted_avg_buy_price = ?, updated_at = datetime("now") WHERE id = ?').run(newQty, newAvg, holding.id);
+            db.prepare('UPDATE user_holdings SET quantity = ?, weighted_avg_buy_price = ?, updated_at = datetime(\'now\') WHERE id = ?').run(newQty, newAvg, holding.id);
         } else {
             db.prepare('DELETE FROM user_holdings WHERE id = ?').run(holding.id);
         }
-        db.prepare('INSERT INTO transactions (user_id, stock_id, type, quantity, price, brokerage_fee, timestamp) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').run(userId, stockId, 'sell', quantity, price, brokerage);
+        db.prepare('INSERT INTO transactions (user_id, stock_id, type, quantity, price, brokerage_fee, timestamp) VALUES (?, ?, ?, ?, ?, ?, datetime(\'now\'))').run(userId, stockId, 'sell', quantity, price, brokerage);
     });
     tx();
     res.json({ data: true });

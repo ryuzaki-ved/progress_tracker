@@ -53,7 +53,7 @@ router.put('/:id', checkMaintenanceMode, (req: any, res) => {
     
     if (setClause.length === 0) return res.json({ data: true, error: null });
     
-    setClause.push('updated_at = datetime("now")');
+    setClause.push('updated_at = datetime(\'now\')');
     values.push(id, userId);
     
     db.prepare(`UPDATE notes SET ${setClause.join(', ')} WHERE id = ? AND user_id = ?`).run(...values);

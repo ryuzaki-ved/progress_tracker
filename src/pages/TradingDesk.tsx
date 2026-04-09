@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
-import { TrendingUp, DollarSign, BarChart3, Activity, Plus, Trash2, Zap, Scissors, X } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { TrendingUp, DollarSign, BarChart3, Activity, Plus, Trash2, Zap, Scissors, X, PieChart } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button, PlaceOrderButton } from '../components/ui/Button';
 import { ToggleSwitch } from '../components/ui/ToggleSwitch';
@@ -14,6 +13,7 @@ import SlidingNumber from '../components/ui/SlidingNumber';
 import { TradingNotificationContainer } from '../components/ui/TradingNotification';
 import { useTradingNotifications } from '../hooks/useTradingNotifications';
 import { OptionHoldingsChart } from '../components/ui/OptionHoldingsChart';
+import { StockHoldingsChart } from '../components/ui/StockHoldingsChart';
 
 import { PlaceOptionOrderButton } from '../components/ui/PlaceOptionOrderButton';
 import { calculateOptionPrice } from '../utils/optionUtils';
@@ -29,7 +29,6 @@ export const TradingDesk: React.FC = () => {
   // Memoize calculated values to prevent unnecessary re-renders
   const {
     holdingsWithStock,
-    holdingsDistribution,
     totalInvestment,
     currentValue,
     totalPnL,
@@ -49,11 +48,6 @@ export const TradingDesk: React.FC = () => {
       };
     });
 
-    const holdingsDistribution = holdingsWithStock.map(h => ({
-      name: h.stockName,
-      value: h.quantity * h.currentPrice,
-    }));
-
     const totalInvestment = holdingsWithStock.reduce((sum, h) => sum + (h.weightedAvgBuyPrice * h.quantity), 0);
     const currentValue = holdingsWithStock.reduce((sum, h) => sum + (h.currentPrice * h.quantity), 0);
     const totalPnL = currentValue - totalInvestment;
@@ -61,7 +55,6 @@ export const TradingDesk: React.FC = () => {
 
     return {
       holdingsWithStock,
-      holdingsDistribution,
       totalInvestment,
       currentValue,
       totalPnL,
@@ -152,28 +145,6 @@ export const TradingDesk: React.FC = () => {
       </div>
     );
   }
-
-  // Pie chart colors
-  const pieColors = [
-    '#6366F1', // indigo
-    '#10B981', // emerald
-    '#F59E42', // orange
-    '#EF4444', // red
-    '#8B5CF6', // violet
-    '#FBBF24', // amber
-    '#3B82F6', // blue
-    '#F472B6', // pink
-    '#22D3EE', // cyan
-    '#A3E635', // lime
-  ];
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
 
   const formatCashBalance = (amount: number) => {
     return formatIndianCurrency(amount);
@@ -499,29 +470,10 @@ export const TradingDesk: React.FC = () => {
           <Card>
             <div className="p-4">
               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
-                <PieChart className="w-5 h-5 mr-2 text-indigo-500" />
+                <BarChart3 className="w-5 h-5 mr-2 text-indigo-500" />
                 Holdings Distribution
               </h3>
-              <div style={{ width: '100%', height: 260 }}>
-                <ResponsiveContainer>
-                  <PieChart>
-                    <Pie
-                      data={holdingsDistribution}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={90}
-                      label={({ name, percent = 0 }) => `${name} (${(percent * 100).toFixed(1)}%)`}
-                    >
-                      {holdingsDistribution.map((_, idx) => (
-                        <Cell key={`cell-${idx}`} fill={pieColors[idx % pieColors.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+              <StockHoldingsChart holdings={holdingsWithStock} />
             </div>
           </Card>
         </div>
