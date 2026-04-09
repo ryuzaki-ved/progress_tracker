@@ -9,7 +9,7 @@ import { useStocks } from '../hooks/useStocks';
 import { useTasks } from '../hooks/useTasks';
 import { useStreaks } from '../hooks/useStreaks';
 import { getVolatilityColor } from '../utils/stockUtils';
-import { ResponsiveContainer, AreaChart, Area, Tooltip, CartesianGrid } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, Tooltip, CartesianGrid, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 
 export const Stocks: React.FC = () => {
   const { stocks, loading, createStock, deleteStock, updateStock, archiveStock } = useStocks();
@@ -80,7 +80,7 @@ export const Stocks: React.FC = () => {
   const stockStreaks = streaks.filter(s => s.isActive); 
 
   return (
-    <div className="p-4 lg:p-6 min-h-[calc(100vh-2rem)] lg:h-[calc(100vh-2rem)] flex flex-col lg:overflow-hidden w-full">
+    <div className="p-4 lg:p-6 min-h-screen flex flex-col w-full custom-scrollbar">
       
       {/* TOP HEADER */}
       <div className="flex items-center justify-between mb-6 flex-shrink-0">
@@ -105,7 +105,7 @@ export const Stocks: React.FC = () => {
       </div>
 
       {/* MASTER-DETAIL SPLIT LAYOUT */}
-      <div className="flex flex-col lg:flex-row flex-1 gap-6 lg:overflow-hidden min-h-0">
+      <div className="flex flex-col lg:flex-row gap-6 mb-8 lg:h-[700px]">
         
         {/* LEFT PANE - TICKER LIST */}
         <div className="w-full lg:w-[380px] h-64 lg:h-full flex flex-col p-4 overflow-hidden border border-white/5 rounded-3xl bg-background/50 shadow-xl flex-shrink-0">
@@ -325,6 +325,127 @@ export const Stocks: React.FC = () => {
               Select an active component to inject into the focus panel
             </div>
           )}
+        </div>
+      </div>
+
+      {/* GLOBAL PORTFOLIO ALLOCATION */}
+      <div className="mt-6 p-8 bg-gray-900/40 backdrop-blur-2xl border border-white/5 rounded-3xl shadow-2xl mb-12">
+        <div className="flex flex-col md:flex-row items-center gap-12">
+          
+          {/* CHART AREA */}
+          <div className="w-full md:w-1/2">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold font-display text-white tracking-tight">Portfolio Allocation</h2>
+              <p className="text-gray-400 mt-1 text-sm uppercase tracking-wider font-semibold">Global Stock Weight Distribution</p>
+            </div>
+            
+            <div className="h-80 w-full relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsPieChart>
+                  <Pie
+                    data={activeStocks.map(s => ({
+                      name: s.name,
+                      value: s.weight * 100,
+                      color: s.color 
+                    }))}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={80}
+                    outerRadius={120}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {activeStocks.map((stock, index) => {
+                      const colorMap: Record<string, string> = {
+                        'bg-blue-500': '#3B82F6',
+                        'bg-green-500': '#10B981',
+                        'bg-yellow-500': '#F59E0B',
+                        'bg-red-500': '#EF4444',
+                        'bg-violet-500': '#8B5CF6',
+                        'bg-pink-500': '#EC4899',
+                        'bg-indigo-500': '#6366F1',
+                        'bg-emerald-500': '#10B981',
+                        'bg-amber-500': '#F59E0B',
+                        'bg-rose-500': '#F43F5E',
+                        'bg-cyan-500': '#06B6D4',
+                        'bg-sky-500': '#0EA5E9',
+                        'bg-orange-500': '#F97316',
+                      };
+                      const color = colorMap[stock.color] || '#8B5CF6';
+                      return <Cell key={`cell-${index}`} fill={color} stroke="none" />;
+                    })}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(17, 24, 39, 0.9)', 
+                      borderRadius: '16px', 
+                      border: '1px solid rgba(255,255,255,0.1)', 
+                      backdropFilter: 'blur(8px)',
+                      color: '#fff',
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+                    }}
+                    itemStyle={{ color: '#fff' }}
+                    formatter={(value: number, name: string) => [`${value.toFixed(1)}%`, name]}
+                  />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+              
+              {/* Center Info */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-gray-400 text-[10px] font-bold uppercase tracking-[0.2em]">Total Alignment</span>
+                <span className="text-4xl font-bold font-display text-white">{totalWeight.toFixed(0)}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* LEGEND / BREAKDOWN */}
+          <div className="w-full md:w-1/2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {activeStocks.map((stock) => {
+                const colorMap: Record<string, string> = {
+                  'bg-blue-500': '#3B82F6',
+                  'bg-green-500': '#10B981',
+                  'bg-yellow-500': '#F59E0B',
+                  'bg-red-500': '#EF4444',
+                  'bg-violet-500': '#8B5CF6',
+                  'bg-pink-500': '#EC4899',
+                  'bg-indigo-500': '#6366F1',
+                  'bg-emerald-500': '#10B981',
+                  'bg-amber-500': '#F59E0B',
+                  'bg-rose-500': '#F43F5E',
+                  'bg-cyan-500': '#06B6D4',
+                  'bg-sky-500': '#0EA5E9',
+                  'bg-orange-500': '#F97316',
+                };
+                const hexColor = colorMap[stock.color] || '#8B5CF6';
+                return (
+                  <div key={stock.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-300">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: hexColor, boxShadow: `0 0 10px ${hexColor}40` }} />
+                      <span className="text-xs font-bold text-gray-300">{stock.name}</span>
+                    </div>
+                    <span className="text-xs font-display font-bold text-white">{(stock.weight * 100).toFixed(0)}%</span>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="mt-8 p-6 bg-violet-600/10 border border-violet-500/20 rounded-2xl">
+              <div className="flex items-start space-x-4">
+                <div className="bg-violet-500/20 p-2 rounded-xl text-violet-400 flex-shrink-0">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white mb-1">Strategic Calibration</h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Higher weights amplify the impact of a stock's performance on your overall life index. 
+                    Ensure your focus is aligned with your current priorities.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 

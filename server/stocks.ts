@@ -21,7 +21,7 @@ function withDivisorAdjustment(userId: number, action: () => any) {
     if (oldIndex > 0) {
       newDivisor = newSum / oldIndex;
     } else if (newSum > 0) {
-      newDivisor = 1.0;
+      newDivisor = newSum / 500.0;
     }
     
     if (!oldSettings) {

@@ -1,7 +1,7 @@
 import express from 'express';
 import db from './db.js';
 import { authenticateToken, checkMaintenanceMode } from './middleware.js';
-import { calculateTaskScore } from './utils.js';
+import { calculateTaskScore, generateRecurringDates } from './utils.js';
 
 const router = express.Router();
 
@@ -39,12 +39,40 @@ router.get('/', (req: any, res) => {
 
 router.post('/', checkMaintenanceMode, (req: any, res) => {
   const userId = req.user.id;
-  const { stockId, title, description, priority, complexity, dueDate, scheduledTime, estimatedDuration } = req.body;
+  const { stockId, title, description, priority, complexity, dueDate, scheduledTime, estimatedDuration, recurringPattern } = req.body;
   try {
-    const info = db.prepare(`INSERT INTO tasks (stock_id, title, description, priority, complexity, due_date, scheduled_time, estimated_duration, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`).run(
-      stockId, title, description || null, priority, complexity || 1, dueDate || null, scheduledTime || null, estimatedDuration || 30, 'pending'
-    );
-    res.json({ data: { id: info.lastInsertRowid }, error: null });
+    const startDate = dueDate ? new Date(dueDate) : new Date();
+    const dates = generateRecurringDates(recurringPattern, startDate);
+    
+    const insertTask = db.prepare(`INSERT INTO tasks (stock_id, title, description, priority, complexity, due_date, scheduled_time, estimated_duration, status, type, recurring_pattern, parent_task_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`);
+    
+    let parentTaskId: any = null;
+    const patternString = recurringPattern ? JSON.stringify(recurringPattern) : null;
+
+    const transaction = db.transaction(() => {
+      dates.forEach((date, index) => {
+        const result = insertTask.run(
+          stockId,
+          title,
+          description || null,
+          priority,
+          complexity || 1,
+          date.toISOString(),
+          scheduledTime || null,
+          estimatedDuration || 30,
+          'pending',
+          recurringPattern ? 'recurring' : 'one_time',
+          index === 0 ? patternString : null,
+          parentTaskId
+        );
+        if (index === 0) {
+          parentTaskId = result.lastInsertRowid;
+        }
+      });
+    });
+
+    transaction();
+    res.json({ data: { id: parentTaskId }, error: null });
   } catch (err: any) {
     res.status(500).json({ data: null, error: err.message });
   }

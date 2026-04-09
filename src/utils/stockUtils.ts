@@ -89,6 +89,26 @@ export function calculateTaskScore({
   return Math.round(baseScore * timeMultiplier);
 }
 
+export function formatIndianCurrency(amount: number): string {
+  const isNegative = amount < 0;
+  const absAmount = Math.abs(amount);
+  const oneCrore = 10000000;
+  
+  if (absAmount >= oneCrore) {
+    const inCrores = absAmount / oneCrore;
+    return `${isNegative ? '-' : ''}₹${inCrores.toLocaleString('en-IN', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    })} Cr`;
+  }
+  
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 2,
+  }).format(amount);
+}
+
 export function normalizeDateToStartOfDay(date: Date): Date {
   const normalized = new Date(date);
   normalized.setHours(0, 0, 0, 0);

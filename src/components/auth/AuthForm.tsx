@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { LogIn, UserPlus, User, Lock, Eye, EyeOff, Shield, TrendingUp } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, Shield, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../hooks/useAuth';
+import { MotivationalBackground } from './MotivationalBackground';
 
 export const AuthForm: React.FC = () => {
   const [mode, setMode] = useState<'signin' | 'signup' | 'admin'>('signin');
@@ -53,77 +54,79 @@ export const AuthForm: React.FC = () => {
   };
 
   return (
-    <div className="h-full min-h-0 overflow-y-auto bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 flex items-center justify-center p-4">
+    <div className="relative h-screen w-screen overflow-hidden flex items-center justify-center p-4 bg-black">
+      <MotivationalBackground />
+      
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="w-full max-w-md relative z-10"
       >
-        <div className="bg-gray-800 rounded-xl shadow-2xl p-8 relative overflow-hidden border border-gray-700">
+        <div className="bg-gray-900/40 backdrop-blur-3xl rounded-3xl shadow-[0_0_80px_rgba(0,0,0,0.8)] p-10 relative overflow-hidden border border-white/5">
+          {/* Animated glow border */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/5 via-transparent to-red-500/5 pointer-events-none" />
+          
           {mode === 'admin' && (
-            <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-600 to-amber-600"></div>
           )}
-          <div className="text-center mb-8">
-            <div className={`relative w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${mode === 'admin' ? 'bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.3)] border border-red-500/50' : 'bg-violet-500/20 shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-violet-500/50'}`}>
-              {/* Outer pulsing ring for non-admin */}
-              {mode !== 'admin' && (
-                <motion.div
-                  className="absolute inset-0 rounded-2xl border-2 border-violet-500/30"
-                  animate={{ scale: [1, 1.25, 1], opacity: [0.5, 0, 0.5] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                />
-              )}
+          
+          <div className="text-center mb-10 relative">
+            <div className={`relative w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 transition-all duration-500 transform hover:rotate-12 ${mode === 'admin' ? 'bg-red-500/20 shadow-[0_0_40px_rgba(239,68,68,0.4)] border border-red-500/30' : 'bg-amber-500/20 shadow-[0_0_40px_rgba(245,158,11,0.4)] border border-amber-500/30'}`}>
               <motion.div
-                animate={mode === 'admin' ? { scale: [1, 1.05, 1] } : { y: [0, -4, 0], scale: [1, 1.05, 1] }}
-                transition={{ duration: mode === 'admin' ? 3 : 2.5, repeat: Infinity, ease: "easeInOut" }}
-              >
-                {mode === 'admin' ? <Shield className="w-8 h-8 text-red-500" /> : <TrendingUp className="w-8 h-8 text-violet-400" />}
-              </motion.div>
+                className={`absolute inset-0 rounded-[2rem] border-2 ${mode === 'admin' ? 'border-red-500/30' : 'border-amber-500/30'}`}
+                animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+              {mode === 'admin' ? <Shield className="w-10 h-10 text-red-500" /> : <TrendingUp className="w-10 h-10 text-amber-500" />}
             </div>
-            <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-indigo-300 tracking-tight">LifeStock</h1>
-            <p className="text-gray-400 mt-2 font-medium">
+            
+            <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-orange-400 to-red-500 tracking-tight mb-2 drop-shadow-sm">
+              LifeStock
+            </h1>
+            <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] opacity-60">
               {getTitle()}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6 relative">
             {mode !== 'admin' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
-                  Username
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black text-amber-500/60 uppercase tracking-[0.2em] px-1">
+                  Identity
                 </label>
-                <div className="relative">
-                  <User className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                <div className="relative group">
+                  <User className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 group-focus-within:text-amber-500 transition-all duration-300" />
                   <input
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-                    placeholder="Enter your username"
+                    className="w-full pl-12 pr-4 py-4 border border-white/5 rounded-2xl bg-black/40 text-white placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/40 transition-all duration-300"
+                    placeholder="Username"
                     required
                   />
                 </div>
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                Password
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black text-amber-500/60 uppercase tracking-[0.2em] px-1">
+                Access Key
               </label>
-              <div className="relative">
-                <Lock className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+              <div className="relative group">
+                <Lock className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 group-focus-within:text-amber-500 transition-all duration-300" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-                  placeholder="Enter your password"
+                  className="w-full pl-12 pr-12 py-4 border border-white/5 rounded-2xl bg-black/40 text-white placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/40 transition-all duration-300"
+                  placeholder="Password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-amber-400 transition-all"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -132,40 +135,45 @@ export const AuthForm: React.FC = () => {
 
             {error && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-4 rounded-2xl text-xs font-bold flex items-center justify-center gap-3"
               >
+                <Shield className="w-4 h-4" />
                 {error}
               </motion.div>
             )}
 
             <Button
               type="submit"
-              className={`w-full ${mode === 'admin' ? 'bg-red-600 hover:bg-red-700 text-white border border-red-600' : 'bg-violet-600 hover:bg-violet-700 text-white'}`}
+              className={`w-full py-5 rounded-2xl font-black uppercase tracking-[0.15em] transition-all duration-500 transform active:scale-[0.97] ${
+                mode === 'admin' 
+                  ? 'bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white shadow-[0_15px_30px_rgba(220,38,38,0.3)]' 
+                  : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white shadow-[0_15px_30px_rgba(245,158,11,0.3)]'
+              }`}
               disabled={loading}
-              variant="primary"
             >
-              <div className="flex items-center justify-center">
-                {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />}
-                {!loading && mode === 'admin' && <Shield className="w-4 h-4 mr-2" />}
-                {!loading && mode === 'signup' && <UserPlus className="w-4 h-4 mr-2" />}
-                {!loading && mode === 'signin' && <LogIn className="w-4 h-4 mr-2" />}
-                {getButtonText()}
+              <div className="flex items-center justify-center gap-3">
+                {loading && <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {!loading && (
+                  <>
+                    <span className="text-sm">{getButtonText()}</span>
+                  </>
+                )}
               </div>
             </Button>
           </form>
 
-          <div className="mt-6 flex flex-col space-y-3 text-center">
+          <div className="mt-10 flex flex-col space-y-5 text-center relative">
             {mode === 'signin' && (
               <>
-                <button onClick={() => { setMode('signup'); setError(null); }} className="text-violet-400 hover:text-violet-300 text-sm font-medium">
-                  Don't have an account? Sign up
+                <button onClick={() => { setMode('signup'); setError(null); }} className="text-amber-400/60 hover:text-amber-400 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300">
+                  New here? Create Account
                 </button>
-                <div className="pt-4 mt-4 border-t border-gray-700">
-                  <button onClick={() => { setMode('admin'); setError(null); }} className="text-gray-400 hover:text-red-400 text-xs font-medium uppercase tracking-wider transition-colors flex items-center justify-center mx-auto space-x-1">
+                <div className="pt-6 border-t border-white/5">
+                  <button onClick={() => { setMode('admin'); setError(null); }} className="text-gray-600 hover:text-red-500 text-[9px] font-black uppercase tracking-[0.3em] transition-all flex items-center justify-center mx-auto space-x-2 opacity-50 hover:opacity-100">
                     <Shield className="w-3 h-3" />
-                    <span>Admin Login</span>
+                    <span>Admin Terminal</span>
                   </button>
                 </div>
               </>
@@ -173,15 +181,15 @@ export const AuthForm: React.FC = () => {
 
             {mode === 'signup' && (
               <>
-                <button onClick={() => { setMode('signin'); setError(null); }} className="text-violet-400 hover:text-violet-300 text-sm font-medium">
-                  Already have an account? Sign in
+                <button onClick={() => { setMode('signin'); setError(null); }} className="text-amber-400/60 hover:text-amber-400 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300">
+                  Joined already? Sign In
                 </button>
               </>
             )}
 
             {mode === 'admin' && (
-              <button onClick={() => { setMode('signin'); setError(null); }} className="text-gray-400 hover:text-gray-200 text-sm font-medium transition-colors">
-                &larr; Back to User Login
+              <button onClick={() => { setMode('signin'); setError(null); }} className="text-gray-600 hover:text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] transition-all">
+                &larr; Back to login
               </button>
             )}
           </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { TrendingUp, DollarSign, BarChart3, Activity, Plus, Trash2 } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { TrendingUp, DollarSign, BarChart3, Activity, Plus, Trash2, Zap, Scissors, X } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card } from '../components/ui/Card';
 import { Button, PlaceOrderButton } from '../components/ui/Button';
@@ -16,6 +17,7 @@ import { OptionHoldingsChart } from '../components/ui/OptionHoldingsChart';
 
 import { PlaceOptionOrderButton } from '../components/ui/PlaceOptionOrderButton';
 import { calculateOptionPrice } from '../utils/optionUtils';
+import { formatIndianCurrency } from '../utils/stockUtils';
 
 
 
@@ -174,12 +176,7 @@ export const TradingDesk: React.FC = () => {
   };
 
   const formatCashBalance = (amount: number) => {
-    const oneCrore = 10000000;
-    if (Math.abs(amount) >= oneCrore) {
-      const inCrores = amount / oneCrore;
-      return `₹${inCrores.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Crores`;
-    }
-    return formatCurrency(amount);
+    return formatIndianCurrency(amount);
   };
 
   const formatPercent = (percent: number) => {
@@ -316,7 +313,7 @@ export const TradingDesk: React.FC = () => {
                 duration={1.5}
                 separator="," 
                 decimals={2}
-                formattingFn={formatCurrency}
+                formattingFn={formatIndianCurrency}
                 preserveValue
                 redraw={false}
                 start={currentValue}
@@ -334,7 +331,7 @@ export const TradingDesk: React.FC = () => {
                   duration={1.5}
                   separator="," 
                   decimals={2}
-                  formattingFn={formatCurrency}
+                  formattingFn={formatIndianCurrency}
                   preserveValue
                   redraw={false}
                   start={totalPnL}
@@ -781,37 +778,55 @@ export const TradingDesk: React.FC = () => {
                         <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{h.currentPremium.toFixed(2)}</td>
                         <td className={`py-2 px-4 text-center ${h.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>{h.unrealizedPnL.toFixed(2)}</td>
                         <td className={`py-2 px-4 text-center ${h.returnPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>{h.returnPercent.toFixed(2)}%</td>
-                          <td className="py-2 px-4 text-center">
-                            <button
-                              className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 mr-2"
-                              onClick={() => setExitQtyPrompt({ holdingId: h.id, max: h.quantity })}
-                              disabled={h.quantity <= 0}
-                            >
-                              Exit Partial
-                            </button>
-                            <button
-                              className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                              onClick={async () => {
-                                try {
-                                  await exitOptionPosition(h.id, h.quantity);
-                                  const optionDetails = h.contractName;
-                                  const exitValue = h.currentPremium * h.quantity;
-                                  notifyOptionExit(optionDetails, h.quantity, h.currentPremium, exitValue);
-                                  
-                                  // Calculate and notify PnL
-                                  const pnl = h.unrealizedPnL;
-                                  const isProfit = pnl > 0;
-                                  notifyOptionPnL(optionDetails, pnl, isProfit);
-                                  
-                                  fetchOptionsData();
-                                } catch (err) {
-                                  alert('Failed to exit position: ' + (err as any).message);
-                                }
-                              }}
-                              disabled={h.quantity <= 0}
-                            >
-                              Exit All
-                            </button>
+                          <td className="py-4 px-4">
+                            <div className="flex items-center justify-center space-x-3">
+                              {/* Exit Partial - RISK MANAGEMENT */}
+                              <div className="relative group">
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => setExitQtyPrompt({ holdingId: h.id, max: h.quantity })}
+                                  disabled={h.quantity <= 0}
+                                  className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 hover:bg-amber-500/20 hover:border-amber-500/50 transition-all duration-300 shadow-[0_0_15px_-3px_rgba(245,158,11,0.2)] hover:shadow-[0_0_20px_-3px_rgba(245,158,11,0.4)] disabled:opacity-30 disabled:cursor-not-allowed"
+                                  title="Risk Management: Exit Partial"
+                                >
+                                  <Scissors className="w-4 h-4" />
+                                </motion.button>
+                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10">
+                                  Harvest Partial
+                                </div>
+                              </div>
+
+                              {/* Exit All - INSTANT LIQUIDATION */}
+                              <div className="relative group">
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={async () => {
+                                    try {
+                                      await exitOptionPosition(h.id, h.quantity);
+                                      const optionDetails = h.contractName;
+                                      const exitValue = h.currentPremium * h.quantity;
+                                      notifyOptionExit(optionDetails, h.quantity, h.currentPremium, exitValue);
+                                      const pnl = h.unrealizedPnL;
+                                      const isProfit = pnl > 0;
+                                      notifyOptionPnL(optionDetails, pnl, isProfit);
+                                      fetchOptionsData();
+                                    } catch (err) {
+                                      alert('Failed to exit position: ' + (err as any).message);
+                                    }
+                                  }}
+                                  disabled={h.quantity <= 0}
+                                  className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 hover:bg-rose-500/20 hover:border-rose-500/50 transition-all duration-300 shadow-[0_0_15px_-3px_rgba(244,63,94,0.2)] hover:shadow-[0_0_20px_-3px_rgba(244,63,94,0.4)] disabled:opacity-30 disabled:cursor-not-allowed"
+                                  title="Instant Liquidation: Exit All"
+                                >
+                                  <Zap className="w-4 h-4" />
+                                </motion.button>
+                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10">
+                                  Instant Exit
+                                </div>
+                              </div>
+                            </div>
                           </td>
                         </tr>
                     ))}
@@ -1013,176 +1028,30 @@ export const TradingDesk: React.FC = () => {
         </div>
       </div>
       
-      {/* Transactions Modal */}
-      <AnimatePresence>
-      {showTxHistory && (
-        <motion.div
-          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <motion.div
-            className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-2xl w-full p-6 relative"
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          >
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" onClick={() => setShowTxHistory(false)}>
-              ×
-            </button>
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Transaction History</h2>
-            <div className="overflow-x-auto max-h-96">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50 dark:bg-gray-800">
-                    <th className="py-2 px-4 text-gray-700 dark:text-gray-200">Type</th>
-                    <th className="py-2 px-4 text-gray-700 dark:text-gray-200">Stock</th>
-                    <th className="py-2 px-4 text-gray-700 dark:text-gray-200">Qty</th>
-                    <th className="py-2 px-4 text-gray-700 dark:text-gray-200">Price</th>
-                    <th className="py-2 px-4 text-gray-700 dark:text-gray-200">Brokerage</th>
-                    <th className="py-2 px-4 text-gray-700 dark:text-gray-200">Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <AnimatePresence>
-                    {transactions.map((tx, idx) => {
-                      const stock = stocks.find(s => s.id.toString() === tx.stockId.toString());
-                      return (
-                        <motion.tr
-                          key={tx.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          transition={{ delay: idx * 0.04 }}
-                        >
-                          <td className="py-2 px-4 font-medium capitalize text-gray-900 dark:text-gray-100">{tx.type}</td>
-                          <td className="py-2 px-4 text-gray-900 dark:text-gray-100">{stock?.name || tx.stockId}</td>
-                          <td className="py-2 px-4 text-right text-gray-900 dark:text-gray-100">{tx.quantity}</td>
-                          <td className="py-2 px-4 text-right text-gray-900 dark:text-gray-100">₹{tx.price.toFixed(2)}</td>
-                          <td className="py-2 px-4 text-right text-gray-900 dark:text-gray-100">₹{tx.brokerageFee.toFixed(2)}</td>
-                          <td className="py-2 px-4 text-right text-gray-900 dark:text-gray-100">{new Date(tx.timestamp).toLocaleString()}</td>
-                        </motion.tr>
-                      );
-                    })}
-                  </AnimatePresence>
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-      </AnimatePresence>
-      {/* Modal for Option Transaction History */}
-      {showOptionTxHistory && (
-        <motion.div
-          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <motion.div
-            className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-2xl w-full p-6 relative"
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          >
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" onClick={() => setShowOptionTxHistory(false)}>
-              ×
-            </button>
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Option Transaction History</h2>
-            <div className="overflow-x-auto max-h-96">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50 dark:bg-gray-700">
-                    <th className="py-2 px-4 text-center">Type</th>
-                    <th className="py-2 px-4 text-center">Contract</th>
-                    <th className="py-2 px-4 text-center">Qty</th>
-                    <th className="py-2 px-4 text-center">Premium</th>
-                    <th className="py-2 px-4 text-center">Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {optionTransactions.map(tx => {
-                    const contract = optionContracts.find(c => c.id === tx.contractId);
-                    return (
-                      <tr key={tx.id}>
-                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{tx.type}</td>
-                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{contract ? `${contract.strikePrice} ${contract.optionType}` : tx.contractId}</td>
-                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{tx.quantity}</td>
-                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{tx.premiumPerUnit.toFixed(2)}</td>
-                        <td className="py-2 px-4 text-center text-gray-900 dark:text-white">{new Date(tx.timestamp).toLocaleString()}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-      {/* Modal for Exit Partial prompt */}
-      {exitQtyPrompt && (
-        <motion.div
-          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <motion.div
-            className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-sm w-full p-6 relative"
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          >
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" onClick={() => setExitQtyPrompt(null)}>
-              ×
-            </button>
-            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Exit Partial Position</h2>
-            <form onSubmit={async e => {
-              e.preventDefault();
-              const qty = Number((e.target as any).elements.qty.value);
-              if (!qty || qty < 1 || qty > exitQtyPrompt.max) {
-                alert('Enter a valid quantity');
-                return;
-              }
-              try {
-                await exitOptionPosition(exitQtyPrompt.holdingId, qty);
-                
-                // Find the holding to get option details
-                const holding = optionHoldingsWithDetails.find(h => h.id === exitQtyPrompt.holdingId);
-                if (holding) {
-                  const optionDetails = holding.contractName;
-                  const exitValue = holding.currentPremium * qty;
-                  notifyOptionExit(optionDetails, qty, holding.currentPremium, exitValue);
-                  
-                  // Calculate and notify PnL
-                  const pnl = (holding.currentPremium - holding.weightedAvgPremium) * qty * (holding.type.startsWith('long') ? 1 : -1);
-                  const isProfit = pnl > 0;
-                  notifyOptionPnL(optionDetails, pnl, isProfit);
-                }
-                
-                setExitQtyPrompt(null);
-                fetchOptionsData();
-              } catch (err) {
-                alert('Failed to exit position: ' + (err as any).message);
-              }
-            }}>
-              <label className="block mb-2 text-gray-700 dark:text-gray-300">Quantity to exit (max {exitQtyPrompt.max}):</label>
-              <input name="qty" type="number" min={1} max={exitQtyPrompt.max} defaultValue={1} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white mb-4" />
-              <div className="flex justify-end space-x-2">
-                <button type="button" className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded" onClick={() => setExitQtyPrompt(null)}>
-                  Cancel
-                </button>
-                <button type="submit" className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Exit</button>
-              </div>
-            </form>
-          </motion.div>
-        </motion.div>
-      )}
+      <TransactionHistoryModal
+        isOpen={showTxHistory}
+        onClose={() => setShowTxHistory(false)}
+        transactions={transactions}
+        stocks={stocks}
+      />
+
+      <OptionTransactionHistoryModal
+        isOpen={showOptionTxHistory}
+        onClose={() => setShowOptionTxHistory(false)}
+        transactions={optionTransactions}
+        contracts={optionContracts}
+      />
+
+      <ExitPartialModal
+        prompt={exitQtyPrompt}
+        onClose={() => setExitQtyPrompt(null)}
+        onExit={exitOptionPosition}
+        holdings={optionHoldingsWithDetails}
+        onNotifyExit={notifyOptionExit}
+        onNotifyPnL={notifyOptionPnL}
+        onRefresh={fetchOptionsData}
+      />
+
       <AddFundsModal
         isOpen={showAddFundsModal}
         onClose={() => setShowAddFundsModal(false)}
@@ -1195,5 +1064,233 @@ export const TradingDesk: React.FC = () => {
         onDismiss={dismissNotification}
       />
     </div>
+  );
+};
+
+// --- Sub-components for Modals ---
+
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const TransactionHistoryModal: React.FC<ModalProps & { transactions: any[], stocks: any[] }> = ({ isOpen, onClose, transactions, stocks }) => {
+  if (!isOpen) return null;
+  return createPortal(
+    <AnimatePresence mode="wait">
+      <motion.div
+        key="tx-history-backdrop"
+        className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[100]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          key="tx-history-modal"
+          className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative border border-white/10 backdrop-blur-xl"
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+        >
+          <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors" onClick={onClose}>
+            <X className="w-6 h-6" />
+          </button>
+          <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100 flex items-center">
+            <Activity className="w-5 h-5 mr-2 text-violet-500" />
+            Transaction History
+          </h2>
+          <div className="overflow-x-auto max-h-[60vh] custom-scrollbar">
+            <table className="min-w-full text-sm">
+              <thead className="sticky top-0 bg-white dark:bg-gray-900 z-10">
+                <tr className="bg-gray-50 dark:bg-gray-800">
+                  <th className="py-3 px-4 text-left text-gray-400 font-bold uppercase tracking-wider text-[10px]">Type</th>
+                  <th className="py-3 px-4 text-left text-gray-400 font-bold uppercase tracking-wider text-[10px]">Stock</th>
+                  <th className="py-3 px-4 text-right text-gray-400 font-bold uppercase tracking-wider text-[10px]">Qty</th>
+                  <th className="py-3 px-4 text-right text-gray-400 font-bold uppercase tracking-wider text-[10px]">Price</th>
+                  <th className="py-3 px-4 text-right text-gray-400 font-bold uppercase tracking-wider text-[10px]">Brokerage</th>
+                  <th className="py-3 px-4 text-right text-gray-400 font-bold uppercase tracking-wider text-[10px]">Time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {transactions.map((tx) => {
+                  const stock = stocks.find(s => s.id.toString() === tx.stockId.toString());
+                  return (
+                    <tr key={tx.id} className="hover:bg-white/5 transition-colors">
+                      <td className="py-3 px-4 font-bold capitalize">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] ${tx.type === 'buy' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                          {tx.type}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-medium text-gray-300">{stock?.name || tx.stockId}</td>
+                      <td className="py-3 px-4 text-right font-share-tech-mono text-white">{tx.quantity}</td>
+                      <td className="py-3 px-4 text-right font-share-tech-mono text-white">₹{tx.price.toFixed(2)}</td>
+                      <td className="py-3 px-4 text-right font-share-tech-mono text-gray-400">₹{tx.brokerageFee.toFixed(2)}</td>
+                      <td className="py-3 px-4 text-right text-gray-500 text-xs">{new Date(tx.timestamp).toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>,
+    document.body
+  );
+};
+
+const OptionTransactionHistoryModal: React.FC<ModalProps & { transactions: any[], contracts: any[] }> = ({ isOpen, onClose, transactions, contracts }) => {
+  if (!isOpen) return null;
+  return createPortal(
+    <AnimatePresence mode="wait">
+      <motion.div
+        key="option-tx-history-backdrop"
+        className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[100]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          key="option-tx-history-modal"
+          className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative border border-white/10 backdrop-blur-xl"
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+        >
+          <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors" onClick={onClose}>
+            <X className="w-6 h-6" />
+          </button>
+          <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100 flex items-center">
+            <Activity className="w-5 h-5 mr-2 text-indigo-500" />
+            Option Transaction History
+          </h2>
+          <div className="overflow-x-auto max-h-[60vh] custom-scrollbar">
+            <table className="min-w-full text-sm">
+              <thead className="sticky top-0 bg-white dark:bg-gray-900 z-10">
+                <tr className="bg-gray-50 dark:bg-gray-700">
+                  <th className="py-3 px-4 text-gray-400 font-bold uppercase tracking-wider text-[10px]">Type</th>
+                  <th className="py-3 px-4 text-gray-400 font-bold uppercase tracking-wider text-[10px]">Contract</th>
+                  <th className="py-3 px-4 text-right text-gray-400 font-bold uppercase tracking-wider text-[10px]">Qty</th>
+                  <th className="py-3 px-4 text-right text-gray-400 font-bold uppercase tracking-wider text-[10px]">Premium</th>
+                  <th className="py-3 px-4 text-right text-gray-400 font-bold uppercase tracking-wider text-[10px]">Time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {transactions.map(tx => {
+                  const contract = contracts.find(c => c.id === tx.contractId);
+                  return (
+                    <tr key={tx.id} className="hover:bg-white/5 transition-colors">
+                      <td className="py-3 px-4 font-bold capitalize">
+                         <span className={`px-2 py-0.5 rounded-full text-[10px] ${tx.type === 'buy' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                          {tx.type}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-medium text-gray-300">{contract ? `${contract.strikePrice} ${contract.optionType}` : tx.contractId}</td>
+                      <td className="py-3 px-4 text-right font-share-tech-mono text-white">{tx.quantity}</td>
+                      <td className="py-3 px-4 text-right font-share-tech-mono text-white">₹{tx.premiumPerUnit.toFixed(2)}</td>
+                      <td className="py-3 px-4 text-right text-gray-500 text-xs">{new Date(tx.timestamp).toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>,
+    document.body
+  );
+};
+
+interface ExitPartialModalProps {
+  prompt: { holdingId: number; max: number } | null;
+  onClose: () => void;
+  onExit: (holdingId: number, qty: number) => Promise<void>;
+  holdings: any[];
+  onNotifyExit: any;
+  onNotifyPnL: any;
+  onRefresh: () => void;
+}
+
+const ExitPartialModal: React.FC<ExitPartialModalProps> = ({ prompt, onClose, onExit, holdings, onNotifyExit, onNotifyPnL, onRefresh }) => {
+  if (!prompt) return null;
+  
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const qty = Number((e.target as any).elements.qty.value);
+    if (!qty || qty < 1 || qty > prompt.max) {
+      alert('Enter a valid quantity');
+      return;
+    }
+    try {
+      await onExit(prompt.holdingId, qty);
+      
+      const holding = holdings.find(h => h.id === prompt.holdingId);
+      if (holding) {
+        const optionDetails = holding.contractName;
+        const exitValue = holding.currentPremium * qty;
+        onNotifyExit(optionDetails, qty, holding.currentPremium, exitValue);
+        
+        const pnl = (holding.currentPremium - holding.weightedAvgPremium) * qty * (holding.type.startsWith('long') ? 1 : -1);
+        const isProfit = pnl > 0;
+        onNotifyPnL(optionDetails, pnl, isProfit);
+      }
+      
+      onClose();
+      onRefresh();
+    } catch (err: any) {
+      alert('Failed to exit position: ' + err.message);
+    }
+  };
+
+  return createPortal(
+    <AnimatePresence mode="wait">
+      <motion.div
+        key="exit-partial-backdrop"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          key="exit-partial-modal"
+          className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-sm w-full p-6 relative border border-white/10"
+          initial={{ scale: 0.95, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+        >
+          <button className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors" onClick={onClose}>
+            <X className="w-6 h-6" />
+          </button>
+          <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100 flex items-center">
+            <Scissors className="w-5 h-5 mr-2 text-amber-500" />
+            Exit Partial Position
+          </h2>
+          <form onSubmit={handleFormSubmit}>
+            <label className="block mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">Quantity to exit (max {prompt.max}):</label>
+            <input 
+              name="qty" 
+              type="number" 
+              min={1} 
+              max={prompt.max} 
+              defaultValue={1} 
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white mb-6 focus:ring-2 focus:ring-amber-500 outline-none transition-all" 
+            />
+            <div className="flex justify-end space-x-3">
+              <button type="button" className="px-5 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" onClick={onClose}>
+                Cancel
+              </button>
+              <button type="submit" className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold hover:from-amber-600 hover:to-orange-700 shadow-lg shadow-amber-500/20 transition-all transform hover:scale-[1.02]">
+                Harvest Profit
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>,
+    document.body
   );
 };
