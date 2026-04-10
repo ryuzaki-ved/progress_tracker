@@ -133,9 +133,9 @@ export const Tasks: React.FC = () => {
     return stock ? stock.color : 'bg-gray-500';
   };
 
-  const handleCompleteTask = async (taskId: string) => {
+  const handleCompleteTask = async (taskId: string, factor: number = 1.0) => {
     try {
-      await completeTask(taskId);
+      await completeTask(taskId, factor);
     } catch (error) {
       console.error('Failed to complete task:', error);
     }
@@ -313,14 +313,37 @@ export const Tasks: React.FC = () => {
                       </div>
                     </div>
 
-                    <Button 
-                      variant={task.status === 'completed' ? 'secondary' : 'primary'} 
-                      className="w-full"
-                      disabled={task.status === 'completed'}
-                     onClick={() => task.status !== 'completed' && handleCompleteTask(task.id)}
-                    >
-                      {task.status === 'completed' ? 'Completed' : 'Mark Complete'}
-                    </Button>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs font-medium text-gray-500 mb-1">
+                        <span>Completion Scale</span>
+                        <span>{task.status === 'completed' ? 'Finalized' : 'Select %'}</span>
+                      </div>
+                      <div className="grid grid-cols-6 gap-1.5 p-1 bg-gray-50/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                        {[
+                          { val: 1, color: 'hover:bg-slate-500 hover:shadow-slate-500/50', text: 'text-slate-600 dark:text-slate-400' },
+                          { val: 2, color: 'hover:bg-cyan-500 hover:shadow-cyan-500/50', text: 'text-cyan-600 dark:text-cyan-400' },
+                          { val: 5, color: 'hover:bg-amber-500 hover:shadow-amber-500/50', text: 'text-amber-600 dark:text-amber-400' },
+                          { val: 8, color: 'hover:bg-emerald-500 hover:shadow-emerald-500/50', text: 'text-emerald-600 dark:text-emerald-400' },
+                          { val: 9, color: 'hover:bg-indigo-500 hover:shadow-indigo-500/50', text: 'text-indigo-600 dark:text-indigo-400' },
+                          { val: 10, color: 'bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 hover:shadow-violet-600/50', text: 'text-white' },
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            disabled={task.status === 'completed'}
+                            onClick={() => task.status !== 'completed' && handleCompleteTask(task.id, item.val / 10)}
+                            className={`py-1.5 rounded-md text-xs font-bold transition-all duration-300 transform active:scale-90 flex items-center justify-center gap-1 ${
+                              task.status === 'completed'
+                                ? 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-50'
+                                : `${item.text} bg-white dark:bg-gray-900 border border-black/5 dark:border-white/5 hover:text-white hover:shadow-lg ${item.val === 10 ? 'px-2' : ''} ${item.color}`
+                            }`}
+                            title={`${item.val * 10}% Completion`}
+                          >
+                            {item.val}
+                            {item.val === 10 && <span className="text-[10px]">⭐</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     
                     {/* Show confetti effect when task is completed */}
                     {task.status === 'completed' && (
@@ -458,14 +481,37 @@ export const Tasks: React.FC = () => {
                       </div>
                     </div>
 
-                    <Button 
-                      variant={task.status === 'completed' ? 'secondary' : 'primary'} 
-                      className="w-full"
-                      disabled={task.status === 'completed'}
-                     onClick={() => task.status !== 'completed' && handleCompleteTask(task.id)}
-                    >
-                      {task.status === 'completed' ? 'Completed' : 'Mark Complete'}
-                    </Button>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs font-medium text-gray-500 mb-1">
+                        <span>Completion Scale</span>
+                        <span>{task.status === 'completed' ? 'Finalized' : 'Select %'}</span>
+                      </div>
+                      <div className="grid grid-cols-6 gap-1.5 p-1 bg-gray-50/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                        {[
+                          { val: 1, color: 'hover:bg-slate-500 hover:shadow-slate-500/50', text: 'text-slate-600 dark:text-slate-400' },
+                          { val: 2, color: 'hover:bg-cyan-500 hover:shadow-cyan-500/50', text: 'text-cyan-600 dark:text-cyan-400' },
+                          { val: 5, color: 'hover:bg-amber-500 hover:shadow-amber-500/50', text: 'text-amber-600 dark:text-amber-400' },
+                          { val: 8, color: 'hover:bg-emerald-500 hover:shadow-emerald-500/50', text: 'text-emerald-600 dark:text-emerald-400' },
+                          { val: 9, color: 'hover:bg-indigo-500 hover:shadow-indigo-500/50', text: 'text-indigo-600 dark:text-indigo-400' },
+                          { val: 10, color: 'bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 hover:shadow-violet-600/50', text: 'text-white' },
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            disabled={task.status === 'completed'}
+                            onClick={() => task.status !== 'completed' && handleCompleteTask(task.id, item.val / 10)}
+                            className={`py-1.5 rounded-md text-xs font-bold transition-all duration-300 transform active:scale-90 flex items-center justify-center gap-1 ${
+                              task.status === 'completed'
+                                ? 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-50'
+                                : `${item.text} bg-white dark:bg-gray-900 border border-black/5 dark:border-white/5 hover:text-white hover:shadow-lg ${item.val === 10 ? 'px-2' : ''} ${item.color}`
+                            }`}
+                            title={`${item.val * 10}% Completion`}
+                          >
+                            {item.val}
+                            {item.val === 10 && <span className="text-[10px]">⭐</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     
                     {/* Show confetti effect when task is completed */}
                     {task.status === 'completed' && (
@@ -606,14 +652,37 @@ export const Tasks: React.FC = () => {
                       </div>
                     </div>
 
-                    <Button 
-                      variant={task.status === 'completed' ? 'secondary' : 'primary'} 
-                      className="w-full"
-                      disabled={task.status === 'completed'}
-                     onClick={() => task.status !== 'completed' && handleCompleteTask(task.id)}
-                    >
-                      {task.status === 'completed' ? 'Completed' : 'Mark Complete'}
-                    </Button>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs font-medium text-gray-500 mb-1">
+                        <span>Completion Scale</span>
+                        <span>{task.status === 'completed' ? 'Finalized' : 'Select %'}</span>
+                      </div>
+                      <div className="grid grid-cols-6 gap-1.5 p-1 bg-gray-50/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                        {[
+                          { val: 1, color: 'hover:bg-slate-500 hover:shadow-slate-500/50', text: 'text-slate-600 dark:text-slate-400' },
+                          { val: 2, color: 'hover:bg-cyan-500 hover:shadow-cyan-500/50', text: 'text-cyan-600 dark:text-cyan-400' },
+                          { val: 5, color: 'hover:bg-amber-500 hover:shadow-amber-500/50', text: 'text-amber-600 dark:text-amber-400' },
+                          { val: 8, color: 'hover:bg-emerald-500 hover:shadow-emerald-500/50', text: 'text-emerald-600 dark:text-emerald-400' },
+                          { val: 9, color: 'hover:bg-indigo-500 hover:shadow-indigo-500/50', text: 'text-indigo-600 dark:text-indigo-400' },
+                          { val: 10, color: 'bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 hover:shadow-violet-600/50', text: 'text-white' },
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            disabled={task.status === 'completed'}
+                            onClick={() => task.status !== 'completed' && handleCompleteTask(task.id, item.val / 10)}
+                            className={`py-1.5 rounded-md text-xs font-bold transition-all duration-300 transform active:scale-90 flex items-center justify-center gap-1 ${
+                              task.status === 'completed'
+                                ? 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-50'
+                                : `${item.text} bg-white dark:bg-gray-900 border border-black/5 dark:border-white/5 hover:text-white hover:shadow-lg ${item.val === 10 ? 'px-2' : ''} ${item.color}`
+                            }`}
+                            title={`${item.val * 10}% Completion`}
+                          >
+                            {item.val}
+                            {item.val === 10 && <span className="text-[10px]">⭐</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     
                     {/* Show confetti effect when task is completed */}
                     {task.status === 'completed' && (
@@ -728,14 +797,37 @@ export const Tasks: React.FC = () => {
                       </div>
                     </div>
 
-                    <Button 
-                      variant={task.status === 'completed' ? 'secondary' : 'primary'} 
-                      className="w-full"
-                      disabled={task.status === 'completed'}
-                     onClick={() => task.status !== 'completed' && handleCompleteTask(task.id)}
-                    >
-                      {task.status === 'completed' ? 'Completed' : 'Mark Complete'}
-                    </Button>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs font-medium text-gray-500 mb-1">
+                        <span>Completion Scale</span>
+                        <span>{task.status === 'completed' ? 'Finalized' : 'Select %'}</span>
+                      </div>
+                      <div className="grid grid-cols-6 gap-1.5 p-1 bg-gray-50/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                        {[
+                          { val: 1, color: 'hover:bg-slate-500 hover:shadow-slate-500/50', text: 'text-slate-600 dark:text-slate-400' },
+                          { val: 2, color: 'hover:bg-cyan-500 hover:shadow-cyan-500/50', text: 'text-cyan-600 dark:text-cyan-400' },
+                          { val: 5, color: 'hover:bg-amber-500 hover:shadow-amber-500/50', text: 'text-amber-600 dark:text-amber-400' },
+                          { val: 8, color: 'hover:bg-emerald-500 hover:shadow-emerald-500/50', text: 'text-emerald-600 dark:text-emerald-400' },
+                          { val: 9, color: 'hover:bg-indigo-500 hover:shadow-indigo-500/50', text: 'text-indigo-600 dark:text-indigo-400' },
+                          { val: 10, color: 'bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 hover:shadow-violet-600/50', text: 'text-white' },
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            disabled={task.status === 'completed'}
+                            onClick={() => task.status !== 'completed' && handleCompleteTask(task.id, item.val / 10)}
+                            className={`py-1.5 rounded-md text-xs font-bold transition-all duration-300 transform active:scale-90 flex items-center justify-center gap-1 ${
+                              task.status === 'completed'
+                                ? 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-50'
+                                : `${item.text} bg-white dark:bg-gray-900 border border-black/5 dark:border-white/5 hover:text-white hover:shadow-lg ${item.val === 10 ? 'px-2' : ''} ${item.color}`
+                            }`}
+                            title={`${item.val * 10}% Completion`}
+                          >
+                            {item.val}
+                            {item.val === 10 && <span className="text-[10px]">⭐</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     
                     {/* Show confetti effect when task is completed */}
                     {task.status === 'completed' && (
@@ -864,14 +956,37 @@ export const Tasks: React.FC = () => {
                           </div>
                         </div>
 
-                        <Button 
-                          variant={task.status === 'completed' ? 'secondary' : 'primary'} 
-                          className="w-full"
-                          disabled={task.status === 'completed'}
-                         onClick={() => task.status !== 'completed' && handleCompleteTask(task.id)}
-                        >
-                          {task.status === 'completed' ? 'Completed' : 'Mark Complete'}
-                        </Button>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs font-medium text-gray-500 mb-1">
+                        <span>Completion Scale</span>
+                        <span>{task.status === 'completed' ? 'Finalized' : 'Select %'}</span>
+                      </div>
+                      <div className="grid grid-cols-6 gap-1.5 p-1 bg-gray-50/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                        {[
+                          { val: 1, color: 'hover:bg-slate-500 hover:shadow-slate-500/50', text: 'text-slate-600 dark:text-slate-400' },
+                          { val: 2, color: 'hover:bg-cyan-500 hover:shadow-cyan-500/50', text: 'text-cyan-600 dark:text-cyan-400' },
+                          { val: 5, color: 'hover:bg-amber-500 hover:shadow-amber-500/50', text: 'text-amber-600 dark:text-amber-400' },
+                          { val: 8, color: 'hover:bg-emerald-500 hover:shadow-emerald-500/50', text: 'text-emerald-600 dark:text-emerald-400' },
+                          { val: 9, color: 'hover:bg-indigo-500 hover:shadow-indigo-500/50', text: 'text-indigo-600 dark:text-indigo-400' },
+                          { val: 10, color: 'bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700 hover:shadow-violet-600/50', text: 'text-white' },
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            disabled={task.status === 'completed'}
+                            onClick={() => task.status !== 'completed' && handleCompleteTask(task.id, item.val / 10)}
+                            className={`py-1.5 rounded-md text-xs font-bold transition-all duration-300 transform active:scale-90 flex items-center justify-center gap-1 ${
+                              task.status === 'completed'
+                                ? 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-50'
+                                : `${item.text} bg-white dark:bg-gray-900 border border-black/5 dark:border-white/5 hover:text-white hover:shadow-lg ${item.val === 10 ? 'px-2' : ''} ${item.color}`
+                            }`}
+                            title={`${item.val * 10}% Completion`}
+                          >
+                            {item.val}
+                            {item.val === 10 && <span className="text-[10px]">⭐</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                         
                         {/* Show confetti effect when task is completed */}
                         {task.status === 'completed' && (

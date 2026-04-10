@@ -104,11 +104,15 @@ export const useTasks = () => {
     }
   };
 
-  const completeTask = async (id: string) => {
+  const completeTask = async (id: string, completionFactor: number = 1.0) => {
     if (!user) return;
     setError(null);
     try {
-      const response = await fetch(`/api/tasks/${id}/complete`, { method: 'POST', headers: getHeaders() });
+      const response = await fetch(`/api/tasks/${id}/complete`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ completionFactor })
+      });
       if (!response.ok) throw new Error((await response.json()).error);
       await pushSequentialIndexUpdate();
       notifyStocksMutated();

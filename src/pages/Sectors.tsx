@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Layers, TrendingUp, TrendingDown } from 'lucide-react';
+import { Layers, TrendingUp, TrendingDown, Star, ArrowUpRight, ArrowDownRight, Info } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { useStocks } from '../hooks/useStocks';
+import { useIndex } from '../hooks/useIndex';
 import { IndexCandlestickChart } from '../components/dashboard/IndexCandlestickChart';
 
 export const Sectors: React.FC = () => {
   const { stocks, loading } = useStocks();
+  const { indexData } = useIndex();
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
 
@@ -36,49 +38,62 @@ export const Sectors: React.FC = () => {
     // Group stocks by sector
     const sectors = Array.from(new Set(stocks.map(s => s.category).filter(Boolean)));
     
-    // Map stock ID to sector (category)
-    const stockToSector: Record<string, string> = {};
-    stocks.forEach(s => stockToSector[s.id] = s.category);
+    // Process only active (non-archived) stocks for relevant grouping
+    const activeStocks = stocks.filter(s => !s.isArchived);
 
-    const result: Record<string, { ohlc: any[], currentScore: number, change: number, changePercent: number }> = {};
+    const result: Record<string, { 
+      ohlc: any[], 
+      currentScore: number, 
+      change: number, 
+      changePercent: number,
+      memberStocks: any[],
+      mvp: any | null,
+      isOutperforming: boolean
+    }> = {};
 
     sectors.forEach(sector => {
-      // Find all history records for this sector
-      const sectorHistory = history.filter(h => stockToSector[h.stock_id] === sector);
-      
-      // Group by date
-      const byDate: Record<string, number> = {};
-      sectorHistory.forEach(h => {
-        if (!byDate[h.date]) byDate[h.date] = 0;
-        byDate[h.date] += h.daily_score;
-      });
+      const sectorStocks = activeStocks.filter(s => s.category === sector);
+      if (sectorStocks.length === 0) return;
 
+      const totalWeight = sectorStocks.reduce((sum, s) => sum + (s.weight || 1), 0);
+      
+      // Calculate daily weighted average scores
       const ohlc: { date: string; open: number; high: number; low: number; close: number }[] = [];
       let lastKnownValue = 500;
       const today = new Date();
 
+      // Process last 30 days
       for (let i = 29; i >= 0; i--) {
         const currentDate = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-        const date =
-          currentDate.getFullYear() +
-          '-' +
-          String(currentDate.getMonth() + 1).padStart(2, '0') +
-          '-' +
-          String(currentDate.getDate()).padStart(2, '0');
+        const dateStr = currentDate.toISOString().split('T')[0];
+        
+        // Find history for all stocks in this sector on this date
+        const dailyRecords = history.filter(h => 
+          sectorStocks.some(s => s.id === h.stock_id.toString()) && h.date === dateStr
+        );
 
-        if (Object.prototype.hasOwnProperty.call(byDate, date)) {
-          const value = byDate[date];
+        if (dailyRecords.length > 0) {
+          // Weighted average: Sum(Score * Weight) / Sum(Weight)
+          let weightedSum = 0;
+          let weightCount = 0;
+          
+          sectorStocks.forEach(stock => {
+            const record = dailyRecords.find(r => r.stock_id.toString() === stock.id);
+            const score = record ? record.daily_score : stock.currentScore; // Fallback to current if missing
+            weightedSum += score * (stock.weight || 1);
+            weightCount += (stock.weight || 1);
+          });
+
+          const close = weightCount > 0 ? weightedSum / weightCount : lastKnownValue;
           const open = lastKnownValue;
-          const close = value;
-          const high =
-            Math.max(open, close) === close && open === close ? close + 0.1 : Math.max(open, close);
-          const low =
-            Math.min(open, close) === close && open === close ? close - 0.1 : Math.min(open, close);
-          ohlc.push({ date, open, high, low, close });
+          const high = Math.max(open, close) + 0.1;
+          const low = Math.min(open, close) - 0.1;
+
+          ohlc.push({ date: dateStr, open, high, low, close });
           lastKnownValue = close;
         } else {
           ohlc.push({
-            date,
+            date: dateStr,
             open: lastKnownValue,
             high: lastKnownValue,
             low: lastKnownValue,
@@ -89,22 +104,34 @@ export const Sectors: React.FC = () => {
 
       ohlc.sort((a, b) => a.date.localeCompare(b.date));
 
-      // Calculate current summary
-      const currentScore = ohlc.length > 0 ? ohlc[ohlc.length - 1].close : 0;
+      const currentScore = ohlc.length > 0 ? ohlc[ohlc.length - 1].close : 500;
       const prevScore = ohlc.length > 1 ? ohlc[ohlc.length - 2].close : currentScore;
       const change = currentScore - prevScore;
       const changePercent = prevScore !== 0 ? (change / prevScore) * 100 : 0;
+
+      // Identify MVP (Top individual gainer in this sector TODAY)
+      const mvp = sectorStocks.reduce((best, s) => {
+        if (!best) return s;
+        return (s.changePercent > best.changePercent) ? s : best;
+      }, null as any);
+
+      // Benchmark Comparison (Compare sector daily change vs overall index daily change)
+      const benchmarkChange = indexData?.changePercent ?? 0;
+      const isOutperforming = changePercent > benchmarkChange;
 
       result[sector] = {
         ohlc,
         currentScore,
         change,
-        changePercent
+        changePercent,
+        memberStocks: sectorStocks,
+        mvp,
+        isOutperforming
       };
     });
 
     return result;
-  }, [stocks, history]);
+  }, [stocks, history, indexData]);
 
   if (loading || loadingHistory) {
     return (
@@ -132,55 +159,96 @@ export const Sectors: React.FC = () => {
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {sectorsObj.length > 0 ? sectorsObj.map(([sectorName, data], index) => (
           <motion.div
             key={sectorName}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={{ delay: index * 0.1, duration: 0.5 }}
           >
-            <Card hover className="h-full relative overflow-hidden bg-gradient-to-br from-slate-600 via-gray-700 to-zinc-800">
-              <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent"></div>
+            <Card hover className="h-full relative overflow-hidden bg-[#1a1c23] border border-white/10 group">
+              {/* Animated accent reflection */}
+              <div className="absolute -inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-[radial-gradient(400px_at_50%_0%,rgba(139,92,246,0.15),transparent)]"></div>
               
-              <div className="relative z-10 flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center text-white shadow-neon-sm">
-                    <Layers className="w-6 h-6" />
+              <div className="relative z-10 flex flex-col h-full">
+                {/* Header with Benchmark Comparison */}
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-14 h-14 bg-violet-600/20 border border-violet-500/30 rounded-2xl flex items-center justify-center text-violet-400 shadow-[0_0_20px_rgba(139,92,246,0.2)] group-hover:shadow-[0_0_30px_rgba(139,92,246,0.4)] transition-all duration-300">
+                      <Layers className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white tracking-tight">{sectorName}</h3>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center ${
+                          data.isOutperforming ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        }`}>
+                          {data.isOutperforming ? (
+                            <><ArrowUpRight className="w-3 h-3 mr-1" /> Outperforming Index</>
+                          ) : (
+                            <><ArrowDownRight className="w-3 h-3 mr-1" /> Underperforming Index</>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-white tracking-wide">{sectorName}</h3>
-                    <p className="text-sm text-gray-300">Combined Category Score</p>
-                  </div>
-                </div>
-              </div>
 
-              <div className="relative z-10 space-y-4">
-                <div className="flex items-center justify-between bg-white/5 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-                  <div>
-                    <div className="text-2xl font-bold text-white text-glow">{data.currentScore.toFixed(1)}</div>
-                    <div className="text-sm text-gray-300">Total Score</div>
-                  </div>
                   <div className="text-right">
-                    <div className={`flex items-center ${data.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {data.change >= 0 ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
-                      <span className="font-semibold">{data.change >= 0 ? '+' : ''}{data.change.toFixed(1)}</span>
+                    <div className="text-2xl font-black text-white font-mono tracking-tighter">
+                      {data.currentScore.toFixed(2)}
                     </div>
-                    <div className={`text-sm ${data.changePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'} opacity-90`}>
-                      {data.changePercent >= 0 ? '+' : ''}{data.changePercent.toFixed(2)}%
+                    <div className={`flex items-center justify-end text-sm font-bold ${data.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {data.change >= 0 ? '+' : ''}{data.change.toFixed(2)}
+                      <span className="ml-1 text-[10px] opacity-70">({data.changePercent.toFixed(2)}%)</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="h-64 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-lg p-3 border border-white/20 shadow-inner">
-                  <IndexCandlestickChart data={data.ohlc} height={230} />
+                {/* Main Performance Chart */}
+                <div className="relative mb-6 rounded-2xl overflow-hidden bg-black/40 border border-white/5 p-4 shadow-inner">
+                  <IndexCandlestickChart data={data.ohlc} height={220} />
                 </div>
+
+                {/* Stock Membership Chips */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between text-xs font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-widest">
+                    <span>Member Stocks</span>
+                    <span>{data.memberStocks.length} Assets</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {data.memberStocks.map(s => (
+                      <div key={s.id} className="flex items-center space-x-1.5 bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg text-xs text-gray-300 hover:bg-white/10 transition-colors cursor-default">
+                        <div className={`w-1.5 h-1.5 rounded-full ${s.change >= 0 ? 'bg-emerald-400' : 'bg-rose-400'}`}></div>
+                        <span className="font-medium">{s.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Footer Insight Section (MVP) */}
+                {data.mvp && (
+                  <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="p-1.5 bg-amber-500/10 rounded-lg">
+                        <Star className="w-4 h-4 text-amber-500 fill-amber-500/20" />
+                      </div>
+                      <span className="text-xs font-medium text-gray-400">Sector MVP:</span>
+                      <span className="text-xs font-bold text-white tracking-wide">{data.mvp.name}</span>
+                    </div>
+                    <div className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-md">
+                      +{data.mvp.changePercent.toFixed(1)}% Today
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
           </motion.div>
         )) : (
-          <div className="col-span-full flex justify-center py-10 text-gray-500">
-            No sectors or stock history to display yet.
+          <div className="col-span-full flex flex-col items-center justify-center py-20 bg-gray-50 dark:bg-gray-800/20 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+            <Info className="w-12 h-12 text-gray-400 mb-4" />
+            <p className="text-gray-500 dark:text-gray-400 font-medium text-lg">No sector performance data available yet.</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Complete your first task to start tracking category performance.</p>
           </div>
         )}
       </div>

@@ -113,19 +113,23 @@ router.delete('/:id', checkMaintenanceMode, (req: any, res) => {
 
 router.post('/:id/complete', checkMaintenanceMode, (req: any, res) => {
   const { id } = req.params;
+  const { completionFactor = 1.0 } = req.body;
   try {
     const taskObj = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as any;
     if (!taskObj) return res.status(404).json({ error: 'Task not found' });
     const stockObj = db.prepare('SELECT * FROM stocks WHERE id = ?').get(taskObj.stock_id) as any;
     if (!stockObj) return res.status(404).json({ error: 'Stock not found' });
 
-    const score = calculateTaskScore({
+    let score = calculateTaskScore({
       priority: taskObj.priority || 'medium',
       complexity: taskObj.complexity || 1,
       type: taskObj.type,
       dueDate: taskObj.due_date ? new Date(taskObj.due_date) : undefined,
       completedAt: new Date(),
     });
+
+    // Apply completion factor (1, 2, 5, 8, 9, 10 -> 0.1, 0.2, 0.5, 0.8, 0.9, 1.0)
+    score = Math.round(score * completionFactor);
 
     db.prepare(`UPDATE tasks SET status = 'completed', completed_at = datetime('now'), updated_at = datetime('now'), score = ? WHERE id = ?`).run(score, id);
     const newScore = (stockObj.current_score || 500) + score;
