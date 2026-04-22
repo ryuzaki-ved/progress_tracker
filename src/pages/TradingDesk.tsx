@@ -420,6 +420,7 @@ export const TradingDesk: React.FC = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                         className="border-b border-gray-100 dark:border-gray-700 hover:bg-violet-50 dark:hover:bg-gray-700 transition-colors duration-150 cursor-pointer"
+                        onClick={() => setSelectedStockId(holding.stockId.toString())}
                       >
                         <td className="py-4 px-4">
                           <div className="flex items-center space-x-3">
@@ -1008,6 +1009,7 @@ export const TradingDesk: React.FC = () => {
         isOpen={showAddFundsModal}
         onClose={() => setShowAddFundsModal(false)}
         onSubmit={handleAddFunds}
+        totalPortfolioValue={totalInvestment + memoizedCashBalance}
       />
       
       {/* Trading Notifications */}

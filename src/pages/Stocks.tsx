@@ -285,13 +285,44 @@ export const Stocks: React.FC = () => {
                   <div className="col-span-1 border border-white/5 rounded-2xl bg-white/5 p-4 overflow-hidden flex flex-col h-72">
                     <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-2">Recent Settlements</h3>
                     <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
-                       {historyRaw.slice(0, 15).map((h, i) => (
-                         <div key={i} className="flex items-center justify-between p-3 border-b border-white/5 last:border-0 hover:bg-white/5 rounded-xl transition-colors">
-                           <div className="text-gray-300 text-sm font-medium">{h.date}</div>
-                           <div className="flex items-center space-x-4">
-                             <div className="text-white font-bold font-display">{h.daily_score}</div>
-                             <div className={`w-12 text-right text-xs font-bold ${h.score_delta >= 0 ? 'text-green-400' : 'text-rose-400'}`}>
-                               {h.score_delta >= 0 ? '+' : ''}{h.score_delta}
+                       {historyRaw.slice().reverse().slice(0, 15).map((h: any, i: number) => (
+                         <div key={i} className="group relative">
+                           <div className="flex items-center justify-between p-3 border-b border-white/5 last:border-0 hover:bg-white/5 rounded-xl transition-colors cursor-default">
+                             <div className="text-gray-300 text-sm font-medium">{h.date}</div>
+                             <div className="flex items-center space-x-2">
+                               {/* Task indicator */}
+                               {h.completed_tasks && h.completed_tasks.length > 0 && (
+                                 <div className="relative group/tasks">
+                                   <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/30 border border-emerald-500/50 text-[10px] font-bold text-emerald-300 cursor-help hover:bg-emerald-500/50 transition-colors">
+                                     {h.completed_tasks.length}
+                                   </div>
+                                   
+                                   {/* Hover tooltip with task details */}
+                                   <div className="absolute bottom-full right-0 mb-2 hidden group-hover/tasks:block z-50 pointer-events-auto">
+                                     <div className="bg-gray-950 border border-emerald-500/40 rounded-lg shadow-xl p-3 w-56 text-xs text-gray-300">
+                                       <div className="font-semibold text-emerald-400 mb-2 pb-2 border-b border-white/10">Tasks Completed ({h.completed_tasks.length})</div>
+                                       <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
+                                         {h.completed_tasks.map((task: any, ti: number) => (
+                                           <div key={ti} className="border-b border-white/5 last:border-0 pb-1.5 last:pb-0">
+                                             <div className="font-medium text-white flex items-start space-x-1.5">
+                                               <span className="text-emerald-400 flex-shrink-0 mt-0.5">✓</span>
+                                               <span className="line-clamp-2">{task.title}</span>
+                                             </div>
+                                             {task.description && (
+                                               <p className="text-gray-400 mt-1 line-clamp-2 ml-5 text-[10px]">{task.description}</p>
+                                             )}
+                                           </div>
+                                         ))}
+                                       </div>
+                                     </div>
+                                   </div>
+                                 </div>
+                               )}
+                               
+                               <div className="text-white font-bold font-display">{h.daily_score}</div>
+                               <div className={`w-12 text-right text-xs font-bold ${h.score_delta >= 0 ? 'text-green-400' : 'text-rose-400'}`}>
+                                 {h.score_delta >= 0 ? '+' : ''}{h.score_delta}
+                               </div>
                              </div>
                            </div>
                          </div>

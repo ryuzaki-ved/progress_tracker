@@ -6,14 +6,18 @@ interface AddFundsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (amount: number) => Promise<void>;
+  totalPortfolioValue: number; // Total funds (cash + invested in stocks)
 }
 
-export const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose, onSubmit }) => {
+export const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose, onSubmit, totalPortfolioValue }) => {
   const [amount, setAmount] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
+
+  // Calculate the maximum allowed to add: 15% of total portfolio value
+  const maxAllowedToAdd = totalPortfolioValue * 0.15;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +25,10 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose, o
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
       setError('Please enter a valid amount');
+      return;
+    }
+    if (numAmount > maxAllowedToAdd) {
+      setError(`You can add a maximum of ₹${maxAllowedToAdd.toFixed(2)} (15% of your portfolio value)`);
       return;
     }
     setLoading(true);
@@ -53,10 +61,13 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose, o
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amount (₹)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Amount (₹) - Max: ₹{maxAllowedToAdd.toFixed(2)}
+            </label>
             <input
               type="number"
               min={1}
+              max={maxAllowedToAdd}
               step="0.01"
               value={amount}
               onChange={e => setAmount(e.target.value)}
@@ -65,6 +76,9 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ isOpen, onClose, o
               autoFocus
               placeholder="Enter amount..."
             />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              You can add up to 15% of your total portfolio value
+            </p>
           </div>
           {error && (
             <div className="text-red-600 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">

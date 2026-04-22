@@ -44,8 +44,24 @@ router.get('/history', (req: any, res) => {
       JOIN stocks ON stock_performance_history.stock_id = stocks.id
       WHERE stocks.user_id = ?
       ORDER BY date DESC
-    `).all(userId);
-    res.json({ data: histRows, error: null });
+    `).all(userId) as any[];
+    
+    // Enrich each history row with completed tasks for that day
+    const enrichedRows = histRows.map(h => {
+      const tasksCompleted = db.prepare(`
+        SELECT id, title, description 
+        FROM tasks 
+        WHERE stock_id = ? AND DATE(completed_at) = ? AND status = 'completed'
+        ORDER BY completed_at DESC
+      `).all(h.stock_id, h.date) as any[];
+      
+      return {
+        ...h,
+        completed_tasks: tasksCompleted || []
+      };
+    });
+    
+    res.json({ data: enrichedRows, error: null });
   } catch(err: any) {
     res.status(500).json({ data: null, error: err.message });
   }

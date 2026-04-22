@@ -106,9 +106,38 @@ router.put('/:id', checkMaintenanceMode, (req: any, res) => {
 router.delete('/:id', checkMaintenanceMode, (req: any, res) => {
   const { id } = req.params;
   try {
-    db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
+    const deleteTx = db.transaction(() => {
+      // Find all child tasks to handle recurring task deletion safely without deleting them
+      const childTasks = db.prepare('SELECT id FROM tasks WHERE parent_task_id = ? ORDER BY due_date ASC').all(id) as any[];
+      
+      if (childTasks.length > 0) {
+        const newParentId = childTasks[0].id;
+        
+        // Transfer recurring pattern to the new parent
+        const oldParentInfo = db.prepare('SELECT recurring_pattern FROM tasks WHERE id = ?').get(id) as any;
+        if (oldParentInfo && oldParentInfo.recurring_pattern) {
+          db.prepare('UPDATE tasks SET recurring_pattern = ? WHERE id = ?').run(oldParentInfo.recurring_pattern, newParentId);
+        }
+
+        // Update other children to point to the new parent
+        db.prepare('UPDATE tasks SET parent_task_id = ? WHERE parent_task_id = ? AND id != ?').run(newParentId, id, newParentId);
+        
+        // The new parent itself should have a null parent_task_id
+        db.prepare('UPDATE tasks SET parent_task_id = NULL WHERE id = ?').run(newParentId);
+      }
+      
+      // Delete any performance bonds associated with THIS task only
+      db.prepare('DELETE FROM performance_bonds WHERE creator_task_id = ? OR challenger_task_id = ?').run(id, id);
+      
+      // Finally delete the task itself
+      db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
+    });
+    
+    deleteTx();
     res.json({ data: true, error: null });
-  } catch(err:any) { res.status(500).json({ error: err.message }) }
+  } catch(err:any) { 
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.post('/:id/complete', checkMaintenanceMode, (req: any, res) => {
